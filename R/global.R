@@ -1,0 +1,106 @@
+# Copyright 2024 Pfizer Inc
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+# R CMD check will generate NOTE(s) with message 'no visible binding for
+# global variable xyz'.  Adding this xyz variable to this file will remove
+# this note.  See ?globalVariables for more information.
+
+globalVariables(c(
+  "ADJPVALUE",
+  "AEDECOD",
+  "AEENDT",
+  "AENDT",
+  "AEOUT",
+  "AEREL",
+  "AESER",
+  "AESEV",
+  "AESOC",
+  "AESTDT",
+  "ASTDT",
+  "ATOXGR",
+  "BIGN",
+  "BLOCK",
+  "BYVAR1",
+  "PCT",
+  "DPTVAL",
+  "TRTVAR",
+  "FREQ",
+  "CTRL_F",
+  "CTRL_P",
+  "BYVAR1N",
+  "CN",
+  "CTRL_N",
+  "CTRL_PCT",
+  "CVALUE",
+  "DECODh",
+  "DENOMN",
+  "DENOMN_CTRLGRP",
+  "DOMAIN",
+  "DPTVALN",
+  "DPTVAR",
+  "DPTVARN",
+  "FMQ",
+  "FMQCAT",
+  "FMQ_NAM ",
+  "FREQ_CTRLGRP",
+  "FREQ_TRTGRP",
+  "HOVER_PAIR",
+  "HOVER_PCT",
+  "HOVER_TEXT",
+  "Newstat",
+  "PCT_CTRLGRP",
+  "PCT_TRTGRP",
+  "PT",
+  "PVALUE",
+  "Percent",
+  "RFENDTC",
+  "RFSTDTC",
+  "RISK",
+  "RISKCIL",
+  "RISKCIU",
+  "RISK_CI",
+  "STAT",
+  "STUDYFL",
+  "TOTAL_N",
+  "TRTCD",
+  "TRTEDT",
+  "TRTEMFL",
+  "TRTPAIR",
+  "TRTSDT",
+  "TRTSORT",
+  "TRTTXT",
+  "UNIQID",
+  "VAL",
+  "VAR_LABEL",
+  "VAR_NAMES",
+  "XVAR",
+  "datain",
+  "effect",
+  "head",
+  "pct",
+  "pop",
+  "read_excel",
+  "result",
+  ".",
+  "DENOMN_TRTGRP",
+  "FMQ_NAM",
+  "USUBJID",
+  "key",
+  ":=",
+  "curve_n",
+  "point_n",
+  "Status",
+  "Value",
+  "ASEV"
+))
