@@ -6,7 +6,7 @@ date: '2024-05-20'
 
 <!-- Please do not edit the README.md file as it is auto-generated. Only edit the README.Rmd file -->
 
-# Clinical Analysis Reporting and Visualization Ensemble in R
+# carver <a href="https://github.com/pfizer-rd/cvarsinternal"><img src="man/figures/carver.png" align="right" height="225" width="200" /></a>
 
 <!-- badges: start -->
   <!-- badges: end -->
