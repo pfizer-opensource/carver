@@ -1,6 +1,6 @@
 <!-- Please do not edit the README.md file as it is auto-generated. Only edit the README.Rmd file -->
 
-# carver <a href="https://github.com/pfizer-rd/cvarsinternal"><img src="man/figures/carver.png" align="right" height="225" width="200" /></a>
+# carver <a href="https://github.com/pfizer-opensource/carver"><img src="man/figures/carver.png" align="right" height="225" width="200" /></a>
 
 <!-- badges: start -->
 
