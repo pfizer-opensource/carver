@@ -13,7 +13,7 @@
 # limitations under the License.
 #
 #' Summary analysis for categorical variables
-#' 
+#'
 #' \code{mcatstat()} returns a new dataframe containing counts and percentages
 #' of a categorical analysis variable according to grouping and treatment
 #' variables passed in \code{mentry()}
@@ -174,7 +174,7 @@ mcatstat <- function(datain = NULL,
     )))) |>
     summarise(FREQ = length(unique(.data[[uniqid]]))) |>
     ungroup()
-  
+
   # If cumulative count is required then
   if (cum_ctyn == "Y") {
     counts <- counts |>
@@ -198,9 +198,9 @@ mcatstat <- function(datain = NULL,
       DPTVAR = dptvars$vars, XVAR = .data[["DPTVAL"]], DPTVARN = dptvarn, CN = "C"
     ) |>
     select(any_of(c(BYVAR, "TRTVAR", SUBGRP, "DPTVAR", "DPTVAL", "CVALUE")), everything())
-  
+
   message("mcatstat success")
-  
+
   return(df)
 }
 
@@ -232,7 +232,7 @@ calc_denom <- function(counts,
   stopifnot(
     "Invalid pctdisp" =
       str_remove(pctdisp, "[[:digit:]]+") %in%
-      c("TRT", "VAR", "COL", "SUBGRP", "SGRPN", "CAT", "NONE", "NO", "DPTVAR", "BYVARN")
+        c("TRT", "VAR", "COL", "SUBGRP", "SGRPN", "CAT", "NONE", "NO", "DPTVAR", "BYVARN")
   )
   # Set denominator values for percentage
   if (pctdisp %in% c("NONE", "NO")) {
@@ -244,15 +244,15 @@ calc_denom <- function(counts,
       df <- counts |> mutate(DENOMN = length(unique(data_denom[[uniqid]])))
     } else {
       percgrp <- switch(gsub("[[:digit:]]", "", pctdisp),
-                        "TRT" = "TRTVAR",
-                        "CAT" = c(BYVAR, "DPTVAL"),
-                        "COL" = c("TRTVAR", SUBGRP),
-                        "SUBGRP" = c("TRTVAR", SUBGRP, BYVAR),
-                        "SGRPN" = SUBGRP,
-                        "DPTVAR" = c("TRTVAR", SUBGRP, BYVAR, "DPTVAL"),
-                        "BYVARN" = c("TRTVAR", paste0("BYVAR", str_to_vec(
-                          str_extract(pctdisp, "[[:digit:]]+"), ""
-                        )))
+        "TRT" = "TRTVAR",
+        "CAT" = c(BYVAR, "DPTVAL"),
+        "COL" = c("TRTVAR", SUBGRP),
+        "SUBGRP" = c("TRTVAR", SUBGRP, BYVAR),
+        "SGRPN" = SUBGRP,
+        "DPTVAR" = c("TRTVAR", SUBGRP, BYVAR, "DPTVAL"),
+        "BYVARN" = c("TRTVAR", paste0("BYVAR", str_to_vec(
+          str_extract(pctdisp, "[[:digit:]]+"), ""
+        )))
       ) |> intersect(names(data_denom))
       # Get denominator count per above variables
       df <- data_denom |>
@@ -260,7 +260,7 @@ calc_denom <- function(counts,
         summarise(DENOMN = length(unique(.data[[uniqid]]))) |>
         inner_join(counts, by = percgrp, multiple = "all")
     }
-    
+
     # Calculate percentage as PCT and concatenate as CVALUE
     p <- ifelse(pctsyn == "N", "", "%") # nolint
     df <- df |> mutate(PCT = round_f((FREQ * 100) / DENOMN, 2))
