@@ -2,61 +2,81 @@
 % Please edit documentation in R/risk_stat.R
 \name{risk_stat}
 \alias{risk_stat}
-\title{Function to calculate risk statistics for treatment pairs from AE pre-processed data}
+\title{Calculate Risk Statistics for treatment pairs from pre-processed Adverse Events data}
 \usage{
 risk_stat(
   datain,
-  d_datain,
-  summary_by,
-  eventVar,
+  a_subset = NA_character_,
+  summary_by = "Patients",
+  eventvar,
   ctrlgrp,
   trtgrp,
-  statistics,
-  alpha,
-  cutoff,
+  statistics = "Risk Ratio",
+  alpha = 0.05,
+  cutoff = 2,
   sort_opt,
-  sort_var
+  sort_var,
+  g_sort_by_ht = "N"
 )
 }
 \arguments{
-\item{datain}{Input dataset after pre_processing of AE data with analysis subset applied}
+\item{datain}{Input dataset after pre_processing and running \code{mentry()} to \emph{ADAE} data}
 
-\item{d_datain}{Input dataset after pre_processing of AE data for denominator}
+\item{a_subset}{Analysis Subset condition specific to categorical analysis.}
 
-\item{summary_by}{Measure to construct the summary by. Values: 'Patients' or 'Events'}
+\item{summary_by}{Measure to construct the summary by. Values: \verb{'Patients' or 'Events'}.}
 
-\item{eventVar}{Event Variable to review by. Example: "AEDECOD", "AEBODSYS"}
+\item{eventvar}{Event Variable to review by. Example: \verb{'AEDECOD', 'AEBODSYS'}.}
 
-\item{ctrlgrp}{Control treatment value}
+\item{ctrlgrp}{Treatment Control value.}
 
-\item{trtgrp}{Treatment(s) to create pairs. Only 1 value for Volcano/table,
-can be multiple for Forest}
+\item{trtgrp}{Treatment(s) to create pairs. Only 1 value for Volcano/table, can be multiple
+for \code{forest_plot()}.}
 
-\item{statistics}{Statistic to be calculated. Values: 'Risk Ratio' or 'Risk Difference'}
+\item{statistics}{Statistic to be calculated. Values: \verb{'Risk Ratio' or 'Risk Difference'}.}
 
-\item{alpha}{Alpha value to determine confidence interval for risk calculation. Default: 0.05}
+\item{alpha}{Alpha value to determine confidence interval for risk calculation. Default: \code{0.05}}
 
-\item{cutoff}{Incidence Cutoff Value - consider only terms with incidence percentage > ui_cutoff}
+\item{cutoff}{Incidence Cutoff Value; consider only terms with \verb{incidence percentage > cutoff}.
+For Adverse Events tables, this only applies to Higher Level Terms.}
 
 \item{sort_opt}{How to sort terms, only for table/forest plot.
-Values: 'Ascending','Descending','Alphabetical'}
+Values: \verb{'Ascending','Descending','Alphabetical'}.}
 
-\item{sort_var}{Metric to sort by. Values: 'Count','Percent','RiskValue'}
+\item{sort_var}{Metric to sort by. Values: \verb{'Count','Percent','RiskValue'}.}
+
+\item{g_sort_by_ht}{For Forest Plot only - include sorting by high term/\emph{BYVAR1}?
+Values: "Y"/"N". In the output, terms will be sorted by group first, then term. To be used
+along with \code{ht_dispyn} = Y in \code{ae_forest_plot()}}
 }
 \value{
-a dataset containing risk statistic calculations for given treatment pair(s)
+A dataset containing risk statistic calculations for given treatment pair(s).
 }
 \description{
-Function to calculate risk statistics for treatment pairs from AE pre-processed data
+Calculate Risk Statistics for treatment pairs from pre-processed Adverse Events data
 }
 \examples{
-library(carver)
+## Pre-processed AE data
+data("ae_pre_process")
 
-risk <- risk_stat(
-  datain = ae_pre$dsin,
-  d_datain = ae_pre$dout,
+ae_entry <- mentry(
+  datain = ae_pre_process$data,
+  subset = NA,
+  byvar = "AEBODSYS",
+  trtvar = "TRTA",
+  trtsort = "TRTAN",
+  subgrpvar = NA,
+  trttotalyn = "N",
+  add_grpmiss = "N",
+  sgtotalyn = "N",
+  pop_fil = "SAFFL"
+)
+
+risk_stat(
+  datain = ae_entry,
+  a_subset = ae_pre_process$a_subset,
   summary_by = "Patients",
-  eventVar = "AEDECOD",
+  eventvar = "AEDECOD",
   ctrlgrp = "Placebo",
   trtgrp = "Xanomeline High Dose",
   statistics = "Risk Ratio",
@@ -65,6 +85,4 @@ risk <- risk_stat(
   sort_opt = "Ascending",
   sort_var = "Count"
 )
-
-risk[25:35, ]
 }

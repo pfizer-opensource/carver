@@ -2,95 +2,124 @@
 % Please edit documentation in R/mcatstat.R
 \name{mcatstat}
 \alias{mcatstat}
-\title{Summary analysis for categorical variables
-\code{mcatstat()} returns a new dataframe containing counts and percentages
-of a categorical analysis variable according to grouping and treatment
-variables passed in \code{mentry()}}
+\title{Summary analysis for categorical variables}
 \usage{
 mcatstat(
   datain = NULL,
-  d_datain = NULL,
-  ui_uniqid = "USUBJID",
-  ui_dptvar = NULL,
-  ui_pctdisp = "TRT",
+  a_subset = NA_character_,
+  denom_subset = NA_character_,
+  uniqid = "USUBJID",
+  dptvar = NULL,
+  pctdisp = "TRT",
   miss_catyn = "N",
+  miss_catlabel = "Missing",
   cum_ctyn = "N",
   total_catyn = "N",
-  dptvarn = 1
+  total_catlabel = "Total",
+  dptvarn = 1,
+  pctsyn = "Y",
+  denomyn = "N"
 )
 }
 \arguments{
-\item{datain}{Input data from \code{mentry()} output (dsin) to get counts for each
+\item{datain}{Input data from \code{mentry()} output to get counts for each
 category}
 
-\item{d_datain}{Input data from \code{mentry()} output (dout) to calculate the
-denominator for percentage calculation
-of the counts from \code{datain}}
+\item{a_subset}{Analysis Subset condition specific to categorical analysis.}
 
-\item{ui_uniqid}{Variable to calculate unique counts of.
-Likely values: "USUBJID", "SITEID", NA}
+\item{denom_subset}{Subset condition to be applied to data set for calculating denominator.}
 
-\item{ui_dptvar}{Categorical Analysis variable. eg: "SEX","AEDECOD"}
+\item{uniqid}{Variable to calculate unique counts of. Expected values: \code{"USUBJID"}, \code{"SITEID"},
+\code{"ALLCT"}}
 
-\item{ui_pctdisp}{Method to calculate denominator (for \%) by.
-Possible values: "TRT","VAR","COL","SUBGRP","CAT","NONE","NO","DPTVAR"}
+\item{dptvar}{Categorical Analysis variable and ordering variable if exists,
+separated by /. eg: \code{"SEX"}, \code{"SEX/SEXN"}, \code{"AEDECOD"}, \code{"ISTPT/ISTPTN"}}
 
-\item{miss_catyn}{To include empty/blank values as "Missing" in categories of
-\code{ui_dptvar} variable or not. Values: "Y"/"N"}
+\item{pctdisp}{Method to calculate denominator (for \%) by.
+Possible values: \code{"TRT"}, \code{"VAR"}, \code{"COL"}, \code{"SUBGRP"}, \code{"CAT"}, \code{"NONE"}, \code{"NO"}, \code{"DPTVAR"},
+\code{"BYVARxyN"}}
+
+\item{miss_catyn}{To include empty/blank values as \code{miss_catlabel} in categories of
+\code{dptvar} variable or not. Values: \code{"Y"/"N"}}
+
+\item{miss_catlabel}{Label for missing values}
 
 \item{cum_ctyn}{To return cumulative frequency instead of individual
-frequencies for each category. Possible values: "Y"/"N"}
+frequencies for each category. Values: \code{"Y"/"N"}}
 
-\item{total_catyn}{To return a 'Total' row for the categories of \code{ui_dptvar}
-variable or not. Possible values: "Y"/"N"}
+\item{total_catyn}{To return a 'Total' row for the categories of \code{dptvar}
+variable or not. Possible values: \code{"Y"/"N"}}
 
-\item{dptvarn}{Number to assign as 'DPTVARN', useful for block sorting when
+\item{total_catlabel}{Label for total category row. eg- "All"/"Total"}
+
+\item{dptvarn}{Number to assign as \code{DPTVARN}, useful for block sorting when
 multiple \code{mcatstat()} outputs are created to be combined.}
+
+\item{pctsyn}{Display Percentage Sign in table or not. Values: \code{"Y"/"N"}}
+
+\item{denomyn}{Display denominator in output or not. Values: \code{"Y"/"N"}}
 }
 \value{
 a data.frame with counts and/or percentages, passed to
-\code{mdisplay()} or for further risk statistic calculation
+passed to \code{tbl_processor()} or graph functions
 }
 \description{
-Summary analysis for categorical variables
 \code{mcatstat()} returns a new dataframe containing counts and percentages
 of a categorical analysis variable according to grouping and treatment
 variables passed in \code{mentry()}
 }
 \details{
 \itemize{
-\item Objects passed to \code{datain} and \code{d_datain} can be the $dsin and $dout
-return elements respectively from either \code{mentry()} or
-\code{ae_pre_processor()}
-\item \code{ui_uniqid} is the variable name to get unique counts of. If given as
-NA, it sums all observations for the given category. If "USUBJID" then it
+\item Object passed to \code{datain} is the return element from \code{mentry()}
+\item \code{a_subset} condition is applied to data to be analysed, and not applied for getting
+denominator
+\item \code{denom_subset} condition, if given, to apply to denominator data alone. Usually used
+with \code{pctdisp} = "SUBGRP" or "DPTVAR"
+\item \code{uniqid} is the variable name to get unique counts of. If given as
+\emph{"ALLCT"}, it sums all observations for the given category. If \emph{"USUBJID"} then it
 calculates the number of unique subjects per category.
-\item \code{cum_ctyn} as "Y" to get output value as cumulative frequencies instead
-of individual frequencies. If "Y", \code{total_catyn} will be reset to "N"
-\item pctdisp has possible values for method to get denominator to calculate
+\item \code{cum_ctyn} as \code{"Y"} to get output value as cumulative frequencies instead
+of individual frequencies. If \code{"Y"}, \code{total_catyn} will be reset to \code{"N"}
+\item \code{pctdisp} has possible values for method to get denominator to calculate
 percentage:
-NONE/NO: No percent calculation
-TRT: Treatment total counts acts as denominator
-VAR: Variable Total of all treatments/groups acts as denominator
-COL: Column wise denominator - percentage within each
-Treatment-Subgroup(s) combination
-CAT: Row-wise denominator - percentage within each Bygroup(s)-dptvar
+\itemize{
+\item \strong{NONE/NO}: No percent calculation
+\item \strong{TRT}: Treatment total counts acts as denominator
+\item \strong{VAR}: Variable Total of all treatments/groups acts as denominator
+\item \strong{COL}: Column wise denominator - percentage within each \code{Treatment-Subgroup(s)}
 combination
-SUBGRP: Percentage within each Treatment-By group(s)-Subgroup(s)
-combination
-DPTVAR: Percentage within each Treatment-By group(s)-Subgroup(s)-dptvar
+\item \strong{CAT}: Row-wise denominator - percentage within each \code{Bygroup(s)-dptvar} combination
+\item \strong{SUBGRP}: Percentage within each \verb{Treatment-By group(s)-Subgroup(s)} combination
+\item \strong{DPTVAR}: Percentage within each \verb{Treatment-By group(s)-Subgroup(s)-dptvar}
 combination.
+\item \strong{BYVARxyN}: Percentage using \code{Treatment-Bygroup} combination as denominator. eg if
+\code{BYVAR12N} then uses \code{TRT-BYVAR1-BYVAR2} combination, if \code{BYVAR1N} then only \code{TRT-BYVAR1}
+\item \strong{SGRPN}: Percentage using Subgroup total as denominator
+}
 }
 }
 \examples{
-data(ae_pre)
+data("adsl")
 
-ae_cat <- mcatstat(
-  datain = ae_pre$dsin,
-  d_datain = ae_pre$dout,
-  ui_uniqid = "USUBJID",
-  ui_dptvar = "AEDECOD",
-  ui_pctdisp = "TRT"
-)
-ae_cat
+df_mentry <-
+  adsl |> mentry(
+    subset = "EFFFL=='Y'",
+    byvar = "AGEGR1",
+    trtvar = "TRT01A",
+    trtsort = "TRT01AN",
+    subgrpvar = "SEX/SEXN",
+    trttotalyn = "N",
+    add_grpmiss = "N",
+    sgtotalyn = "N",
+    pop_fil = "Overall Population"
+  )
+
+df_mentry |>
+  mcatstat(
+    a_subset = "SUBGRPVAR1 == 'F'",
+    uniqid = "USUBJID",
+    dptvar = "RACE/RACEN",
+    pctdisp = "TRT"
+  )
+
 }
