@@ -7,23 +7,38 @@
 var_start(df, pattern)
 }
 \arguments{
-\item{df}{Dataframe input from which to get names}
+\item{df}{\code{data.frame} input from which to get names}
 
-\item{pattern}{String. If not ends with N,only matches start. If ends with N, matches start and
-checks if column name ends in "N"}
+\item{pattern}{String. If not ends with \code{N}, only matches start. If ends with \code{N}, matches start
+and checks if column name ends in \code{"N"}}
 }
 \value{
 Vector of column names starting with given pattern
 }
 \description{
-Searches column names of given dataframe to identify which start with the given pattern.
-If the pattern given ends with 'N', it looks for variables that also end with N.
-If the pattern does not end with "N", it excludes variables that end with "N" while returning
-those that start with the pattern. eg. pattern="BYVAR" may return c("BYVAR1","BYVAR2")
-Whereas "BYVARN" may return c("BYVAR1N","BYVAR2N"), if they exist.
+Searches column names of given \code{data.frame} to identify which start with the given pattern.
+If the pattern given ends with \code{'N'}, it looks for variables that also end with \code{N}.
+If the pattern does not end with \code{'N'}, it excludes variables that end with \code{'N'} while returning
+those that start with the pattern. eg. \code{pattern = "BYVAR"} may return \code{c("BYVAR1","BYVAR2")}
+Whereas \code{"BYVARN"} may return \code{c("BYVAR1N","BYVAR2N")}, if they exist.
 }
 \examples{
-data(ae_pre)
-var_start(ae_pre$dsin, "BYVARN")
-var_start(ae_pre$dsin, "BYVAR")
+data("ae_pre_process")
+
+ae_pre <- mentry(
+  datain = ae_pre_process$data,
+  subset = NA,
+  byvar = "AEBODSYS~SEX",
+  trtvar = "TRTA",
+  trtsort = "TRTAN",
+  subgrpvar = NA,
+  trttotalyn = "N",
+  add_grpmiss = "N",
+  sgtotalyn = "N",
+  pop_fil = "SAFFL"
+)
+
+var_start(ae_pre, "BYVARN")
+var_start(ae_pre, "BYVAR")
+
 }

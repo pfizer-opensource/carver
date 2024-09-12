@@ -17,6 +17,24 @@ line_plot(
 }
 \arguments{
 \item{datain}{Input dataset from process_line_plot_data() output.}
+
+\item{series_var}{Series (Treatment) Variable.}
+
+\item{series_labelvar}{Series (Treatment) Variable labels for legend, if
+different from \code{series_var}. If this is needed, then \code{series_labelvar}
+should be a factor variable with levels corresponding to \code{series_var}, also a factor.}
+
+\item{series_opts}{Series Variable styling options, a \code{list} containing
+\code{shape}, \code{color} and \code{size}.}
+
+\item{axis_opts}{A \code{list} of axis specific options retrieved from \code{plot_axis_opts()}.}
+
+\item{legend_opts}{Legend styling option, a \code{list} containing \code{label}, \code{pos}(position) and
+\code{dir} (direction).}
+
+\item{griddisplay}{Display Grid \code{(Y/N)}.}
+
+\item{plot_title}{Text to use as plot title, if required}
 }
 \value{
 plot - Line plot.
