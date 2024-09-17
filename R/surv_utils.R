@@ -79,7 +79,7 @@ surv_pre_processor <- function(dataset_adsl,
 #' @noRd
 #'
 pairwise_surv_stats <- function(datain) {
-  pairs <- combn(sort(unique(datain[["TRTSORT"]])), 2)
+  pairs <- utils::combn(sort(unique(datain[["TRTSORT"]])), 2)
 
   pair_stat <- map_chr(seq_len(ncol(pairs)), \(i) {
     trt_index <- pairs[, i]

@@ -18,7 +18,6 @@
 #' @param lterm Low Level Adverse Event term variable, used for analysis
 #'
 #' @return List of summarized data frames for Adverse Events based on high and lower term.
-#' @noRd
 #'
 #' @examples
 #' data(adae)
