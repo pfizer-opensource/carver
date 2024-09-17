@@ -21,6 +21,9 @@
 #' @param extra_df Additional dataframe, to merge with `datain`.
 #' @param extra_mergeby Variables to merge `extra_df` by, if present.
 #' @param dropvars Variables additional to standard present in input data to be removed from output
+#' @param keepvars Specific variables to be retained in report in addition to grouping and value
+#' columns. If `keepvars` is given it overrides `dropvars` and the columns are located as last columns
+#' of the output.
 #' @param disp_value_col Hide/Show value column from the final display.
 #' @param addrowvars Group Variable(s) to be removed as a column and instead used as row headers
 #' in the value column.
@@ -58,6 +61,7 @@ tbl_processor <- function(datain,
                           extra_df = NULL,
                           extra_mergeby = "DPTVAL",
                           dropvars = "",
+                          keepvars = "",
                           disp_value_col = "Y",
                           addrowvars = NA_character_) {
   stopifnot(nrow(datain) != 0)
@@ -69,14 +73,25 @@ tbl_processor <- function(datain,
   if (disp_value_col == "N") {
     datain <- select(datain, -"DPTVAL")
   }
-  # Drop variables not in use
+  # Drop variables not in use and convert display to character
   rep <- datain |>
-    select(
-      -any_of(c("DENOMN", "TRTTXT", "FREQ", "PCT", "XVAR", "TOTAL_N", dropvars)),
-      -starts_with("HOVER")
-    ) |>
     mutate(across(any_of("CVALUE"), ~ as.character(.x))) |>
     ungroup()
+  if (any(keepvars == "")) {
+    rep <- rep |>
+      select(
+        -any_of(c("DENOMN", "TRTTXT", "FREQ", "PCT", "XVAR", "TOTAL_N", "TRTPAIR", dropvars)),
+        -starts_with("HOVER")
+      )
+  } else {
+    rep <- rep |>
+      select(
+        any_of(c(BYVAR, "DPTVAR", "DPTVAL",
+                 "DPTVAL" = "STAT", "TRTVAR", SUBGRP, BYVARN, SUBGRPN,
+                 "DPTVARN", "DPTVALN", "DPTVALN" = "STATN", "CVALUE", "CN", keepvars))
+      )
+  }
+
   # IF treatment, subgroup exists, pivot and perform operations
   if (any(c("TRTVAR", SUBGRP) %in% names(rep))) {
     # Workaround for pivot_wider to accept "duplicate" spanned column names (Total)
@@ -104,6 +119,10 @@ tbl_processor <- function(datain,
   # If additional dataset is given:
   if (is.data.frame(extra_df)) {
     rep <- rep |> inner_join(extra_df, by = extra_mergeby)
+  }
+  # Order Variables to last:
+  if (all(keepvars != "") && all(keepvars %in% names(rep))) {
+    rep <- relocate(rep, any_of(keepvars), .after = last_col())
   }
   # Labels for Statistics, if present
   if (!all(is.na(statlabel)) && any(rep[["CN"]] == "N")) {

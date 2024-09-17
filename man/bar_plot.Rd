@@ -21,14 +21,29 @@ bar_plot(
 \arguments{
 \item{datain}{output dataset from mcat/msumstat data; processed in graphics}
 
+\item{series_var}{Series (Treatment) Variable.}
+
+\item{series_labelvar}{Series (Treatment) Variable labels for legend, if
+different from \code{series_var}. If this is needed, then \code{series_labelvar}
+should be a factor variable with levels corresponding to \code{series_var}, also a factor.}
+
 \item{series_opts}{Series Variable styling options, a \code{list} containing
 \code{color} and \code{contrast}.}
+
+\item{axis_opts}{A \code{list} of axis specific options retrieved from \code{plot_axis_opts()}.}
+
+\item{legend_opts}{Legend styling option, a \code{list} containing \code{label}, \code{pos}(position) and
+\code{dir} (direction).}
 
 \item{bar_pos}{Position of bars within group. Values: "dodged"/"stacked"}
 
 \item{bar_width}{Width of individual bars \emph{numeric}}
 
 \item{flip_plot}{To flip plot axes or not. Values: "Y"/"N"}
+
+\item{griddisplay}{Display Grid \code{(Y/N)}.}
+
+\item{plot_title}{Text to use as plot title, if required}
 }
 \value{
 a ggplot object

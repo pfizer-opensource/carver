@@ -26,7 +26,6 @@ options(warn = -1)
 #' @param statistics Statistic to be calculated. Values: `'Risk Ratio' or 'Risk Difference'`.
 #' @param alpha Alpha value to determine confidence interval for risk calculation. Default: `0.05`
 #' @param cutoff Incidence Cutoff Value; consider only terms with `incidence percentage > cutoff`.
-#' For Adverse Events tables, this only applies to Higher Level Terms.
 #' @param sort_opt How to sort terms, only for table/forest plot.
 #' Values: `'Ascending','Descending','Alphabetical'`.
 #' @param sort_var Metric to sort by. Values: `'Count','Percent','RiskValue'`.
@@ -86,7 +85,7 @@ risk_stat <-
       "Invalid Risk Statistics; specify any one of `Risk Ratio` or `Risk Difference`" =
         statistics %in% c("Risk Ratio", "Risk Difference")
     )
-
+    trt_list <- datain[["TRTVAR"]]
     ## getting equivalent data variable for given summary by selection
     summ_var <-
       recode(tolower(summary_by),
@@ -157,6 +156,8 @@ risk_stat <-
       risk_out <- risk_out |>
         risk_hover_text(summary_by, eventvar) |>
         ord_summ_df(sort_var, sort_opt, g_sort_by_ht)
+      risk_out[["TRTVAR"]] <- factor(risk_out[["TRTVAR"]],
+                                     levels = unique(risk_out[["TRTVAR"]][order(trt_list)]))
     }
     risk_out
   }
@@ -234,6 +235,7 @@ add_risk_stat <- function(mcatout,
     rename(CTRL_N = "FREQ_CTRLGRP", CTRL_PCT = "PCT_CTRLGRP") |>
     select(-c("risk_out", any_of(starts_with("DENOMN")), any_of(ends_with("TRTGRP")))) |>
     pivot_longer(c("CTRL", "ACTIVE"), values_to = "TRTVAR", names_to = NULL)
+
 }
 
 #' Calculate Risk Statistics
