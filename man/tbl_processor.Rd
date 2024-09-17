@@ -11,6 +11,7 @@ tbl_processor(
   extra_df = NULL,
   extra_mergeby = "DPTVAL",
   dropvars = "",
+  keepvars = "",
   disp_value_col = "Y",
   addrowvars = NA_character_
 )
@@ -28,6 +29,10 @@ eg: If analysis vars (\code{DPTVAR}) contains \verb{AGEGR1, RACE}; \code{dptlabe
 \item{extra_mergeby}{Variables to merge \code{extra_df} by, if present.}
 
 \item{dropvars}{Variables additional to standard present in input data to be removed from output}
+
+\item{keepvars}{Specific variables to be retained in report in addition to grouping and value
+columns. If \code{keepvars} is given it overrides \code{dropvars} and the columns are located as last columns
+of the output.}
 
 \item{disp_value_col}{Hide/Show value column from the final display.}
 

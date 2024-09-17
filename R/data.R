@@ -56,8 +56,8 @@
 #'
 #' Pre Processed `adae` data from `ae_pre_processor()`
 #'
-#' @format List of data frames of length `3`
-"ae_pre"
+#' @format List of length `2`, 1 data frame and 1 string
+"ae_pre_process"
 
 #' ae_risk
 #'

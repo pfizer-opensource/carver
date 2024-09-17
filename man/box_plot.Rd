@@ -21,6 +21,20 @@ box_plot(
 \arguments{
 \item{datain}{Input dataset from \code{msumstat()} output element \verb{$gsum}}
 
+\item{series_var}{Series (Treatment) Variable.}
+
+\item{series_labelvar}{Series (Treatment) Variable labels for legend, if
+different from \code{series_var}. If this is needed, then \code{series_labelvar}
+should be a factor variable with levels corresponding to \code{series_var}, also a factor.}
+
+\item{series_opts}{Series Variable styling options, a \code{list} containing
+\code{shape}, \code{color} and \code{size}.}
+
+\item{axis_opts}{A \code{list} of axis specific options retrieved from \code{plot_axis_opts()}.}
+
+\item{legend_opts}{Legend styling option, a \code{list} containing \code{label}, \code{pos}(position) and
+\code{dir} (direction).}
+
 \item{ystat}{Additional statistic to be plotted as markers. Default: \emph{mean}}
 
 \item{boxfill}{Whether box has fill color or not. Uses \code{series_opts$color} as
@@ -31,6 +45,10 @@ box fill colors if "Y" or as box outline colors if "N". ("Y"/"N")}
 \item Width of individual boxes in plot and
 \item Width of the interval between box-groups of X axis. eg. c(0.9, 0.9)
 }}
+
+\item{griddisplay}{Display Grid \code{(Y/N)}.}
+
+\item{plot_title}{Text to use as plot title, if required}
 }
 \value{
 a ggplot object of boxplot with given parameters

@@ -37,8 +37,7 @@ for \code{forest_plot()}.}
 
 \item{alpha}{Alpha value to determine confidence interval for risk calculation. Default: \code{0.05}}
 
-\item{cutoff}{Incidence Cutoff Value; consider only terms with \verb{incidence percentage > cutoff}.
-For Adverse Events tables, this only applies to Higher Level Terms.}
+\item{cutoff}{Incidence Cutoff Value; consider only terms with \verb{incidence percentage > cutoff}.}
 
 \item{sort_opt}{How to sort terms, only for table/forest plot.
 Values: \verb{'Ascending','Descending','Alphabetical'}.}

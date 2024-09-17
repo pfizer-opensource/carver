@@ -18,6 +18,14 @@ vx_box_plot(
 \item{datalist}{List of Input datasets, retrieved from
 \code{process_vx_box_data()} and \code{split_data_by_var()}}
 
+\item{axis_opts}{A \code{list} of axis specific options retrieved from \code{plot_axis_opts()}.}
+
+\item{series_opts}{Series Variable styling options, a \code{list} containing
+\code{shape}, \code{color} and \code{size}.}
+
+\item{legend_opts}{Legend styling option, a \code{list} containing \code{label}, \code{pos}(position) and
+\code{dir} (direction).}
+
 \item{box_opts}{Vector containing:
 \enumerate{
 \item Width of individual boxes in plot and
@@ -25,6 +33,8 @@ vx_box_plot(
 }}
 
 \item{ystat}{Additional statistic to be plotted as markers. Default: \emph{mean}}
+
+\item{griddisplay}{Display Grid \code{(Y/N)}.}
 }
 \value{
 a list of lists, each of 2 elements:

@@ -21,8 +21,30 @@ process_vx_box_data(
 )
 }
 \arguments{
+\item{dataset_adsl}{(\code{data.frame}) ADSL dataset.}
+
+\item{dataset_analysis}{(\code{data.frame}) Analysis Dataset.}
+
+\item{adsl_subset}{(\code{string}) Subset condition to be applied on \code{dataset_adsl}.}
+
+\item{analysis_subset}{(\code{string}) Subset Condition to be applied on \code{dataset_analysis}.}
+
+\item{split_by}{(\code{string}) By variable for stratification.}
+
+\item{trtvar}{(\code{string}) Treatment Variable to be created for analysis.}
+
+\item{trtsort}{(\code{string}) Variable to sort treatment variable by.}
+
+\item{xvar}{(\code{string}) Values for X axis, determined by filter condition for
+analysis visit.}
+
+\item{yvar}{(\code{string}) Values for Y axis, determined by filter condition for
+analysis visit.}
+
 \item{ystat}{Additional Statistic to be calculated and plotted as markers.
 Values: 'mean', 'sum', 'sd' etc}
+
+\item{legendbign}{(\code{string}) Display count as (N = ..) in Treatment legend? Values: "Y"/"N"}
 
 \item{ada_nab_opts}{List of values of : \emph{PARAMN}, Y axis Label, Reference
 line value and Dilution (for footnote) corresponding to ADA and NAb titers

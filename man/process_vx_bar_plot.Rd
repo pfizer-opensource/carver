@@ -21,6 +21,12 @@ process_vx_bar_plot(
 )
 }
 \arguments{
+\item{dataset_adsl}{(\code{data.frame}) ADSL dataset.}
+
+\item{adsl_subset}{(\code{string}) Subset condition to be applied on \code{dataset_adsl}.}
+
+\item{dataset_analysis}{(\code{data.frame}) Analysis Dataset.}
+
 \item{analysis_subset}{Subset conditions for analysis of dependent variable
 Applicable only to numerator calculation for \%}
 
@@ -29,12 +35,20 @@ Applicable only to numerator calculation for \%}
 \item{denom_subset}{Subset condition to be applied to data set for
 calculating denominator.}
 
+\item{split_by}{(\code{string}) By variable for stratification.}
+
+\item{trtvar}{(\code{string}) Treatment Variable to be created for analysis.}
+
+\item{trtsort}{(\code{string}) Variable to sort treatment variable by.}
+
 \item{xvar}{Categorical Analysis variable for X axis}
 
 \item{yvar}{Y axis variable/statistic. Possible Values: "FREQ"/"PCT"}
 
 \item{pctdisp}{Method to calculate denominator (for \%) by
 Possible values: "TRT","VAR","COL","SUBGRP","CAT","NONE","NO","DPTVAR"}
+
+\item{legendbign}{(\code{string}) Display count as (N = ..) in Treatment legend? Values: "Y"/"N"}
 }
 \value{
 mcatstat dataset as data frame.
