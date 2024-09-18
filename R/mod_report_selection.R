@@ -148,7 +148,8 @@ mod_report_selection_server <- function(id, sourcedata, domain, data_attr) {
 
       updateSelectInput(session,
         "repType",
-        choices = unique(report_meta()["REPTYPE"][report_meta()["TA"] == input$tarea])
+        choices = unique(report_meta()["REPTYPE"][report_meta()["TA"] == input$tarea &
+                           report_meta()["DOMAIN"] == toupper(input$bdomain)])
       )
     }) %>%
       bindEvent(input$tarea)
@@ -159,7 +160,7 @@ mod_report_selection_server <- function(id, sourcedata, domain, data_attr) {
       meta <- report_meta()
       choices <-
         unique(meta["REPNAME"][meta["TA"] == input$tarea &
-          meta["REPTYPE"] == input$repType])
+          meta["REPTYPE"] == input$repType & report_meta()["DOMAIN"] == toupper(input$bdomain)])
 
       updateSelectInput(session,
         "repName",
