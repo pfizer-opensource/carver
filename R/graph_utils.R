@@ -581,7 +581,7 @@ plot_title_nsubj <- function(datain, plot_data, by) {
   } else {
     plot_data <- bind_cols(plot_data, adsin_count)
   }
-  return(plot_data)
+  plot_data
 }
 
 #' Convert dataframe into ggplot object table

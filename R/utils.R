@@ -41,7 +41,7 @@ data_attrib <- function(datain) {
     ),
     c("VAR_NAMES", "VAR_LABEL")
   )
-  return(data_attr)
+  data_attr
 }
 
 
@@ -122,7 +122,7 @@ round_f <- function(x, digits = 2) {
 fmtrd <- function(f, d = 2, ...) {
   function(x) {
     dc <- do.call(f, args = list(x, na.rm = TRUE, ...))
-    return(ifelse(is.na(dc), "-", round_f(dc, d)))
+    ifelse(is.na(dc), "-", round_f(dc, d))
   }
 }
 
@@ -526,20 +526,26 @@ get_report_meta <- function() {
     ~REPTYPE,
     "Any",
     "ADAE",
-    "adae_r001",
+    "adae_tier_summary",
     "Summary of Adverse Events by System Organ Class and Preferred Term",
     "2.1",
     "Table",
     "Any",
     "ADAE",
-    "Forest Plot",
-    "Forest plot for adverse events",
+    "adae_risk_summary",
+    "Relative Risk of Adverse Events by System Organ Class and Preferred Term",
     "2.2",
+    "Table",
+    "Any",
+    "ADAE",
+    "Forest Plot",
+    "Forest plot for Adverse Events",
+    "2.3",
     "Figure",
     "Any",
     "ADAE",
     "Volcano Plot",
-    "Volcano plot for adverse events",
+    "Volcano plot for Adverse Events",
     "2.4",
     "Figure",
     "Any",
@@ -547,6 +553,24 @@ get_report_meta <- function() {
     "Event Analysis",
     "Event analysis of MedRA query",
     "2.5",
+    "Figure",
+    "Any",
+    "ADAE",
+    "Tornado Plot",
+    "Tornado plot for Adverse Events",
+    "2.6",
+    "Figure",
+    "Any",
+    "ADSL",
+    "adsl_summary",
+    "Demographic Summary",
+    "3.1",
+    "Table",
+    "Oncology",
+    "ADTTE",
+    "KM Plot",
+    "Kaplan Meier Plot for Time to Events",
+    "4.1",
     "Figure",
   )
 }

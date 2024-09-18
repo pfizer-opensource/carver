@@ -22,8 +22,8 @@
 #' @param extra_mergeby Variables to merge `extra_df` by, if present.
 #' @param dropvars Variables additional to standard present in input data to be removed from output
 #' @param keepvars Specific variables to be retained in report in addition to grouping and value
-#' columns. If `keepvars` is given it overrides `dropvars` and the columns are located as last columns
-#' of the output.
+#' columns. If `keepvars` is given it overrides `dropvars` and the columns are located as last
+#' columns of the output.
 #' @param disp_value_col Hide/Show value column from the final display.
 #' @param addrowvars Group Variable(s) to be removed as a column and instead used as row headers
 #' in the value column.
