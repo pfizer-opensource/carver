@@ -16,7 +16,7 @@ Transformation object per given base
 Reverse Log transformation of value to pass to scale options
 }
 \examples{
-library(tlfcarver)
+library(carver)
 library(ggplot2)
 ggplot(data = mtcars, mapping = aes(x = mpg, y = hp)) +
   geom_point() +
