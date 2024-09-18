@@ -87,8 +87,9 @@ tbl_processor <- function(datain,
     rep <- rep |>
       select(
         any_of(c(BYVAR, "DPTVAR", "DPTVAL",
-                 "DPTVAL" = "STAT", "TRTVAR", SUBGRP, BYVARN, SUBGRPN,
-                 "DPTVARN", "DPTVALN", "DPTVALN" = "STATN", "CVALUE", "CN", keepvars))
+          "DPTVAL" = "STAT", "TRTVAR", SUBGRP, BYVARN, SUBGRPN,
+          "DPTVARN", "DPTVALN", "DPTVALN" = "STATN", "CVALUE", "CN", keepvars
+        ))
       )
   }
 

@@ -157,7 +157,8 @@ risk_stat <-
         risk_hover_text(summary_by, eventvar) |>
         ord_summ_df(sort_var, sort_opt, g_sort_by_ht)
       risk_out[["TRTVAR"]] <- factor(risk_out[["TRTVAR"]],
-                                     levels = unique(risk_out[["TRTVAR"]][order(trt_list)]))
+        levels = unique(risk_out[["TRTVAR"]][order(trt_list)])
+      )
     }
     risk_out
   }
@@ -235,7 +236,6 @@ add_risk_stat <- function(mcatout,
     rename(CTRL_N = "FREQ_CTRLGRP", CTRL_PCT = "PCT_CTRLGRP") |>
     select(-c("risk_out", any_of(starts_with("DENOMN")), any_of(ends_with("TRTGRP")))) |>
     pivot_longer(c("CTRL", "ACTIVE"), values_to = "TRTVAR", names_to = NULL)
-
 }
 
 #' Calculate Risk Statistics

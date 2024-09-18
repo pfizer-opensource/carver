@@ -34,7 +34,7 @@ data_attrib <- function(datain) {
         names(datain),
         function(x) {
           ifelse(is.null(attr(datain[[x]], "label")),
-                 x, attr(datain[[x]], "label")
+            x, attr(datain[[x]], "label")
           )
         }
       ))
@@ -174,17 +174,17 @@ summary_functions <- function(sigdec = 2) {
       whiskerlow = function(x) {
         fns_list[["min"]](
           x[(x >= (quantile(x, 0.25, na.rm = TRUE) - 1.5 * IQR(x, na.rm = TRUE))) &
-              (x <= quantile(x, 0.25, na.rm = TRUE))])
+            (x <= quantile(x, 0.25, na.rm = TRUE))])
       },
       whiskerup = function(x) {
         fns_list[["max"]](
           x[(x <= (quantile(x, 0.75, na.rm = TRUE) + 1.5 * IQR(x, na.rm = TRUE))) &
-              (x >= quantile(x, 0.75, na.rm = TRUE))])
+            (x >= quantile(x, 0.75, na.rm = TRUE))])
       },
       outliers = function(x) {
         x <- x[!is.na(x)]
         paste(unique(x[x < as.numeric(fns_list[["whiskerlow"]](x)) |
-                         x > as.numeric(fns_list[["whiskerup"]](x))]), collapse = "~")
+          x > as.numeric(fns_list[["whiskerup"]](x))]), collapse = "~")
       },
       geom_lowci = function(x) {
         ci <- 0.95
@@ -292,17 +292,17 @@ split_section_headers <- function(datain,
     split_by <- var_start(datain, split_by_prefix)
     stopifnot("No variables with split_by_prefix" = length(split_by) > 0)
   }
-  
+
   if (split_lab != "") {
     split_lab <- str_to_vec(split_lab)
   } else {
     split_lab <- NA_character_
   }
-  
+
   header_list <- datain |>
     group_by(!!!syms(split_by)) |>
     group_keys()
-  
+
   map(seq_along(split_by), \(x) {
     header_list |>
       mutate(
@@ -365,14 +365,14 @@ dataset_vignette <- function(df = NULL, disp_vars = NULL, subset = NA_character_
     out <- out |>
       filter(!!!parse_exprs(subset))
   }
-  
+
   if (!is.null(disp_vars)) {
     hide_columns <- which(!(colnames(out) %in% str_to_vec(disp_vars)))
     cols_to_hide <- list(list(targets = hide_columns - 1, visible = FALSE))
   } else {
     cols_to_hide <- list()
   }
-  
+
   DT::datatable(
     out,
     rownames = FALSE,
@@ -417,14 +417,14 @@ add_bigN <- function(data, dsin, grpvar, modvar, subjid = "USUBJID") {
     summarise(BIGN = n()) |>
     (\(.) left_join(data, ., by = grpvar))() |>
     mutate(across(any_of(modvar),
-                  ~ paste0(.x, " (N=", .data[["BIGN"]], ")"),
-                  .names = "{.col}_BIGN"
+      ~ paste0(.x, " (N=", .data[["BIGN"]], ")"),
+      .names = "{.col}_BIGN"
     )) |>
     select(-all_of("BIGN"))
   if (length(modvar) == 1 && is.factor(data[[modvar]])) {
     newvar <- paste0(modvar, "_BIGN")
     data[[newvar]] <- factor(data[[newvar]],
-                             levels = unique(data[[newvar]][order(data[[modvar]])])
+      levels = unique(data[[newvar]][order(data[[modvar]])])
     )
   }
   data
@@ -496,13 +496,13 @@ display_bign_head <- function(datain,
         mutate(across(any_of(lastvar), ~ paste0(.x, colformat)))
       if (lastvar == "TRTVAR") {
         datain[["TRTVAR"]] <- factor(datain[["TRTVAR"]],
-                                     levels = unique(datain[["TRTVAR"]][ord])
+          levels = unique(datain[["TRTVAR"]][ord])
         )
       }
     }
   } else {
     notrthead <- ifelse(any(c(trtbignyn, subbignyn) == "Y"),
-                        paste0(notrthead, " (N = ", length(unique(mentry_data[["USUBJID"]])), ")"), notrthead
+      paste0(notrthead, " (N = ", length(unique(mentry_data[["USUBJID"]])), ")"), notrthead
     )
     datain <- datain |>
       mutate(!!notrthead := as.character(.data[["CVALUE"]])) |>

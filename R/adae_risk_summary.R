@@ -39,7 +39,7 @@
 #'     sgtotalyn = "N",
 #'     pop_fil = "Overall Population"
 #'   )
-#' 
+#'
 #' ae_risk <- ae_entry |>
 #'   adae_risk_summary(
 #'     a_subset = ae_pre_process[["a_subset"]],
@@ -54,7 +54,7 @@
 #'     sort_opt = "Ascending",
 #'     sort_var = "Count"
 #'   )
-#' 
+#'
 #' ae_risk |>
 #'   tbl_processor(keepvars = c("Risk Ratio (CI)", "P-value")) |>
 #'   tbl_display()

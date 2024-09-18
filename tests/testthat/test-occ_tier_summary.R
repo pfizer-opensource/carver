@@ -117,5 +117,6 @@ test_that("Errors resolved correctly", {
       apply_hrow_cutoff = "Y",
       sort_opt = "Alphabetical",
       sort_var = "Count"
-    ))
+    )
+  )
 })
