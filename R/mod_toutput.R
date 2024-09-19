@@ -60,18 +60,12 @@ mod_toutput_server <- function(id, repName, filters, popfilter, process_btn) {
       req(tolower(repName()) %in% c("adae_tier_summary"))
       req(filters()$ae_pre)
       req(filters()$ae_filter)
+      req(filters()$trtbign)
       req(filters()$ae_llt)
       req(filters()$ae_hlt)
       req(filters()$summary_by)
       req(filters()$ment_out)
       req(filters()$a_subset)
-      #req(filters()$aeRiskYN)
-      # if (filters()$aeRiskYN == "Y") {
-      #   req(filters()$treatment1)
-      #   req(filters()$treatment2)
-      #   req(filters()$statistics)
-      #   req(filters()$alpha)
-      # }
       req(filters()$ui_pctdisp)
       req(filters()$cutoff)
       req(filters()$sort_opt)
@@ -96,7 +90,12 @@ mod_toutput_server <- function(id, repName, filters, popfilter, process_btn) {
             apply_hrow_cutoff = "N",
             sort_opt = filters()$sort_opt,
             sort_var = filters()$sort_by
-          )
+          ) |>
+            display_bign_head(
+              mentry_data = filters()$ment_out,
+              trtbignyn = filters()$trtbign,
+              subbignyn = "N"
+            )
         )
         rv$toutput <- try(
           rv$outdata |>
@@ -120,6 +119,7 @@ mod_toutput_server <- function(id, repName, filters, popfilter, process_btn) {
       req(filters()$ae_llt)
       req(filters()$ae_hlt)
       req(filters()$summary_by)
+      req(filters()$trtbign)
       req(filters()$ment_out)
       req(filters()$a_subset)
       req(filters()$treatment1)
@@ -152,7 +152,12 @@ mod_toutput_server <- function(id, repName, filters, popfilter, process_btn) {
               cutoff = filters()$cutoff,
               sort_opt = filters()$sort_opt,
               sort_var = filters()$sort_by
-            )
+            ) |>
+              display_bign_head(
+                mentry_data = filters()$ment_out,
+                trtbignyn = filters()$trtbign,
+                subbignyn = "N"
+              )
         )
         rv$toutput <- try(
           rv$outdata |>
