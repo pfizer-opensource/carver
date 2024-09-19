@@ -34,7 +34,7 @@ mod_generic_filters_ui <- function(id) {
           width = 4,
           textInput(ns("overall_subset"),
             "Overall Subset",
-            value = "USUBJID!=''"
+            value = "STUDYID != ''"
           )
         ),
         column(
@@ -42,12 +42,13 @@ mod_generic_filters_ui <- function(id) {
           textInput(
             inputId = ns("a_subset"),
             label = "Analysis Subset",
-            value = ""
+            value = "USUBJID != ''"
           )
+        )
         ),
+      fluidRow(
         column(
-          width = 2,
-          offset = 1,
+          width = 4,
           radioButtons(
             inputId = ns("trttotalyn"),
             label = "Total Treatment",
@@ -57,7 +58,17 @@ mod_generic_filters_ui <- function(id) {
           )
         ),
         column(
-          width = 2,
+          width = 4,
+          radioButtons(
+            inputId = ns("trtbign"),
+            label = "Display Treatment 'N'",
+            choices = c("Y", "N"),
+            selected = "N",
+            inline = TRUE
+          )
+        ),
+        column(
+          width = 4,
           radioButtons(
             inputId = ns("grpvarmiss"),
             label = "Keep Missing Group",
@@ -67,7 +78,7 @@ mod_generic_filters_ui <- function(id) {
           )
         )
       )
-    ),
+      ),
     box(
       id = ns("box_2"),
       title = tags$strong("Adverse Events Inputs"),
@@ -279,16 +290,12 @@ mod_generic_filters_server <-
         req(domain())
         hide("pctdisp")
         req(repName())
-        req(repName() %in% c("adae_tier_summary", "adae_risk_summary", "Event Analysis"))
+        req(repName() %in% c("adae_tier_summary"))
         show("pctdisp")
-        if (repName() == "adae_tier_summary") {
-          pct_denom <- c(
-            "Treatment" = "TRT", "Total" = "VAR", "None" = "NO",
-            "By High Term" = "BYVAR1N"
-          )
-        } else {
-          pct_denom <- c("Treatment" = "TRT")
-        }
+        pct_denom <- c(
+          "Treatment" = "TRT", "Total" = "VAR", "None" = "NO",
+          "By High Term" = "BYVAR1N"
+        )
         updateSelectInput(
           session,
           "pctdisp",
@@ -310,10 +317,8 @@ mod_generic_filters_server <-
           }
           if (repName() == "tornado_plot") {
             hide("ui_hlt")
-            hide("pctdisp")
           } else {
             show("ui_hlt")
-            show("pctdisp")
           }
         } else {
           hide("box_2")
@@ -476,6 +481,7 @@ mod_generic_filters_server <-
             max = 1,
             value = 1
           )
+          print("End Mentry process")
         }
       }) |>
         bindEvent(
@@ -585,6 +591,8 @@ mod_generic_filters_server <-
           ae_pre = rv$ae_pre,
           ment_out = rv$ment_out,
           trt_var = trt_var(),
+          a_subset = input$a_subset,
+          trtbign = input$trtbign,
           ae_filter = input$ae_filter,
           ae_hlt = input$ae_hlt,
           ae_llt = input$ae_llt,
