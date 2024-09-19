@@ -436,9 +436,14 @@ mod_generic_filters_server <-
         # Mentry processing - common
         if (!tolower(repName()) %in% c("tornado_plot", "event analysis", "km plot")) {
           print("Start Mentry process")
+          if (toupper(domain()) == "ADAE") {
+            datain <- rv$ae_pre
+          } else {
+            datain <- sourcedata()[[domain()]]
+          }
           withProgress(
             rv$ment_out <- mentry(
-              datain = ifelse(toupper(domain() == "ADAE"), rv$ae_pre, sourcedata()[[domain()]]),
+              datain = datain,
               subset = input$overall_subset,
               byvar = byv,
               subgrpvar = NA, # take input$subgrpvar as required here
