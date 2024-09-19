@@ -33,7 +33,7 @@ mod_generic_filters_ui <- function(id) {
         column(
           width = 4,
           textInput(ns("overall_subset"),
-            "Overall Subset Condition",
+            "Overall Subset",
             value = "USUBJID!=''"
           )
         ),
@@ -50,7 +50,7 @@ mod_generic_filters_ui <- function(id) {
           offset = 1,
           radioButtons(
             inputId = ns("trttotalyn"),
-            label = "Total treatment",
+            label = "Total Treatment",
             choices = c("Y", "N"),
             selected = "N",
             inline = TRUE
@@ -60,7 +60,7 @@ mod_generic_filters_ui <- function(id) {
           width = 2,
           radioButtons(
             inputId = ns("grpvarmiss"),
-            label = "Keep Missing Group Variable",
+            label = "Keep Missing Group",
             choices = c("Y", "N"),
             selected = "N",
             inline = TRUE
@@ -146,14 +146,6 @@ mod_generic_filters_ui <- function(id) {
       fluidRow(
         column(
           width = 4,
-          selectInput(
-            ns("sort_by"),
-            "Sorting Variable",
-            choices = NULL
-          )
-        ),
-        column(
-          width = 4,
           sliderInput(
             ns("cutoff"),
             "Cutoff of Incidence (%)",
@@ -162,6 +154,22 @@ mod_generic_filters_ui <- function(id) {
             value = 5
           )
         ),
+        column(
+          width = 4,
+          selectInput(
+            ns("sort_opt"),
+            "Sorting Option",
+            choices = c("Ascending", "Descending", "Alphabetical")
+          )
+        ),
+        column(
+          width = 4,
+          selectInput(
+            ns("sort_by"),
+            "Sorting Variable",
+            choices = NULL
+          )
+        )
       )
     ),
     box(
@@ -206,6 +214,12 @@ mod_generic_filters_ui <- function(id) {
             value = 0.05,
             min = 0.01,
             max = 0.1
+          ),
+          selectInput(
+            ns("pvalue_label"),
+            "P-value Transformation",
+            choices = c("None", "-log10"),
+            selected = "None"
           )
         )
       ),
@@ -219,15 +233,6 @@ mod_generic_filters_ui <- function(id) {
             max = 100,
             value = 5
           )
-        ),
-        column(
-          width = 4,
-          selectInput(
-            ns("pvalue_label"),
-            "P-value Transformation",
-            choices = c("None", "-log10"),
-            selected = "None"
-          )
         )
       ),
       hr(),
@@ -236,12 +241,7 @@ mod_generic_filters_ui <- function(id) {
           width = 4,
           uiOutput(ns("treatment1_UI")),
           uiOutput(ns("treatment1_label_UI")),
-          uiOutput(ns("ctrlgrp_UI")),
-          selectInput(
-            ns("sort_opt"),
-            "Sorting Option",
-            choices = c("Ascending", "Descending", "Alphabetical")
-          )
+          uiOutput(ns("ctrlgrp_UI"))
         ),
         column(
           width = 4,
@@ -265,6 +265,16 @@ mod_generic_filters_server <-
 
       rv <- reactiveValues(ae_pre = NULL, ae_pre_comp = 0, mentry_out = NULL)
 
+      # Generic Outputs change between graph and table:
+      observe({
+        req(domain())
+        req(repType())
+        if (tolower(repType()) == "table") {
+          show("grpvarmiss")
+        } else {
+          hide("grpvarmiss")
+        }
+      })
       observe({
         req(domain())
         hide("pctdisp")
@@ -291,19 +301,19 @@ mod_generic_filters_server <-
         req(domain())
         req(repType())
         req(repName())
-        if (domain() == "ADAE") {
+        if (toupper(domain()) == "ADAE") {
           show("box_2")
           if (input$period == "Other") {
             show("period_spec")
           } else {
             hide("period_spec")
           }
-          if (!repName() %in% "tornado_plot") {
-            show("ui_hlt")
-            show("pctdisp")
-          } else {
+          if (repName() == "tornado_plot") {
             hide("ui_hlt")
             hide("pctdisp")
+          } else {
+            show("ui_hlt")
+            show("pctdisp")
           }
         } else {
           hide("box_2")
@@ -352,21 +362,27 @@ mod_generic_filters_server <-
       observe({
         req(repName())
         req(tolower(repName()) %in% c("ae_forest_plot", "adae_tier_summary", "adae_risk_summary"))
-        req(input$sort_opt != "Alphabetical")
-
-        if (tolower(repName()) == "adae_risk_summary") {
-          by_var <- c("Count", "Percent", "RiskValue")
-        } else if (tolower(repName()) == "ae_forest_plot") {
-          by_var <- c("Count", "Percent", "RiskValue")
-        } else if (tolower(repName()) == "adae_tier_summary") {
-          by_var <- c("Count", "Percent")
+        req(input$sort_opt)
+        if (input$sort_opt != "Alphabetical") {
+          if (tolower(repName()) == "adae_risk_summary") {
+            by_var <- c("Count", "Percent", "RiskValue")
+          } else if (tolower(repName()) == "ae_forest_plot") {
+            by_var <- c("Count", "Percent", "RiskValue")
+          } else if (tolower(repName()) == "adae_tier_summary") {
+            by_var <- c("Count", "Percent")
+          }
+          updateSelectInput(
+            session,
+            "sort_by",
+            choices = by_var
+          )
+        } else {
+          updateSelectInput(
+            session,
+            "sort_by",
+            choices = "None"
+          )
         }
-
-        updateSelectInput(
-          session,
-          "sort_by",
-          choices = by_var
-        )
         print("AE Sort Variable updated")
       })
 
@@ -464,7 +480,7 @@ mod_generic_filters_server <-
       }) |>
         bindEvent(
           list(
-            repName(), input$overall_subset, input$grpvarmiss, input$trttotalyn, trt_var(),
+            repName(), input$overall_subset, input$trttotalyn, trt_var(),
             trt_sort(), popfilter()
           )
         )
@@ -530,7 +546,7 @@ mod_generic_filters_server <-
           })
 
           output$trtgrp_UI <- renderUI({
-            req(tolower(repName()) == "forest plot")
+            req(tolower(repName()) == "ae_forest_plot")
             checkboxGroupInput(
               ns("trtgrp"),
               "Treatment Group",
