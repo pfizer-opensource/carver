@@ -45,7 +45,7 @@ mod_generic_filters_ui <- function(id) {
             value = "USUBJID != ''"
           )
         )
-        ),
+      ),
       fluidRow(
         column(
           width = 4,
@@ -78,7 +78,7 @@ mod_generic_filters_ui <- function(id) {
           )
         )
       )
-      ),
+    ),
     box(
       id = ns("box_2"),
       title = tags$strong("Adverse Events Inputs"),
