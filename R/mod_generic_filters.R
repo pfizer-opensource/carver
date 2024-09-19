@@ -26,55 +26,30 @@ mod_generic_filters_ui <- function(id) {
   tagList(
     box(
       id = ns("box_1"),
-      title = tags$strong("Subsetting Conditions"),
+      title = tags$strong("Generic Inputs"),
       maximizable = TRUE,
       width = 12,
       fluidRow(
         column(
           width = 4,
-          textInput(ns("aeSubset"),
-            "Analysis Subset Condition",
+          textInput(ns("overall_subset"),
+            "Overall Subset Condition",
             value = "USUBJID!=''"
           )
         ),
         column(
           width = 4,
-          textInput(ns("aeDenomSubset"),
-            "Denominator Subset Condition",
-            value = "STUDYID!=''"
-          )
-        ),
-        column(
-          width = 4,
           selectInput(
-            inputId = ns("ui_pctdisp"),
-            label = "Percentage Denominator",
-            choices = NULL
-          )
-        )
-      )
-    ),
-    box(
-      id = ns("adae_r001"),
-      title = tags$strong("AE Summary Table Inputs"),
-      maximizable = TRUE,
-      width = 12,
-      fluidRow(
-        column(
-          width = 2,
-          radioButtons(
-            inputId = ns("aeBigN"),
-            label = "Treatment Big N",
-            choices = c("Y", "N"),
-            selected = "N",
-            inline = TRUE
+            inputId = ns("a_subset"),
+            label = "Analysis Subset",
+            value = ""
           )
         ),
         column(
           width = 2,
           offset = 1,
           radioButtons(
-            inputId = ns("aeTrtTot"),
+            inputId = ns("trttotalyn"),
             label = "Total treatment",
             choices = c("Y", "N"),
             selected = "N",
@@ -82,21 +57,10 @@ mod_generic_filters_ui <- function(id) {
           )
         ),
         column(
-          width = 3,
-          radioButtons(
-            inputId = ns("aeGrpVarMiss"),
-            label = "Add Missing Grouping Variable",
-            choices = c("Y", "N"),
-            selected = "N",
-            inline = TRUE
-          )
-        ),
-        column(
           width = 2,
-          offset = 1,
           radioButtons(
-            inputId = ns("aeRiskYN"),
-            label = "Calculate Risk",
+            inputId = ns("grpvarmiss"),
+            label = "Keep Missing Group Variable",
             choices = c("Y", "N"),
             selected = "N",
             inline = TRUE
@@ -106,7 +70,7 @@ mod_generic_filters_ui <- function(id) {
     ),
     box(
       id = ns("box_2"),
-      title = tags$strong("Generic Inputs"),
+      title = tags$strong("Adverse Events Inputs"),
       maximizable = TRUE,
       width = 12,
       fluidRow(
@@ -145,7 +109,7 @@ mod_generic_filters_ui <- function(id) {
       ),
       fluidRow(
         column(
-          width = 4,
+          width = 3,
           selectInput(
             ns("ae_hlt"),
             "Higher Level Event Term",
@@ -154,23 +118,56 @@ mod_generic_filters_ui <- function(id) {
           )
         ),
         column(
-          width = 4,
+          width = 3,
           selectInput(
             ns("ae_llt"),
-            "Lower Level Event Term",
+            "Event Term",
             choices = get_ae_term(),
             selected = c("AE Dictionary-Derived Term (AEDECOD)" = "AEDECOD")
           )
         ),
         column(
-          width = 4,
+          width = 3,
           selectInput(
             ns("summary_by"),
             "Summary By",
             choices = c("Participants" = "Patients", "Events" = "Events")
           )
+        ),
+        column(
+          width = 3,
+          selectInput(
+            inputId = ns("pctdisp"),
+            label = "Percentage Denominator",
+            choices = NULL
+          )
         )
       ),
+      fluidRow(
+        column(
+          width = 4,
+          selectInput(
+            ns("sort_by"),
+            "Sorting Variable",
+            choices = NULL
+          )
+        ),
+        column(
+          width = 4,
+          sliderInput(
+            ns("cutoff"),
+            "Cutoff of Incidence (%)",
+            min = 0,
+            max = 10,
+            value = 5
+          )
+        ),
+      )),
+    box(
+      id = ns("box_3"),
+      title = tags$strong("AE Statistics"),
+      maximizable = TRUE,
+      width = 12,
       fluidRow(
         column(
           width = 4,
@@ -221,6 +218,15 @@ mod_generic_filters_ui <- function(id) {
             max = 100,
             value = 5
           )
+        ),
+        column(
+          width = 4,
+          selectInput(
+            ns("pvalue_label"),
+            "P-value Transformation",
+            choices = c("None", "-log10"),
+            selected = "None"
+          )
         )
       ),
       hr(),
@@ -243,35 +249,6 @@ mod_generic_filters_ui <- function(id) {
           uiOutput(ns("treatment2_label_UI")),
           uiOutput(ns("trtgrp_UI"))
         )
-      ),
-      fluidRow(
-        column(
-          width = 4,
-          selectInput(
-            ns("sort_by"),
-            "Sorting Variable",
-            choices = NULL
-          )
-        ),
-        column(
-          width = 4,
-          sliderInput(
-            ns("cutoff"),
-            "Cutoff of Incidence (%)",
-            min = 0,
-            max = 10,
-            value = 5
-          )
-        ),
-        column(
-          width = 4,
-          selectInput(
-            ns("pvalue_label"),
-            "P-value Transformation",
-            choices = c("None", "-log10"),
-            selected = "None"
-          )
-        )
       )
     )
   )
@@ -285,23 +262,23 @@ mod_generic_filters_server <-
     moduleServer(id, function(input, output, session) {
       ns <- session$ns
 
-      rv <- reactiveValues(ae_pre = NULL, ae_pre_comp = 0)
+      rv <- reactiveValues(ae_pre = NULL, ae_pre_comp = 0, mentry_out = NULL)
 
       observe({
         req(domain())
-        hide("ui_pctdisp")
-        req(repType() == "Table")
-        show("ui_pctdisp")
-
-        if (input$aeRiskYN == "N") {
-          pct_denom <- c("Treatment" = "TRT", "Total" = "VAR", "High Term" = "HT")
+        hide("pctdisp")
+        req(repName())
+        req(repName() %in% c("adae_tier_summary", "adae_risk_summary", "Event Analysis"))
+        show("pctdisp")
+        if (repName() == "adae_tier_summary") {
+          pct_denom <- c("Treatment" = "TRT", "Total" = "VAR", "None" = "NO",
+                         "By High Term" = "BYVAR1N")
         } else {
           pct_denom <- c("Treatment" = "TRT")
         }
-
         updateSelectInput(
           session,
-          "ui_pctdisp",
+          "pctdisp",
           choices = pct_denom
         )
       })
@@ -311,25 +288,30 @@ mod_generic_filters_server <-
         req(domain())
         req(repType())
         req(repName())
-
-        if (input$period == "Other") {
-          show("period_spec")
+        if (domain() == "ADAE") {
+          show("box_2")
+          if (input$period == "Other") {
+            show("period_spec")
+          } else {
+            hide("period_spec")
+          }
+          if (!repName() %in% "tornado_plot") {
+            show("ui_hlt")
+            show("pctdisp")
+          } else {
+            hide("ui_hlt")
+            hide("pctdisp")
+          }
         } else {
-          hide("period_spec")
+          hide("box_2")
         }
 
-        if (repName() == "adae_r001") show("adae_r001") else hide("adae_r001")
-
-        if (repName() == "Forest Plot" || repName() == "Volcano Plot" ||
-          (repName() == "adae_r001") && input$aeRiskYN == "Y") {
-          show("statistics")
-          show("alpha")
+        if (repName() %in% c("ae_forest_plot", "ae_volcano_plot", "adae_risk_summary")) {
+          show("box_3")
         } else {
-          hide("statistics")
-          hide("alpha")
+          hide("box_3")
         }
-
-        if (repName() == "Forest Plot" || repName() == "Volcano Plot") {
+        if (repName() %in% c("ae_forest_plot", "ae_volcano_plot")) {
           show("pvalcut")
           show("X_ref")
           show("pvalue_label")
@@ -339,7 +321,7 @@ mod_generic_filters_server <-
           hide("pvalue_label")
         }
 
-        if (repName() == "Forest Plot" || repName() == "adae_r001") {
+        if (repName() %in% c("ae_forest_plot", "adae_tier_summary", "adae_risk_summary")) {
           show("sort_opt")
           show("sort_by")
         } else {
@@ -347,7 +329,7 @@ mod_generic_filters_server <-
           hide("sort_by")
         }
 
-        if (repName() == "Forest Plot") {
+        if (repName() == "ae_forest_plot") {
           show("riskScale")
         } else {
           hide("riskScale")
@@ -366,14 +348,14 @@ mod_generic_filters_server <-
 
       observe({
         req(repName())
-        req(tolower(repName()) %in% c("forest plot", "adae_r001"))
+        req(tolower(repName()) %in% c("ae_forest_plot", "adae_tier_summary", "adae_risk_summary"))
         req(input$sort_opt != "Alphabetical")
 
-        if (tolower(repName()) == "adae_r001" && input$aeRiskYN == "Y") {
+        if (tolower(repName()) == "adae_risk_summary") {
           by_var <- c("Count", "Percent", "RiskValue")
-        } else if (tolower(repName()) == "forest plot") {
+        } else if (tolower(repName()) == "ae_forest_plot") {
           by_var <- c("Count", "Percent", "RiskValue")
-        } else if (tolower(repName()) == "adae_r001" && input$aeRiskYN == "N") {
+        } else if (tolower(repName()) == "adae_tier_summary") {
           by_var <- c("Count", "Percent")
         }
 
@@ -390,53 +372,20 @@ mod_generic_filters_server <-
         req(domain())
         req(repName())
         req(repType())
-        req(trt_var())
-        req(trt_sort())
-        req(popfilter())
         req(input$ae_filter)
-        req(input$ae_hlt)
         if (tolower(domain()) == "adae") {
-          print("AE byVar processing start")
-          ## evaluating the by variables based on report selection
-          if (repType() == "Table") {
-            aeByV <- input$ae_hlt
-          } else {
-            if (tolower(repName()) %in% c("volcano plot", "forest plot", "event analysis")) {
-              aeByV <- input$ae_hlt
-            } else {
-              aeByV <- NA
-            }
-          }
-          print("AE byVar processing end")
-
           print("AE preprocessing start")
           ### calling Pre Processing AE data
           withProgress(
             rv$ae_pre <- ae_pre_processor(
               datain = sourcedata()[[domain()]],
-              ae_filter = input$ae_filter,
-              aeSubset = ifelse(repType() == "Table", input$aeSubset, NA),
-              aeDenomSubset = ifelse(repType() == "Table", input$aeDenomSubset, NA),
-              aeObsPeriod = input$period,
-              aeObsResidual = input$period_spec,
-              trtvar = toupper(trt_var()),
-              trtsort = trt_sort(),
-              pop_fil = str_trim(unlist(strsplit(
-                unique(popfilter()), "~"
-              ))[1]),
               fmq_data = utils::read.csv(paste0(
                 app_sys("extdata"), "/FMQ_Consolidated_List.csv"
               )),
-              aeEventVar = ifelse(is.null(input$ae_llt), input$ae_hlt, input$ae_llt),
-              aeByVar = aeByV,
-              aeSubGrpVar = NA,
-              aeBigN = ifelse(repType() == "Table", input$aeBigN, "N"),
-              aeGrpVarMiss = ifelse(repType() == "Table", input$aeGrpVarMiss, "N"),
-              aeTrtTot = ifelse(repType() == "Table", input$aeTrtTot, "N"),
-              aeSubGrpTot = "N"
-            ),
-            message = "Executing pre processing for EVENTS/ PT...",
-            detail = "This step should take a while.",
+              ae_filter = input$ae_filter,
+              obs_residual = ifelse(input$period == "Other", input$period_spec, NA)
+              ),
+            message = "Executing pre processing for AE...",
             min = 0,
             max = 1,
             value = 1
@@ -448,23 +397,84 @@ mod_generic_filters_server <-
       }) %>%
         bindEvent(
           list(
-            repName(), trt_var(), trt_sort(), popfilter(), input$ae_filter, input$aeSubset,
-            input$aeDenomSubset, input$period, input$period_spec, input$ae_hlt, input$ae_llt,
-            input$aeBigN, input$aeGrpVarMiss, input$aeTrtTot
+            repName(), input$ae_filter, input$period, input$period_spec
+            # input$aeDenomSubset, input$ae_hlt, input$ae_llt,
+            # input$aeBigN, input$grpvarmiss, input$trttotalyn, trt_var(), trt_sort(), popfilter(), input$aeSubset,
           )
         )
-
+      
+      observe({
+        req(sourcedata())
+        req(domain())
+        req(repName())
+        req(repType())
+        req(trt_var())
+        req(trt_sort())
+        req(popfilter())
+        req(input$overall_subset)
+        if (tolower(domain()) == "adae") {
+          req(rv$ae_pre)
+          print("AE byVar processing start")
+          ## evaluating the by variables based on report selection
+          if (repType() == "Table") {
+            byv <- input$ae_hlt
+          } else {
+            if (tolower(repName()) %in% c("ae_volcano_plot", "ae_forest_plot", "event analysis")) {
+              byv <- input$ae_hlt
+            } else {
+              byv <- NA
+            }
+          }
+          print("AE byVar processing end")
+        } else {
+          byv <- NA
+          ## Take input$byvar here, if applicable
+        }
+        # Mentry processing - common
+        if (!tolower(repName()) %in% c("tornado_plot", "event analysis", "km plot")) {
+          print("Start Mentry process")
+          withProgress(
+            rv$ment_out <- mentry(
+              datain = ifelse(toupper(domain() == "ADAE"), rv$ae_pre, sourcedata()[[domain()]]),
+              subset = input$overall_subset,
+              byvar = byv,
+              subgrpvar = NA, #take input$subgrpvar as required here
+              trtvar = toupper(trt_var()),
+              trtsort = trt_sort(),
+              pop_fil = str_trim(unlist(strsplit(
+                unique(popfilter()), "~"
+              ))[1]),
+              trttotalyn = ifelse(repType() == "Table", input$trttotalyn, "N"),
+              sgtotalyn = "N",
+              add_grpmiss = ifelse(repType() == "Table", input$grpvarmiss, "N")
+            ),
+            message = "Executing mentry processing...",
+            detail = "This step should take a while.",
+            min = 0,
+            max = 1,
+            value = 1
+          )
+        }
+      }) |>
+        bindEvent(
+          list(
+            repName(), input$overall_subset, input$grpvarmiss, input$trttotalyn, trt_var(),
+            trt_sort(), popfilter()
+          )
+        )
+      
+      # Forest, Volcano processing
       observe({
         req(rv$ae_pre)
-        if (tolower(repName()) %in% c("volcano plot", "forest plot") ||
-          (tolower(repName()) == "adae_r001" && input$aeRiskYN == "Y")) {
+        req(rv$ment_out)
+        if (tolower(repName()) %in% c("ae_volcano_plot", "ae_forest_plot", "adae_risk_summary")) {
           print("AE treatment pair processing start")
 
-          TRTCD <- unique(rv$ae_pre$dout$TRTVAR[rv$ae_pre$dout$TRTVAR != ""])
+          TRTCD <- unique(rv$ment_out$TRTVAR[rv$ment_out$TRTVAR != ""])
 
           ## Single pair radio button selection for Volcano plot
           output$treatment1_UI <- renderUI({
-            req(repName() == "Volcano Plot" || (repName() == "adae_r001") && input$aeRiskYN == "Y")
+            req(tolower(repName()) %in% c("ae_volcano_plot", "adae_risk_summary"))
             radioButtons(
               ns("treatment1"),
               "Control Group",
@@ -474,7 +484,7 @@ mod_generic_filters_server <-
           })
 
           output$treatment2_UI <- renderUI({
-            req(repName() == "Volcano Plot" || (repName() == "adae_r001") && input$aeRiskYN == "Y")
+            req(tolower(repName()) %in% c("ae_volcano_plot", "adae_risk_summary"))
             radioButtons(
               ns("treatment2"),
               "Treatment Group",
@@ -484,7 +494,7 @@ mod_generic_filters_server <-
           })
 
           output$treatment1_label_UI <- renderUI({
-            req(tolower(repName()) == "volcano plot")
+            req(tolower(repName()) == "ae_volcano_plot")
             textInput(ns("treatment1_label"),
               "Label for Control Group",
               value = "Control"
@@ -492,17 +502,18 @@ mod_generic_filters_server <-
           })
 
           output$treatment2_label_UI <- renderUI({
-            req(tolower(repName()) == "volcano plot")
+            req(tolower(repName()) == "ae_volcano_plot")
             textInput(ns("treatment2_label"),
               "Label for Treatment Group",
               value = "Treatment"
             )
           })
-
+          
+          
           ## Multiple pair check box selection for forest plot
 
           output$ctrlgrp_UI <- renderUI({
-            req(tolower(repName()) == "forest plot")
+            req(tolower(repName()) == "ae_forest_plot")
             radioButtons(
               ns("ctrlgrp"),
               "Control Group",
@@ -524,24 +535,25 @@ mod_generic_filters_server <-
           print("AE treatment pair processing end")
         }
       }) %>%
-        bindEvent(list(rv$ae_pre_comp, input$aeRiskYN))
+        bindEvent(list(rv$ae_pre_comp, rv$ment_out))
 
       filters <- reactive({
         req(rv$ae_pre)
         req(input$ae_filter)
-        if ((repName() == "adae_r001") && input$aeRiskYN == "Y") {
+        req(rv$ment_out)
+        if (repName() == "adae_risk_summary") {
           req(input$treatment1)
           req(input$treatment2)
           req(input$statistics)
           req(input$alpha)
         }
-        if (repName() == "Volcano Plot") {
+        if (repName() == "ae_volcano_plot") {
           req(input$treatment1)
           req(input$treatment2)
           req(input$treatment1_label)
           req(input$treatment2_label)
         }
-        if (tolower(repName()) == "forest plot") {
+        if (tolower(repName()) == "ae_forest_plot") {
           req(input$ctrlgrp)
           req(input$trtgrp)
           req(!identical(input$ctrlgrp, input$trtgrp))
@@ -549,19 +561,19 @@ mod_generic_filters_server <-
 
         list(
           ae_pre = rv$ae_pre,
+          ment_out = rv$ment_out,
           trt_var = trt_var(),
           ae_filter = input$ae_filter,
           ae_hlt = input$ae_hlt,
           ae_llt = input$ae_llt,
           summary_by = input$summary_by,
-          aeRiskYN = input$aeRiskYN,
           treatment1 = input$treatment1,
           treatment2 = input$treatment2,
           treatment1_label = input$treatment1_label,
           treatment2_label = input$treatment2_label,
           statistics = input$statistics,
           alpha = input$alpha,
-          ui_pctdisp = input$ui_pctdisp,
+          ui_pctdisp = input$pctdisp,
           cutoff = input$cutoff,
           sort_opt = input$sort_opt,
           sort_by = input$sort_by,
