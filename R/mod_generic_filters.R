@@ -162,7 +162,8 @@ mod_generic_filters_ui <- function(id) {
             value = 5
           )
         ),
-      )),
+      )
+    ),
     box(
       id = ns("box_3"),
       title = tags$strong("AE Statistics"),
@@ -271,8 +272,10 @@ mod_generic_filters_server <-
         req(repName() %in% c("adae_tier_summary", "adae_risk_summary", "Event Analysis"))
         show("pctdisp")
         if (repName() == "adae_tier_summary") {
-          pct_denom <- c("Treatment" = "TRT", "Total" = "VAR", "None" = "NO",
-                         "By High Term" = "BYVAR1N")
+          pct_denom <- c(
+            "Treatment" = "TRT", "Total" = "VAR", "None" = "NO",
+            "By High Term" = "BYVAR1N"
+          )
         } else {
           pct_denom <- c("Treatment" = "TRT")
         }
@@ -384,7 +387,7 @@ mod_generic_filters_server <-
               )),
               ae_filter = input$ae_filter,
               obs_residual = ifelse(input$period == "Other", input$period_spec, NA)
-              ),
+            ),
             message = "Executing pre processing for AE...",
             min = 0,
             max = 1,
@@ -402,7 +405,7 @@ mod_generic_filters_server <-
             # input$aeBigN, input$grpvarmiss, input$trttotalyn, trt_var(), trt_sort(), popfilter(), input$aeSubset,
           )
         )
-      
+
       observe({
         req(sourcedata())
         req(domain())
@@ -438,7 +441,7 @@ mod_generic_filters_server <-
               datain = ifelse(toupper(domain() == "ADAE"), rv$ae_pre, sourcedata()[[domain()]]),
               subset = input$overall_subset,
               byvar = byv,
-              subgrpvar = NA, #take input$subgrpvar as required here
+              subgrpvar = NA, # take input$subgrpvar as required here
               trtvar = toupper(trt_var()),
               trtsort = trt_sort(),
               pop_fil = str_trim(unlist(strsplit(
@@ -462,7 +465,7 @@ mod_generic_filters_server <-
             trt_sort(), popfilter()
           )
         )
-      
+
       # Forest, Volcano processing
       observe({
         req(rv$ae_pre)
@@ -508,8 +511,8 @@ mod_generic_filters_server <-
               value = "Treatment"
             )
           })
-          
-          
+
+
           ## Multiple pair check box selection for forest plot
 
           output$ctrlgrp_UI <- renderUI({
