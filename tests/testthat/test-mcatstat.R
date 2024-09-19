@@ -201,4 +201,12 @@ test_that("Case 6: Filters check", {
     distinct(USUBJID) |>
     nrow()
   expect_equal(unique(m_denom$DENOMN), denomvalue)
+  m_num1 <- mcatstat(
+    datain = ad_entry,
+    a_subset = "SEX == 'X'",
+    uniqid = "USUBJID",
+    dptvar = "SEX",
+    pctdisp = "TRT"
+  )
+  expect_equal(nrow(m_num1), 0)
 })

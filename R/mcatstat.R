@@ -159,8 +159,9 @@ mcatstat <- function(datain = NULL,
   } else {
     data_denom <- data_pro
   }
-  stopifnot(nrow(data_denom) != 0)
-  stopifnot(nrow(data_num) != 0)
+  if (nrow(data_num) < 1 || nrow(data_denom) < 1) {
+    return(data.frame())
+  }
   if (miss_catyn == "N") {
     data_num <- data_num |>
       filter(.data[["DPTVAL"]] != miss_catlabel)

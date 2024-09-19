@@ -45,40 +45,76 @@ mod_toutput_ui <- function(id) {
 mod_toutput_server <- function(id, repName, filters, popfilter, process_btn) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
-
+    
     rv <- reactiveValues(
       outdata = NULL,
-      toutput = NULL,
+      tout = NULL,
       title = "",
       footnote = ""
     )
-
+    
+    
     observe({
       req(repName())
       req(popfilter())
       req(filters())
-      req(tolower(repName()) %in% c("adae_tier_summary"))
+      req(tolower(repName()) %in% c("adae_risk_summary", "adae_tier_summary"))
       req(filters()$ae_pre)
       req(filters()$ae_filter)
-      req(filters()$trtbign)
       req(filters()$ae_llt)
       req(filters()$ae_hlt)
       req(filters()$summary_by)
-      req(filters()$ment_out)
-      req(filters()$a_subset)
-      req(filters()$ui_pctdisp)
+      req(filters()$trtbign)
       req(filters()$cutoff)
       req(filters()$sort_opt)
       req(filters()$sort_by)
-      print("AE Summary table process start")
+      print("ADAE table process start")
       if (filters()$a_subset == "") {
         a_subset <- filters()$ae_pre$a_subset
       } else {
         a_subset <- paste(na.omit(
-          c(filters()$ae_pre$a_subset, filters()$a_subset)
-        ), collapse = " & ")
+          c(filters()$ae_pre$a_subset, filters()$a_subset)), collapse = " & ")
       }
-      withProgress(message = "Generating AE Summary table", value = 0, {
+      # Title and Footnote
+      rv$title <- paste0(
+        "Participants With ", filters()$ae_filter,
+        " Adverse Events by Higher Term and Lower Term \n",
+        "Population: ",
+        popfilter()
+      )
+      rv$footnote <- paste0("* n is the number of participants with ", filters()$ae_filter,
+                            " adverse events.")
+      if (tolower(repName()) == "adae_risk_summary") {
+        req(filters()$ment_out)
+        req(filters()$a_subset)
+        req(filters()$treatment1)
+        req(filters()$treatment2)
+        req(filters()$statistics)
+        req(filters()$alpha)
+        withProgress(message = "Generating AE Risk table", value = 0, {
+          rv$outdata <- try(
+            adae_risk_summary(
+              filters()$ment_out,
+              a_subset = a_subset,
+              summary_by = filters()$summary_by,
+              hterm = filters()$ae_hlt,
+              lterm = filters()$ae_llt,
+              ctrlgrp = filters()$treatment1,
+              trtgrp = filters()$treatment2,
+              statistics = filters()$statistics,
+              alpha = filters()$alpha,
+              cutoff = filters()$cutoff,
+              sort_opt = filters()$sort_opt,
+              sort_var = filters()$sort_by
+            )
+          )
+          keepvars <- c("Risk Ratio (CI)", "P-value")
+          rv$footnote <- paste0(rv$footnote, "\n", filters()$statistics, " is shown between ",
+                                filters()$treatment1, " and ", filters()$treatment2)
+          print("AE Risk table process end")
+        })
+      } else {
+        req(filters()$ui_pctdisp)
         rv$outdata <- try(
           occ_tier_summary(
             filters()$ment_out,
@@ -91,108 +127,60 @@ mod_toutput_server <- function(id, repName, filters, popfilter, process_btn) {
             apply_hrow_cutoff = "N",
             sort_opt = filters()$sort_opt,
             sort_var = filters()$sort_by
-          ) |>
-            display_bign_head(
-              mentry_data = filters()$ment_out,
-              trtbignyn = filters()$trtbign,
-              subbignyn = "N"
-            )
+          )
         )
-        rv$toutput <- try(
-          rv$outdata |>
-            tbl_processor() |>
-            tbl_display() |>
-            autofit()
-        )
-      })
-      print("AE Summary table process end")
-    }) %>%
-      bindEvent(process_btn())
-
-
-    observe({
-      req(repName())
-      req(popfilter())
-      req(filters())
-      req(tolower(repName()) %in% c("adae_risk_summary"))
-      req(filters()$ae_pre)
-      req(filters()$ae_filter)
-      req(filters()$ae_llt)
-      req(filters()$ae_hlt)
-      req(filters()$summary_by)
-      req(filters()$trtbign)
-      req(filters()$ment_out)
-      req(filters()$a_subset)
-      req(filters()$treatment1)
-      req(filters()$treatment2)
-      req(filters()$statistics)
-      req(filters()$alpha)
-      req(filters()$ui_pctdisp)
-      req(filters()$cutoff)
-      req(filters()$sort_opt)
-      req(filters()$sort_by)
-      print("AE Summary table process start")
-      if (filters()$a_subset == "") {
-        a_subset <- filters()$ae_pre$a_subset
-      } else {
-        a_subset <- paste(na.omit(
-          c(filters()$ae_pre$a_subset, filters()$a_subset)
-        ), collapse = " & ")
+        keepvars <- ""
+        print("AE Summary table process end")
+        rv$footnote <- paste0(rv$footnote, " \n Cut off >", filters()$cutoff,
+                              "% is applied only to event term")
       }
-      withProgress(message = "Generating AE Risk table", value = 0, {
-        rv$outdata <- try(
-          adae_risk_summary(
-            filters()$ment_out,
-            a_subset = a_subset,
-            summary_by = filters()$summary_by,
-            hterm = filters()$ae_hlt,
-            lterm = filters()$ae_llt,
-            ctrlgrp = filters()$treatment1,
-            trtgrp = filters()$treatment2,
-            statistics = filters()$statistics,
-            alpha = filters()$alpha,
-            cutoff = filters()$cutoff,
-            sort_opt = filters()$sort_opt,
-            sort_var = filters()$sort_by
-          ) |>
-            display_bign_head(
-              mentry_data = filters()$ment_out,
-              trtbignyn = filters()$trtbign,
-              subbignyn = "N"
-            )
-        )
-        rv$toutput <- try(
+      if (ncol(rv$outdata) == 1) {
+        rv$tout <- flextable(rv$outdata) |>
+          autofit()
+      } else {
+        rv$outdata <- rv$outdata |>
+          display_bign_head(
+            mentry_data = filters()$ment_out,
+            trtbignyn = filters()$trtbign,
+            subbignyn = "N"
+          )
+        rv$tout <- try(
           rv$outdata |>
-            tbl_processor(keepvars = c("Risk Ratio (CI)", "P-value")) |>
+            tbl_processor(keepvars = keepvars) |>
             tbl_display() |>
             autofit()
         )
-      })
-      print("AE Risk table process end")
+      }
+      
     }) %>%
       bindEvent(process_btn())
-
+    
     output$table_UI <- renderUI({
-      req(rv$toutput)
-      ft <- rv$toutput %>%
+      req(rv$tout)
+      ft <- rv$tout %>%
         border_inner(officer::fp_border(color = "cadetblue")) %>%
         fontsize(size = 12, part = "header") %>%
         fontsize(size = 9, part = "body")
       htmltools_value(ft)
     })
-
-    # output$t_title_UI <- renderText({
-    #   req(rv$toutput)
-    #   rpt_title <- str_replace_all(rv$toutput$title, "\n", "<br>")
-    #   return(HTML(rpt_title))
-    # })
-    #
-    # output$t_footnote_UI <- renderText({
-    #   req(rv$toutput)
-    #   rpt_ftnote <- str_replace_all(rv$toutput$footnote, "\n", "<br>")
-    #   return(HTML(rpt_ftnote))
-    # })
-
-    reactive(rv$toutput)
+    
+    output$t_title_UI <- renderText({
+      req(rv$title)
+      rpt_title <- str_replace_all(rv$title, "\n", "<br>")
+      return(HTML(rpt_title))
+    })
+    
+    output$t_footnote_UI <- renderText({
+      req(rv$footnote)
+      rpt_ftnote <- str_replace_all(rv$footnote, "\n", "<br>")
+      return(HTML(rpt_ftnote))
+    })
+    
+    reactive(list(
+      outdata = rv$outdata,
+      tout = rv$tout,
+      title = rv$title,
+      footnote = rv$footnote
+    ))
   })
 }
