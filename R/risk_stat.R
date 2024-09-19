@@ -155,7 +155,8 @@ risk_stat <-
         risk_hover_text(summary_by, eventvar) |>
         ord_summ_df(sort_var, sort_opt, g_sort_by_ht)
       risk_out[["TRTVAR"]] <- factor(risk_out[["TRTVAR"]],
-        levels = trt_list, ordered = TRUE)
+        levels = trt_list, ordered = TRUE
+      )
     }
     risk_out
   }

@@ -45,15 +45,15 @@ mod_toutput_ui <- function(id) {
 mod_toutput_server <- function(id, repName, filters, popfilter, process_btn) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
-    
+
     rv <- reactiveValues(
       outdata = NULL,
       tout = NULL,
       title = "",
       footnote = ""
     )
-    
-    
+
+
     observe({
       req(repName())
       req(popfilter())
@@ -73,7 +73,8 @@ mod_toutput_server <- function(id, repName, filters, popfilter, process_btn) {
         a_subset <- filters()$ae_pre$a_subset
       } else {
         a_subset <- paste(na.omit(
-          c(filters()$ae_pre$a_subset, filters()$a_subset)), collapse = " & ")
+          c(filters()$ae_pre$a_subset, filters()$a_subset)
+        ), collapse = " & ")
       }
       # Title and Footnote
       rv$title <- paste0(
@@ -82,8 +83,10 @@ mod_toutput_server <- function(id, repName, filters, popfilter, process_btn) {
         "Population: ",
         popfilter()
       )
-      rv$footnote <- paste0("* n is the number of participants with ", filters()$ae_filter,
-                            " adverse events.")
+      rv$footnote <- paste0(
+        "* n is the number of participants with ", filters()$ae_filter,
+        " adverse events."
+      )
       if (tolower(repName()) == "adae_risk_summary") {
         req(filters()$ment_out)
         req(filters()$a_subset)
@@ -109,8 +112,10 @@ mod_toutput_server <- function(id, repName, filters, popfilter, process_btn) {
             )
           )
           keepvars <- c("Risk Ratio (CI)", "P-value")
-          rv$footnote <- paste0(rv$footnote, "\n", filters()$statistics, " is shown between ",
-                                filters()$treatment1, " and ", filters()$treatment2)
+          rv$footnote <- paste0(
+            rv$footnote, "\n", filters()$statistics, " is shown between ",
+            filters()$treatment1, " and ", filters()$treatment2
+          )
           print("AE Risk table process end")
         })
       } else {
@@ -131,8 +136,10 @@ mod_toutput_server <- function(id, repName, filters, popfilter, process_btn) {
         )
         keepvars <- ""
         print("AE Summary table process end")
-        rv$footnote <- paste0(rv$footnote, " \n Cut off >", filters()$cutoff,
-                              "% is applied only to event term")
+        rv$footnote <- paste0(
+          rv$footnote, " \n Cut off >", filters()$cutoff,
+          "% is applied only to event term"
+        )
       }
       if (ncol(rv$outdata) == 1) {
         rv$tout <- flextable(rv$outdata) |>
@@ -151,10 +158,9 @@ mod_toutput_server <- function(id, repName, filters, popfilter, process_btn) {
             autofit()
         )
       }
-      
     }) %>%
       bindEvent(process_btn())
-    
+
     output$table_UI <- renderUI({
       req(rv$tout)
       ft <- rv$tout %>%
@@ -163,19 +169,19 @@ mod_toutput_server <- function(id, repName, filters, popfilter, process_btn) {
         fontsize(size = 9, part = "body")
       htmltools_value(ft)
     })
-    
+
     output$t_title_UI <- renderText({
       req(rv$title)
       rpt_title <- str_replace_all(rv$title, "\n", "<br>")
       return(HTML(rpt_title))
     })
-    
+
     output$t_footnote_UI <- renderText({
       req(rv$footnote)
       rpt_ftnote <- str_replace_all(rv$footnote, "\n", "<br>")
       return(HTML(rpt_ftnote))
     })
-    
+
     reactive(list(
       outdata = rv$outdata,
       tout = rv$tout,
