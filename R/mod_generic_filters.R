@@ -39,7 +39,7 @@ mod_generic_filters_ui <- function(id) {
         ),
         column(
           width = 4,
-          selectInput(
+          textInput(
             inputId = ns("a_subset"),
             label = "Analysis Subset",
             value = ""
