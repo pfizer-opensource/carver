@@ -401,8 +401,6 @@ mod_generic_filters_server <-
         bindEvent(
           list(
             repName(), input$ae_filter, input$period, input$period_spec
-            # input$aeDenomSubset, input$ae_hlt, input$ae_llt,
-            # input$aeBigN, input$grpvarmiss, input$trttotalyn, trt_var(), trt_sort(), popfilter(), input$aeSubset,
           )
         )
 
@@ -437,7 +435,7 @@ mod_generic_filters_server <-
         if (!tolower(repName()) %in% c("tornado_plot", "event analysis", "km plot")) {
           print("Start Mentry process")
           if (toupper(domain()) == "ADAE") {
-            datain <- rv$ae_pre
+            datain <- rv$ae_pre[["data"]]
           } else {
             datain <- sourcedata()[[domain()]]
           }
@@ -594,7 +592,6 @@ mod_generic_filters_server <-
           ref_line = input$ref_line
         )
       })
-
       filters
     })
   }
