@@ -123,7 +123,8 @@ mod_goutput_server <- function(id, sourcedata, repName, filters, process_btn) {
         a_subset <- filters()$ae_pre$a_subset
       } else {
         a_subset <- paste(na.omit(
-          c(filters()$ae_pre$a_subset, filters()$a_subset)), collapse = " & ")
+          c(filters()$ae_pre$a_subset, filters()$a_subset)
+        ), collapse = " & ")
       }
       withProgress(
         rv$outdata <- risk_stat(
@@ -144,7 +145,8 @@ mod_goutput_server <- function(id, sourcedata, repName, filters, process_btn) {
           alpha = filters()$alpha,
           cutoff = filters()$cutoff,
           sort_opt = ifelse(tolower(repName()) == "ae_forest_plot", filters()$sort_opt,
-                            "Ascending"),
+            "Ascending"
+          ),
           sort_var = ifelse(tolower(repName()) == "ae_forest_plot", filters()$sort_by, "Count")
         ),
         message = "Executing Get Statistics for EVENTS/ PT...",
@@ -176,24 +178,25 @@ mod_goutput_server <- function(id, sourcedata, repName, filters, process_btn) {
       withProgress(message = "Generating Forest Plot", value = 0, {
         rv$goutput <- try(
           ae_forest_plot(
-          datain = forest_data,
-          series_opts = plot_aes_opts(
             datain = forest_data,
-            series_color = c("black", "royalblue2", "goldenrod", "forestgreen", "magenta", "brown"),
-            series_size = rep(1, 5)
-          ),
-          trtpair_color = "#F8766D~#7CAE00~#00BFC4~#C77CFF",
-          axis_opts = plot_axis_opts(
-            xaxis_label = filters()$statistics,
-            xaxis_scale = tolower(filters()$riskScale),
-            xopts = list(labelsize = 8)
-          ),
-          risk_ref = as.numeric(filters()$X_ref),
-          pvalue_sig = filters()$pvalcut,
-          highlight_sig = "Y",
-          rel_widths = c(0.4, 0.4, 0.2),
-          interactive = "Y"
-        ))[[1]]
+            series_opts = plot_aes_opts(
+              datain = forest_data,
+              series_color = c("black", "royalblue2", "goldenrod", "forestgreen", "magenta", "brown"),
+              series_size = rep(1, 5)
+            ),
+            trtpair_color = "#F8766D~#7CAE00~#00BFC4~#C77CFF",
+            axis_opts = plot_axis_opts(
+              xaxis_label = filters()$statistics,
+              xaxis_scale = tolower(filters()$riskScale),
+              xopts = list(labelsize = 8)
+            ),
+            risk_ref = as.numeric(filters()$X_ref),
+            pvalue_sig = filters()$pvalcut,
+            highlight_sig = "Y",
+            rel_widths = c(0.4, 0.4, 0.2),
+            interactive = "Y"
+          )
+        )[[1]]
       })
       print("AE Forest Plot process end")
     }) %>%
@@ -226,17 +229,17 @@ mod_goutput_server <- function(id, sourcedata, repName, filters, process_btn) {
       withProgress(message = "Generating Volcano Plot", value = 0, {
         rv$goutput <- try(
           ae_volcano_plot(
-          datain = rv$outdata,
-          axis_opts = axis_opts,
-          legend_opts = list(
-            label = "",
-            pos = "bottom",
-            dir = "horizontal"
-          ),
-          xref = filters()$X_ref,
-          pvalue_sig = filters()$pvalcut,
-          interactive = "Y"
-        )
+            datain = rv$outdata,
+            axis_opts = axis_opts,
+            legend_opts = list(
+              label = "",
+              pos = "bottom",
+              dir = "horizontal"
+            ),
+            xref = filters()$X_ref,
+            pvalue_sig = filters()$pvalcut,
+            interactive = "Y"
+          )
         )
       })
       print("AE Volcano Plot process end")
@@ -388,28 +391,30 @@ mod_goutput_server <- function(id, sourcedata, repName, filters, process_btn) {
         a_subset <- filters()$ae_pre$a_subset
       } else {
         a_subset <- paste(na.omit(
-          c(filters()$ae_pre$a_subset, filters()$a_subset)), collapse = " & ")
+          c(filters()$ae_pre$a_subset, filters()$a_subset)
+        ), collapse = " & ")
       }
       withProgress(message = "Generating AE event analysis", value = 0, {
         rv$outdata <- try(
-            process_event_analysis(
-              datain = filters()$ment_out,
-              a_subset = a_subset,
-              summary_by = filters()$summary_by,
-              hterm = filters()$ae_hlt,
-              ht_val = input$hlt_val,
-              ht_scope = input$hlt_cat,
-              lterm = filters()$ae_llt,
-              lt_val = input$llt_val,
-              lt_scope = input$llt_cat
-            )
+          process_event_analysis(
+            datain = filters()$ment_out,
+            a_subset = a_subset,
+            summary_by = filters()$summary_by,
+            hterm = filters()$ae_hlt,
+            ht_val = input$hlt_val,
+            ht_scope = input$hlt_cat,
+            lterm = filters()$ae_llt,
+            lt_val = input$llt_val,
+            lt_scope = input$llt_cat
+          )
         )
         rv$goutput <- try(
           event_analysis_plot(
-          datain = rv$outdata,
-          ref_line = filters()$ref_line,
-          interactive = "Y"
-        ))
+            datain = rv$outdata,
+            ref_line = filters()$ref_line,
+            interactive = "Y"
+          )
+        )
       })
       print("AE event analysis process end")
     }) %>%
@@ -478,7 +483,7 @@ mod_goutput_server <- function(id, sourcedata, repName, filters, process_btn) {
 
     output$figure_UI <- plotly::renderPlotly({
       req(rv$goutput)
-      #req(rv$goutput$ptly)
+      # req(rv$goutput$ptly)
       rv$goutput
     })
 
