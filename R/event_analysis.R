@@ -40,12 +40,17 @@
 #'   )
 #'
 #' ## prepare data for plot
-#' prep_event_analysis <- prep_ae[["data"]] |>
+#' prep_entry <- prep_ae[["data"]] |>
+#' mentry(
+#' trtvar = "TRTA",
+#' trtsort = "TRTAN",
+#' trttotalyn = "N",
+#' byvar = "FMQ_NAM"
+#' )
+#' ## prepare data for plot
+#' prep_event_analysis <- prep_entry |>
 #'   process_event_analysis(
 #'     a_subset = glue::glue("AOCCPFL == 'Y' & {prep_ae$a_subset}"),
-#'     trtvar = "TRTA",
-#'     trtsort = "TRTAN",
-#'     trttotalyn = "Y",
 #'     summary_by = "Events",
 #'     hterm = "FMQ_NAM",
 #'     ht_val = "ABDOMINAL PAIN",
@@ -179,14 +184,17 @@ event_analysis_plot <-
 #'     obs_residual = 0,
 #'     fmq_data = FMQ_Consolidated_List
 #'   )
-#'
+#' prep_entry <- prep_ae[["data"]] |>
+#' mentry(
+#' trtvar = "TRTA",
+#' trtsort = "TRTAN",
+#' trttotalyn = "N",
+#' byvar = "FMQ_NAM"
+#' )
 #' ## prepare data for plot
-#' prep_event_analysis <- prep_ae[["data"]] |>
+#' prep_event_analysis <- prep_entry |>
 #'   process_event_analysis(
 #'     a_subset = glue::glue("AOCCPFL == 'Y' & {prep_ae$a_subset}"),
-#'     trtvar = "TRTA",
-#'     trtsort = "TRTAN",
-#'     trttotalyn = "Y",
 #'     summary_by = "Events",
 #'     hterm = "FMQ_NAM",
 #'     ht_val = "ABDOMINAL PAIN",
@@ -202,9 +210,6 @@ event_analysis_plot <-
 process_event_analysis <-
   function(datain,
            a_subset = NA_character_,
-           trtvar,
-           trtsort = NA_character_,
-           trttotalyn = "N",
            summary_by = "Events",
            hterm,
            ht_val,
@@ -221,12 +226,6 @@ process_event_analysis <-
     lt_val <- get_event_scope(lterm, lt_val, lt_scope, ht_val)
 
     ae_counts <- datain |>
-      mentry(
-        byvar = hterm,
-        trtvar = trtvar,
-        trtsort = trtsort,
-        trttotalyn = trttotalyn
-      ) |>
       mcatstat(
         a_subset = a_subset,
         uniqid = ifelse(toupper(summary_by) == "PATIENTS", "USUBJID", "ALLCT"),
@@ -481,9 +480,8 @@ event_plotly <- function(p, ref_line, title_text) {
       yref = "paper",
       xref = "paper",
       xanchor = "center",
-      yanchor = "top",
+      yanchor = "bottom",
       showarrow = FALSE,
-      yshift = 35,
       font = list(size = 12)
     )
 }

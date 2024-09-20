@@ -91,27 +91,26 @@ mod_goutput_server <- function(id, sourcedata, repName, filters, process_btn) {
     ns <- session$ns
 
     rv <- reactiveValues(
-      statistics = NULL,
+      outdata = NULL,
       goutput = NULL,
       output_trigger = 0
     )
 
     observe({
       req(repName())
-      req(filters()$ae_pre$dsin)
-      req(filters()$ae_pre$dout)
+      req(tolower(repName()) %in% c("ae_volcano_plot", "ae_forest_plot"))
+      req(filters()$ae_pre)
+      req(filters()$ment_out)
       req(filters()$ae_filter)
       req(filters()$statistics)
       req(filters()$ae_hlt)
       req(filters()$ae_llt)
       req(filters()$summary_by)
-      if (tolower(repName()) %in% c("volcano plot")) {
+      if (tolower(repName()) %in% c("ae_volcano_plot")) {
         req(filters()$treatment1)
-        req(filters()$treatment1_label)
         req(filters()$treatment2)
-        req(filters()$treatment2_label)
       }
-      if (tolower(repName()) %in% c("forest plot")) {
+      if (tolower(repName()) %in% c("ae_forest_plot")) {
         req(filters()$ctrlgrp)
         req(filters()$trtgrp)
         req(filters()$sort_opt)
@@ -119,93 +118,126 @@ mod_goutput_server <- function(id, sourcedata, repName, filters, process_btn) {
       }
       req(filters()$alpha)
       req(filters()$cutoff)
-      if (tolower(repName()) %in% c("volcano plot", "forest plot")) {
-        print("AE risk_stat process start")
-        withProgress(
-          rv$statistics <- risk_stat(
-            datain = filters()$ae_pre$dsin,
-            d_datain = filters()$ae_pre$dout,
-            eventVar = ifelse(is.null(filters()$ae_llt), filters()$ae_hlt, filters()$ae_llt),
-            summary_by = filters()$summary_by,
-            ctrlgrp = ifelse(tolower(repName()) == "volcano plot",
-              filters()$treatment1,
-              filters()$ctrlgrp
-            ),
-            trtgrp = ifelse(
-              tolower(repName()) == "volcano plot",
-              filters()$treatment2,
-              paste(filters()$trtgrp, collapse = "~~")
-            ),
-            statistics = filters()$statistics,
-            alpha = filters()$alpha,
-            cutoff = filters()$cutoff,
-            sort_opt = ifelse(tolower(repName()) == "forest plot", filters()$sort_opt, NA),
-            sort_var = ifelse(tolower(repName()) == "forest plot", filters()$sort_by, NA)
-          ),
-          message = "Executing Get Statistics for EVENTS/ PT...",
-          detail = "This step should take a while.",
-          min = 0,
-          max = 1,
-          value = 1
-        )
-        print("AE risk_stat process end")
-        rv$output_trigger <- rv$output_trigger + 1
+      print("AE risk_stat process start")
+      if (filters()$a_subset == "") {
+        a_subset <- filters()$ae_pre$a_subset
+      } else {
+        a_subset <- paste(na.omit(
+          c(filters()$ae_pre$a_subset, filters()$a_subset)), collapse = " & ")
       }
+      withProgress(
+        rv$outdata <- risk_stat(
+          datain = filters()$ment_out,
+          a_subset = a_subset,
+          eventvar = ifelse(is.null(filters()$ae_llt), filters()$ae_hlt, filters()$ae_llt),
+          summary_by = filters()$summary_by,
+          ctrlgrp = ifelse(tolower(repName()) == "ae_volcano_plot",
+            filters()$treatment1,
+            filters()$ctrlgrp
+          ),
+          trtgrp = ifelse(
+            tolower(repName()) == "ae_volcano_plot",
+            filters()$treatment2,
+            paste(filters()$trtgrp, collapse = "~~")
+          ),
+          statistics = filters()$statistics,
+          alpha = filters()$alpha,
+          cutoff = filters()$cutoff,
+          sort_opt = ifelse(tolower(repName()) == "ae_forest_plot", filters()$sort_opt,
+                            "Ascending"),
+          sort_var = ifelse(tolower(repName()) == "ae_forest_plot", filters()$sort_by, "Count")
+        ),
+        message = "Executing Get Statistics for EVENTS/ PT...",
+        detail = "This step should take a while.",
+        min = 0,
+        max = 1,
+        value = 1
+      )
+      rv$outdata <- rv$outdata |>
+        filter(!is.nan(.data[["RISK"]]), !is.infinite(.data[["RISK"]]))
+      print("AE risk_stat process end")
+      rv$output_trigger <- rv$output_trigger + 1
     }) %>%
       bindEvent(process_btn())
 
     observe({
-      req(tolower(repName()) %in% c("forest plot"))
-      req(rv$statistics)
+      req(tolower(repName()) %in% c("ae_forest_plot"))
+      req(rv$outdata)
+      req(filters()$ment_out)
       req(filters()$ae_filter)
       req(filters()$pvalcut)
       req(filters()$X_ref)
       req(filters()$riskScale)
+      req(filters()$trtbign)
+      req(filters()$statistics)
       print("AE Forest Plot process start")
+      forest_data <- rv$outdata |>
+        plot_display_bign(filters()$ment_out, bignyn = filters()$trtbign)
       withProgress(message = "Generating Forest Plot", value = 0, {
-        rv$goutput <- try(forest_plot(
-          datain = isolate(rv$statistics),
-          AE_Filter = filters()$ae_filter,
-          review_by = c(filters()$ae_hlt, filters()$ae_llt),
-          summary_by = filters()$summary_by,
-          statistics = filters()$statistics,
-          xref = as.numeric(filters()$X_ref),
-          pvalcut = filters()$pvalcut,
-          scale_trans = filters()$riskScale
-        ))
+        rv$goutput <- try(
+          ae_forest_plot(
+          datain = forest_data,
+          series_opts = plot_aes_opts(
+            datain = forest_data,
+            series_color = c("black", "royalblue2", "goldenrod", "forestgreen", "magenta", "brown"),
+            series_size = rep(1, 5)
+          ),
+          trtpair_color = "#F8766D~#7CAE00~#00BFC4~#C77CFF",
+          axis_opts = plot_axis_opts(
+            xaxis_label = filters()$statistics,
+            xaxis_scale = tolower(filters()$riskScale),
+            xopts = list(labelsize = 8)
+          ),
+          risk_ref = as.numeric(filters()$X_ref),
+          pvalue_sig = filters()$pvalcut,
+          highlight_sig = "Y",
+          rel_widths = c(0.4, 0.4, 0.2),
+          interactive = "Y"
+        ))[[1]]
       })
       print("AE Forest Plot process end")
     }) %>%
       bindEvent(rv$output_trigger)
 
     observe({
-      req(tolower(repName()) %in% c("volcano plot"))
-      req(filters()$ae_pre$dsin)
-      req(rv$statistics)
-      req(filters()$ae_filter)
-      req(filters()$statistics)
-      req(filters()$treatment1)
-      req(filters()$treatment2)
+      req(tolower(repName()) %in% c("ae_volcano_plot"))
+      req(filters()$ae_pre)
+      req(rv$outdata)
       req(filters()$X_ref)
       req(filters()$summary_by)
       req(filters()$pvalue_label)
-
+      req(filters()$treatment1_label)
+      req(filters()$treatment2_label)
+      req(filters()$pvalcut)
       print("AE Volcano Plot process start")
+      vaxis_opts <- ae_volcano_opts(
+        rv$outdata,
+        filters()$treatment1_label,
+        filters()$treatment2_label,
+        pvalue_trans = filters()$pvalue_label
+      )
+
+      axis_opts <- plot_axis_opts(
+        ylinearopts = vaxis_opts$ylinearopts,
+        yaxis_scale = vaxis_opts$yaxis_scale,
+        xaxis_label = vaxis_opts$xaxis_label,
+        yaxis_label = vaxis_opts$yaxis_label
+      )
       withProgress(message = "Generating Volcano Plot", value = 0, {
-        rv$goutput <- try(volcano_plot(
-          datain = isolate(filters()$ae_pre$dsin),
-          AE_Filter = filters()$ae_filter,
-          statistics_data = isolate(rv$statistics),
-          statistics = filters()$statistics,
-          treatment1 = filters()$treatment1,
-          treatment2 = filters()$treatment2,
-          X_ref = as.numeric(filters()$X_ref),
-          summary_by = filters()$summary_by,
-          pvalue_label = filters()$pvalue_label,
-          treatment1_label = filters()$treatment1_label,
-          treatment2_label = filters()$treatment2_label,
-          pvalcut = filters()$pvalcut
-        ))
+        rv$goutput <- try(
+          ae_volcano_plot(
+          datain = rv$outdata,
+          axis_opts = axis_opts,
+          legend_opts = list(
+            label = "",
+            pos = "bottom",
+            dir = "horizontal"
+          ),
+          xref = filters()$X_ref,
+          pvalue_sig = filters()$pvalcut,
+          interactive = "Y"
+        )
+        )
       })
       print("AE Volcano Plot process end")
     }) %>%
@@ -222,12 +254,13 @@ mod_goutput_server <- function(id, sourcedata, repName, filters, process_btn) {
 
     observe({
       req(tolower(repName()) %in% c("event analysis"))
-      req(filters()$ae_pre$dsin)
+      req(filters()$ae_pre)
+      req(filters()$ment_out)
       req(filters()$ae_hlt)
 
       print("AE event analysis hlt list input process start")
 
-      temp1 <- filters()$ae_pre$dsin
+      temp1 <- filters()$ment_out
 
       if (filters()$ae_hlt %in% c("SMQ_NAM", "FMQ_NAM", "CQ_NAM")) {
         if (filters()$ae_hlt %in% names(temp1)) {
@@ -253,14 +286,15 @@ mod_goutput_server <- function(id, sourcedata, repName, filters, process_btn) {
 
     observe({
       req(tolower(repName()) %in% c("event analysis"))
-      req(filters()$ae_pre$dsin)
+      req(filters()$ae_pre)
+      req(filters()$ment_out)
       req(filters()$ae_hlt)
       req(input$hlt_val)
       if (filters()$ae_hlt %in% c("FMQ_NAM", "SMQ_NAM", "CQ_NAM")) {
         req(input$hlt_cat)
       }
       print("AE event analysis llt list input process start")
-      temp1 <- filters()$ae_pre$dsin
+      temp1 <- filters()$ment_out
 
       if (filters()$ae_hlt %in% c("FMQ_NAM", "SMQ_NAM", "CQ_NAM")) {
         if (toupper(input$hlt_cat) == "NARROW") {
@@ -303,7 +337,7 @@ mod_goutput_server <- function(id, sourcedata, repName, filters, process_btn) {
 
     observe({
       req(tolower(repName()) %in% c("event analysis"))
-      req(filters()$ae_pre$dsin)
+      req(filters()$ae_pre)
       print("AE event analysis hlt scope input process start")
 
       output$aeHLT_query_cat_UI <- renderUI({
@@ -336,9 +370,10 @@ mod_goutput_server <- function(id, sourcedata, repName, filters, process_btn) {
 
     observe({
       req(tolower(repName()) %in% c("event analysis"))
-      req(filters()$ae_pre$dsin)
+      req(filters()$ae_pre)
       req(filters()$ae_hlt)
       req(filters()$ae_llt)
+      req(filters()$ment_out)
       req(input$hlt_val)
       req(input$llt_val)
       if (filters()$ae_hlt %in% c("SMQ_NAM", "FMQ_NAM", "CQ_NAM")) {
@@ -348,20 +383,32 @@ mod_goutput_server <- function(id, sourcedata, repName, filters, process_btn) {
         req(input$llt_cat)
       }
       req(filters()$summary_by)
-
       print("AE event analysis process start")
+      if (filters()$a_subset == "") {
+        a_subset <- filters()$ae_pre$a_subset
+      } else {
+        a_subset <- paste(na.omit(
+          c(filters()$ae_pre$a_subset, filters()$a_subset)), collapse = " & ")
+      }
       withProgress(message = "Generating AE event analysis", value = 0, {
-        rv$goutput <- try(event_analysis(
-          datain = filters()$ae_pre$dsin,
-          datain_N = filters()$ae_pre$dout,
-          hl_var = filters()$ae_hlt,
-          hl_val = toupper(input$hlt_val),
-          hl_scope = toupper(input$hlt_cat),
-          ll_var = filters()$ae_llt,
-          ll_val = toupper(input$llt_val),
-          ll_scope = toupper(input$llt_cat),
-          summary_by = filters()$summary_by,
-          ref_line = filters()$ref_line
+        rv$outdata <- try(
+            process_event_analysis(
+              datain = filters()$ment_out,
+              a_subset = a_subset,
+              summary_by = filters()$summary_by,
+              hterm = filters()$ae_hlt,
+              ht_val = input$hlt_val,
+              ht_scope = input$hlt_cat,
+              lterm = filters()$ae_llt,
+              lt_val = input$llt_val,
+              lt_scope = input$llt_cat
+            )
+        )
+        rv$goutput <- try(
+          event_analysis_plot(
+          datain = rv$outdata,
+          ref_line = filters()$ref_line,
+          interactive = "Y"
         ))
       })
       print("AE event analysis process end")
@@ -372,10 +419,10 @@ mod_goutput_server <- function(id, sourcedata, repName, filters, process_btn) {
       event <- plotly::event_data("plotly_click", source = "plot_output")
       req(length(event) > 0)
 
-      if (tolower(repName()) == "forest plot") {
+      if (tolower(repName()) == "ae_forest_plot") {
         test <- rv$goutput$drill_plt$data[as.numeric(event$key), ]
-      } else if (tolower(repName()) == "volcano plot") {
-        test <- rv$goutput$plot$data[as.numeric(event$key), ]
+      } else if (tolower(repName()) == "ae_volcano_plot") {
+        test <- rv$outdata[as.numeric(event$key), ]
       } else {
         if (event$curveNumber == 0 && event$x > 0) {
           test <- NULL
@@ -393,7 +440,7 @@ mod_goutput_server <- function(id, sourcedata, repName, filters, process_btn) {
 
       req(test)
 
-      display <- filters()$ae_pre$dout %>%
+      display <- filters()$ment_out %>%
         select(any_of(c(
           "USUBJID", "TRTVAR", "BYVAR1", filters()$ae_llt, "AESER", "AEOUT", "AESEV",
           "AESTDT", "ASTTM", "AEENDT", "TRTSTDT", "TRTEDT", "TRTEMFL"
@@ -431,8 +478,8 @@ mod_goutput_server <- function(id, sourcedata, repName, filters, process_btn) {
 
     output$figure_UI <- plotly::renderPlotly({
       req(rv$goutput)
-      req(rv$goutput$ptly)
-      rv$goutput$ptly
+      #req(rv$goutput$ptly)
+      rv$goutput
     })
 
     output$g_title_UI <- renderText({

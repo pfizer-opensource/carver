@@ -68,10 +68,9 @@ g_seriescol <- function(gdata,
   if (!is.factor(gdata[[SERIESVAR]])) gdata[[SERIESVAR]] <- as.factor(gdata[[SERIESVAR]])
 
   # Set names as factor levels
-  seriescols <- setNames(
-    col_list[seq_along(unique(gdata[[SERIESVAR]]))],
-    levels(unique(gdata[[SERIESVAR]]))
-  )
+  levs <- levels(unique(gdata[[SERIESVAR]]))
+  vals <- levs[levs %in% unique(gdata[[SERIESVAR]])]
+  seriescols <- setNames(col_list[seq_along(vals)], vals)
   return(seriescols)
 }
 
@@ -139,10 +138,10 @@ g_seriessym <- function(gdata,
   }
 
   # Set names as factor levels
-  ptshapes <- setNames(
-    shapelist[seq_along(unique(gdata[[SERIESVAR]]))],
-    levels(unique(gdata[[SERIESVAR]]))
-  )
+  # Set names as factor levels
+  levs <- levels(unique(gdata[[SERIESVAR]]))
+  vals <- levs[levs %in% unique(gdata[[SERIESVAR]])]
+  ptshapes <- setNames(shapelist[seq_along(vals)], vals)
   return(ptshapes)
 }
 
