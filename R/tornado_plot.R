@@ -77,7 +77,7 @@ tornado_plot <- function(datain,
     "XVAR Treatment values not in data" =
       all(c("XVAR", "trt_left", "trt_right") %in% names(datain))
   )
-  
+
   # Tornado plot - Flipped left and right Bar plots to ref line at 0
   g_plot <- datain |>
     ggplot(aes(x = XVAR)) +
@@ -93,7 +93,7 @@ tornado_plot <- function(datain,
       width = bar_width
     ) +
     coord_flip()
-  
+
   names(series_opts) <- rev(names(series_opts))
   # Adding Labels, Breaks, Colors, Ticks, Themes
   g_plot +
@@ -189,19 +189,19 @@ process_tornado_data <-
            legendbign = "N",
            yvar) {
     # Check data sets are not empty
-    #stopifnot("ADSL data is empty" = nrow(dataset_adsl) != 0)
+    # stopifnot("ADSL data is empty" = nrow(dataset_adsl) != 0)
     stopifnot("Analysis data is empty" = nrow(dataset_analysis) != 0)
-    
+
     # stopifnot(all(c(ae_catvar, paste0(ae_catvar, "N")) %in%
     #                 toupper(names(dataset_analysis))))
-    
+
     # Merge with adsl
     # adsl_merged <- adsl_merge(
     #   adsl = dataset_adsl,
     #   adsl_subset = adsl_subset,
     #   dataset_add = dataset_analysis
     # )
-    
+
     # Pre-Processing data for Adverse Event
     data_pre <- ae_pre_processor(
       datain = dataset_analysis,
@@ -209,7 +209,7 @@ process_tornado_data <-
       obs_residual = obs_residual,
       fmq_data = fmq_data
     )
-    
+
     # Data mentry processing
     mentry_out <- mentry(
       data_pre$data,
@@ -226,7 +226,7 @@ process_tornado_data <-
       "Given Subsets not present in Analysis Data" =
         nrow(mentry_out) != 0
     )
-    
+
     # Summary analysis for tornado plot dataset
     mcatstat_out <- mcatstat(
       datain = mentry_out,
@@ -237,21 +237,21 @@ process_tornado_data <-
       pctdisp = pctdisp
     ) |> (\(x) {
       mutate(x,
-             YVAR = as.numeric(PCT),
-             XVAR = factor(x$XVAR,
-                           levels = rev(x |>
-                                          group_by(XVAR) |>
-                                          mutate(XVARPCTS = sum(as.numeric(PCT))) |>
-                                          arrange(desc(.data$XVARPCTS)) |>
-                                          distinct(XVAR) |>
-                                          pull(XVAR))
-             ),
-             BYVAR1 = factor(x$BYVAR1, levels = rev(unique(x$BYVAR1)))
+        YVAR = as.numeric(PCT),
+        XVAR = factor(x$XVAR,
+          levels = rev(x |>
+            group_by(XVAR) |>
+            mutate(XVARPCTS = sum(as.numeric(PCT))) |>
+            arrange(desc(.data$XVARPCTS)) |>
+            distinct(XVAR) |>
+            pull(XVAR))
+        ),
+        BYVAR1 = factor(x$BYVAR1, levels = rev(unique(x$BYVAR1)))
       ) |>
         pivot_wider(names_from = "TRTVAR", values_from = "YVAR") |>
         mutate(trt_left = !!sym(trt_left), trt_right = !!sym(trt_right))
     })()
-    
+
     # Dataset for tornado plot
     plot_title_nsubj(
       mentry_out,

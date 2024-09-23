@@ -245,14 +245,14 @@ mod_goutput_server <- function(id, sourcedata, repName, filters, process_btn) {
       print("AE Volcano Plot process end")
     }) %>%
       bindEvent(rv$output_trigger)
-    
+
     observe({
       req(tolower(repName()) %in% c("tornado_plot"))
       req(filters()$process_tornado_data)
-      
+
       print("AE Tornado Plot process start")
       withProgress(message = "Generating Volcano Plot", value = 0, {
-      rv$goutput <- try(tornado_plot(
+        rv$goutput <- try(tornado_plot(
           datain = filters()$process_tornado_data,
           trt_left_label = filters()$treatment1_label,
           trt_right_label = filters()$treatment2_label,
