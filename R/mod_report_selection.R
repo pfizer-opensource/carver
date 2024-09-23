@@ -152,7 +152,7 @@ mod_report_selection_server <- function(id, sourcedata, domain, data_attr) {
           report_meta()["DOMAIN"] == toupper(input$bdomain)])
       )
     }) %>%
-      bindEvent(input$tarea)
+      bindEvent(list(input$tarea, input$bdomain))
 
     observe({
       req(input$repType)
@@ -167,7 +167,7 @@ mod_report_selection_server <- function(id, sourcedata, domain, data_attr) {
         choices = choices
       )
     }) %>%
-      bindEvent(input$repType)
+      bindEvent(list(input$repType, input$bdomain, input$tarea))
 
     observe({
       req(input$repName)
