@@ -306,7 +306,7 @@ mod_generic_filters_server <-
           choices = pct_denom
         )
       })
-      
+
       observe({
         req(domain())
         if (repName() == "eDISH_plot") {
@@ -690,7 +690,7 @@ mod_generic_filters_server <-
           input$treatment1, input$treatment2, input$pctdisp, input$denom_subset,
           input$trtbign, input$ae_hlt
         ))
-      
+
       observe({
         req(sourcedata())
         req(domain())
@@ -705,7 +705,7 @@ mod_generic_filters_server <-
         merged_df <- sourcedata()$adsl %>%
           adsl_merge(
             dataset_add = filter(sourcedata()$adlb, !!!rlang::parse_exprs(input$a_subset))
-            ) %>%
+          ) %>%
           mentry(
             subset = input$overall_subset,
             byvar = NA_character_,
