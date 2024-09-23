@@ -478,7 +478,7 @@ mod_generic_filters_server <-
           print("AE byVar processing start")
           ## evaluating the by variables based on report selection
           if (repType() == "Table" ||
-              tolower(repName()) %in% c("ae_volcano_plot", "ae_forest_plot", "event analysis")) {
+            tolower(repName()) %in% c("ae_volcano_plot", "ae_forest_plot", "event analysis")) {
             byv <- input$ae_hlt
           } else {
             byv <- NA
@@ -490,7 +490,7 @@ mod_generic_filters_server <-
           datain <- sourcedata()[[domain()]]
           ## Take input$byvar here, if applicable
         }
-      # Mentry processing - common
+        # Mentry processing - common
         print("Start Mentry process")
         withProgress(
           rv$ment_out <- mentry(
