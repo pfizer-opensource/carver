@@ -280,6 +280,7 @@ mod_goutput_server <- function(id, sourcedata, repName, filters, process_btn) {
 
     observe({
       req(filters()$ae_pre)
+      req(tolower(repName()) %in% c("edish_plot"))
 
       series_opts <- plot_aes_opts(
         filters()$ae_pre,

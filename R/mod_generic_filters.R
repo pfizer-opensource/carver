@@ -309,14 +309,19 @@ mod_generic_filters_server <-
       
       observe({
         req(domain())
-        req(repName() %in% c("eDISH_plot"))
+        if (repName() == "eDISH_plot") {
+          text <- "PARAMCD %in% c('ALT', 'AST', 'BILI')"
+        } else {
+          text <- "USUBJID != ''"
+        }
         updateTextInput(
           session,
           "a_subset",
           "Analysis Subset",
-          "PARAMCD %in% c('ALT', 'AST', 'BILI')"
+          text
         )
-      })
+      }) %>%
+        bindEvent(repName())
 
       # observer to control showing/hiding inputs based on report selection
       observe({
