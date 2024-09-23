@@ -472,60 +472,53 @@ mod_generic_filters_server <-
         req(trt_sort())
         req(popfilter())
         req(input$overall_subset)
+        req(!tolower(repName()) %in% c("tornado_plot", "km plot", "eDISH_plot"))
         if (tolower(domain()) == "adae") {
           req(rv$ae_pre)
           print("AE byVar processing start")
           ## evaluating the by variables based on report selection
-          if (repType() == "Table") {
+          if (repType() == "Table" ||
+              tolower(repName()) %in% c("ae_volcano_plot", "ae_forest_plot", "event analysis")) {
             byv <- input$ae_hlt
           } else {
-            if (tolower(repName()) %in% c("ae_volcano_plot", "ae_forest_plot", "event analysis")) {
-              byv <- input$ae_hlt
-            } else {
-              byv <- NA
-            }
+            byv <- NA
           }
           print("AE byVar processing end")
+          datain <- rv$ae_pre[["data"]]
         } else {
           byv <- NA
+          datain <- sourcedata()[[domain()]]
           ## Take input$byvar here, if applicable
         }
-        # Mentry processing - common
-        if (!tolower(repName()) %in% c("tornado_plot", "event analysis", "eDISH_plot")) {
-          print("Start Mentry process")
-          if (toupper(domain()) == "ADAE") {
-            datain <- rv$ae_pre[["data"]]
-          } else {
-            datain <- sourcedata()[[domain()]]
-          }
-          withProgress(
-            rv$ment_out <- mentry(
-              datain = datain,
-              subset = input$overall_subset,
-              byvar = byv,
-              subgrpvar = NA, # take input$subgrpvar as required here
-              trtvar = toupper(trt_var()),
-              trtsort = trt_sort(),
-              pop_fil = str_trim(unlist(strsplit(
-                unique(popfilter()), "~"
-              ))[1]),
-              trttotalyn = ifelse(repType() == "Table", input$trttotalyn, "N"),
-              sgtotalyn = "N",
-              add_grpmiss = ifelse(repType() == "Table", input$grpvarmiss, "N")
-            ),
-            message = "Executing mentry processing...",
-            detail = "This step should take a while.",
-            min = 0,
-            max = 1,
-            value = 1
-          )
-          print("End Mentry process")
-        }
+      # Mentry processing - common
+        print("Start Mentry process")
+        withProgress(
+          rv$ment_out <- mentry(
+            datain = datain,
+            subset = input$overall_subset,
+            byvar = byv,
+            subgrpvar = NA, # take input$subgrpvar as required here
+            trtvar = toupper(trt_var()),
+            trtsort = trt_sort(),
+            pop_fil = str_trim(unlist(strsplit(
+              unique(popfilter()), "~"
+            ))[1]),
+            trttotalyn = ifelse(repType() == "Table", input$trttotalyn, "N"),
+            sgtotalyn = "N",
+            add_grpmiss = ifelse(repType() == "Table", input$grpvarmiss, "N")
+          ),
+          message = "Executing mentry processing...",
+          detail = "This step should take a while.",
+          min = 0,
+          max = 1,
+          value = 1
+        )
+        print("End Mentry process")
       }) |>
         bindEvent(
           list(
             repName(), input$overall_subset, input$trttotalyn, trt_var(),
-            trt_sort(), popfilter()
+            trt_sort(), popfilter(), input$ae_hlt
           )
         )
 
