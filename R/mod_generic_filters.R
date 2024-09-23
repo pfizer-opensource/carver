@@ -130,6 +130,10 @@ mod_generic_filters_ui <- function(id) {
         ),
         column(
           width = 3,
+          uiOutput(ns("ae_catvar_UI"))
+        ),
+        column(
+          width = 3,
           selectInput(
             ns("ae_llt"),
             "Event Term",
@@ -274,7 +278,7 @@ mod_generic_filters_server <-
     moduleServer(id, function(input, output, session) {
       ns <- session$ns
 
-      rv <- reactiveValues(ae_pre = NULL, ae_pre_comp = 0, mentry_out = NULL)
+      rv <- reactiveValues(ae_pre = NULL, ae_pre_comp = 0, mentry_out = NULL, process_tornado_data = NA)
 
       # Generic Outputs change between graph and table:
       observe({
@@ -315,20 +319,15 @@ mod_generic_filters_server <-
           } else {
             hide("period_spec")
           }
-          if (repName() == "tornado_plot") {
-            hide("ui_hlt")
-          } else {
-            show("ui_hlt")
-          }
         } else {
           hide("box_2")
         }
 
-        if (repName() %in% c("ae_forest_plot", "ae_volcano_plot", "adae_risk_summary")) {
-          show("box_3")
-        } else {
-          hide("box_3")
-        }
+        # if (repName() %in% c("ae_forest_plot", "ae_volcano_plot", "adae_risk_summary")) {
+        #   show("box_3")
+        # } else {
+        #   hide("box_3")
+        # }
         if (repName() %in% c("ae_forest_plot", "ae_volcano_plot")) {
           show("pvalcut")
           show("X_ref")
@@ -361,6 +360,26 @@ mod_generic_filters_server <-
           hide("ref_line")
           show("summary_by")
           show("cutoff")
+        }
+        
+        if (repName() == "tornado_plot") {
+          hide("ui_llt")
+          hide("ae_llt")
+          hide("pvalcut")
+          hide("alpha")
+          hide("riskScale")
+          hide("X_ref")
+          hide("pvalue_label")
+          hide("ref_line")
+          hide("statistics")
+          hide("cutoff")
+          hide("summary_by")
+        } else {
+          show("ui_hlt")
+          show("treatment1")
+          show("treatment2")
+          show("treatment1_label")
+          show("treatment2_label")
         }
       })
 
@@ -495,45 +514,45 @@ mod_generic_filters_server <-
       observe({
         req(rv$ae_pre)
         req(rv$ment_out)
-        if (tolower(repName()) %in% c("ae_volcano_plot", "ae_forest_plot", "adae_risk_summary")) {
+        if (tolower(repName()) %in% c("tornado_plot", "ae_volcano_plot", "ae_forest_plot", "adae_risk_summary")) {
           print("AE treatment pair processing start")
 
           TRTCD <- unique(rv$ment_out$TRTVAR[rv$ment_out$TRTVAR != ""])
 
           ## Single pair radio button selection for Volcano plot
           output$treatment1_UI <- renderUI({
-            req(tolower(repName()) %in% c("ae_volcano_plot", "adae_risk_summary"))
+            req(tolower(repName()) %in% c("tornado_plot", "ae_volcano_plot", "adae_risk_summary"))
             radioButtons(
               ns("treatment1"),
-              "Control Group",
+              if(repName()=="tornado_plot") "Treatment Left" else "Control Group",
               choices = TRTCD,
               selected = TRTCD[1]
             )
           })
 
           output$treatment2_UI <- renderUI({
-            req(tolower(repName()) %in% c("ae_volcano_plot", "adae_risk_summary"))
+            req(tolower(repName()) %in% c("tornado_plot", "ae_volcano_plot", "adae_risk_summary"))
             radioButtons(
               ns("treatment2"),
-              "Treatment Group",
+              if(repName()=="tornado_plot") "Treatment Right" else "Treatment Group",
               choices = setdiff(TRTCD, input$treatment1),
               selected = setdiff(TRTCD, input$treatment1)[1]
             )
           })
 
           output$treatment1_label_UI <- renderUI({
-            req(tolower(repName()) == "ae_volcano_plot")
+            req(tolower(repName()) %in% c("tornado_plot", "ae_volcano_plot"))
             textInput(ns("treatment1_label"),
-              "Label for Control Group",
-              value = "Control"
+              if(repName()=="tornado_plot") "Treatment Left Label" else "Label for Control Group",
+              value = if(repName()=="tornado_plot") input$treatment1 else "Control"
             )
           })
 
           output$treatment2_label_UI <- renderUI({
-            req(tolower(repName()) == "ae_volcano_plot")
+            req(tolower(repName()) %in% c("tornado_plot", "ae_volcano_plot"))
             textInput(ns("treatment2_label"),
-              "Label for Treatment Group",
-              value = "Treatment"
+              if(repName()=="tornado_plot") "Treatment Right Label" else "Label for Treatment Group",
+              value = if(repName()=="tornado_plot") input$treatment2 else "Treatment"
             )
           })
 
@@ -565,6 +584,96 @@ mod_generic_filters_server <-
       }) %>%
         bindEvent(list(rv$ae_pre_comp, rv$ment_out))
 
+      # Tornado Plot
+      
+      observe({
+        req(sourcedata())
+        req(domain())
+        req(repName())
+        req(repType())
+        if (tolower(repName()) %in% c("tornado_plot")) {
+          output$ae_catvar_UI <- renderUI({
+            selectInput(
+              inputId = ns("ae_catvar"),
+              label = "AE Categorical Variable",
+              choices = colnames(sourcedata()[[domain()]])[
+                  colnames(sourcedata()[[domain()]]) %in% c("AESEV", "ASEV", "AETOXGR", "ATOXGR")],
+              selected = "AESEV"
+            )
+          })
+          updateSelectInput(
+            session,
+            "ae_hlt",
+            selected = c("Primary System Organ Class (AESOC)" = "AESOC")
+          )
+        }
+      }) %>%
+        bindEvent(list(
+          repName()
+        ))
+      
+      observe({ 
+        req(sourcedata())
+        req(domain())
+        req(repName())
+        req(repType())
+        req(trt_var())
+        req(trt_sort())
+        req(popfilter())
+        req(input$ae_filter)
+        #req(input$subgrpvar)
+        req(input$ae_catvar)
+        req(input$treatment1)
+        req(input$treatment2)
+        req(input$trtbign)
+        req(input$ae_hlt)
+        if (tolower(repName()) %in% c("tornado_plot")) {
+          print("AE Tornado plot pre-processing start")
+          
+          data <- sourcedata()[[domain()]]
+          
+          ae_catvarN <- paste0(input$ae_catvar,"N")
+          if(!(ae_catvarN %in% colnames(data))){
+            data <- data |>
+              mutate(!!ae_catvarN := as.numeric(factor(.data[[input$ae_catvar]])))
+          }
+          
+          data <- data |>
+            mutate(SUBJID := .data[["USUBJID"]])
+          
+          rv$process_tornado_data <- process_tornado_data( 
+            dataset_adsl = NULL,
+            dataset_analysis = data,
+            adsl_subset = "",
+            analysis_subset = input$a_subset,
+            ae_filter = input$ae_filter,
+            obs_residual = ifelse(input$period == "Other", input$period_spec, NA),
+            fmq_data = utils::read.csv(paste0(
+              app_sys("extdata"), "/FMQ_Consolidated_List.csv"
+            )),
+            split_by = NA,
+            ae_catvar = input$ae_catvar,
+            trtvar = trt_var(),
+            trt_left = input$treatment1,
+            trt_right = input$treatment2,
+            trtsort = trt_sort(),
+            pop_fil = popfilter(),
+            pctdisp = "TRT",
+            denom_subset = NA,
+            legendbign = input$trtbign,
+            yvar = input$ae_hlt
+          )
+
+          print("AE Tornado plot pre-processing end")
+        }
+      }) %>%
+        bindEvent(list(
+          repName(), trt_var(), trt_sort(), popfilter(), 
+          input$ae_filter, input$ae_catvar, input$period, input$period_spec,
+          input$treatment1, input$treatment2, input$pctdisp, input$denom_subset, 
+          input$trtbign, input$ae_hlt
+        ))
+      
       filters <- reactive({
         req(rv$ae_pre)
         req(input$ae_filter)
@@ -601,6 +710,7 @@ mod_generic_filters_server <-
           treatment2 = input$treatment2,
           treatment1_label = input$treatment1_label,
           treatment2_label = input$treatment2_label,
+          process_tornado_data = rv$process_tornado_data,
           statistics = input$statistics,
           alpha = input$alpha,
           ui_pctdisp = input$pctdisp,

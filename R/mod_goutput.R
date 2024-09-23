@@ -245,6 +245,38 @@ mod_goutput_server <- function(id, sourcedata, repName, filters, process_btn) {
       print("AE Volcano Plot process end")
     }) %>%
       bindEvent(rv$output_trigger)
+    
+    observe({
+      req(tolower(repName()) %in% c("tornado_plot"))
+      req(filters()$process_tornado_data)
+      
+      print("AE Tornado Plot process start")
+      withProgress(message = "Generating Volcano Plot", value = 0, {
+      rv$goutput <- try(tornado_plot(
+          datain = filters()$process_tornado_data,
+          trt_left_label = filters()$treatment1_label,
+          trt_right_label = filters()$treatment2_label,
+          bar_width = 0.5,
+          axis_opts = plot_axis_opts(
+            xaxis_label = "Primary System Organ Class",
+            yaxis_label = "% of Subjects",
+            ylinearopts = list(
+              breaks = seq(-100, 100, 10),
+              labels = (c(seq(100, 0, -10), seq(10, 100, 10)))
+            )
+          ),
+          legend_opts = list(
+            label = "Severity",
+            pos = c(0.15, 0.15),
+            dir = "vertical"
+          ),
+          series_opts = g_seriescol(filters()$process_tornado_data, "blue~yellow~red", "BYVAR1"),
+          griddisplay = "N"
+        ))
+      })
+      print("AE Tornado Plot process end")
+    }) %>%
+      bindEvent(process_btn())
 
     observe({
       req(repName())
