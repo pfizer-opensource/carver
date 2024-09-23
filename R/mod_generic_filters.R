@@ -278,7 +278,7 @@ mod_generic_filters_server <-
     moduleServer(id, function(input, output, session) {
       ns <- session$ns
 
-      rv <- reactiveValues(ae_pre = NULL, ae_pre_comp = 0, mentry_out = NULL, process_tornado_data = NA)
+      rv <- reactiveValues(ae_pre = NULL, ae_pre_comp = 0, ment_out = NULL, process_tornado_data = NA)
 
       # Generic Outputs change between graph and table:
       observe({
@@ -304,6 +304,17 @@ mod_generic_filters_server <-
           session,
           "pctdisp",
           choices = pct_denom
+        )
+      })
+      
+      observe({
+        req(domain())
+        req(repName() %in% c("eDISH_plot"))
+        updateTextInput(
+          session,
+          "a_subset",
+          "Analysis Subset",
+          "PARAMCD %in% c('ALT', 'AST', 'BILI')"
         )
       })
 
@@ -472,7 +483,7 @@ mod_generic_filters_server <-
           ## Take input$byvar here, if applicable
         }
         # Mentry processing - common
-        if (!tolower(repName()) %in% c("tornado_plot", "event analysis", "km plot")) {
+        if (!tolower(repName()) %in% c("tornado_plot", "event analysis", "eDISH_plot")) {
           print("Start Mentry process")
           if (toupper(domain()) == "ADAE") {
             datain <- rv$ae_pre[["data"]]
@@ -673,6 +684,46 @@ mod_generic_filters_server <-
           input$ae_filter, input$ae_catvar, input$period, input$period_spec,
           input$treatment1, input$treatment2, input$pctdisp, input$denom_subset,
           input$trtbign, input$ae_hlt
+        ))
+      
+      observe({
+        req(sourcedata())
+        req(domain())
+        req(trt_var())
+        req(trt_sort())
+        req(popfilter())
+        req(repName() == "eDISH_plot")
+        req(input$a_subset)
+        req(input$overall_subset)
+        print("Edish process start")
+
+        merged_df <- sourcedata()$adsl %>%
+          adsl_merge(
+            dataset_add = filter(sourcedata()$adlb, !!!rlang::parse_exprs(input$a_subset))
+            ) %>%
+          mentry(
+            subset = input$overall_subset,
+            byvar = NA_character_,
+            subgrpvar = NA_character_,
+            trtvar = toupper(trt_var()),
+            trtsort = trt_sort(),
+            pop_fil = str_trim(unlist(strsplit(
+              unique(popfilter()), "~"
+            ))[1]),
+            trttotalyn = ifelse(repType() == "Table", input$trttotalyn, "N"),
+            sgtotalyn = "N",
+            add_grpmiss = ifelse(repType() == "Table", input$grpvarmiss, "N")
+          )
+        rv$ae_pre <- merged_df %>%
+          process_edish_data(
+            alt_paramcd = "ALT",
+            ast_paramcd = "AST",
+            bili_paramcd = "BILI"
+          )
+        print("Edish process ends")
+      }) %>%
+        bindEvent(list(
+          trt_var(), trt_sort(), popfilter(), input$a_subset, input$overall_subset
         ))
 
       filters <- reactive({

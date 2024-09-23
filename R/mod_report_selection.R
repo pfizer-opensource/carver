@@ -146,10 +146,13 @@ mod_report_selection_server <- function(id, sourcedata, domain, data_attr) {
     observe({
       req(input$tarea)
 
+      choices <- filter(report_meta(), TA == input$tarea & DOMAIN == toupper(input$bdomain)) %>%
+        pull(REPTYPE) %>%
+        unique()
+
       updateSelectInput(session,
         "repType",
-        choices = unique(report_meta()["REPTYPE"][report_meta()["TA"] == input$tarea &
-          report_meta()["DOMAIN"] == toupper(input$bdomain)])
+        choices = choices
       )
     }) %>%
       bindEvent(list(input$tarea, input$bdomain))

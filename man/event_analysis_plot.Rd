@@ -51,12 +51,12 @@ prep_ae <- adae |>
 
 ## prepare data for plot
 prep_entry <- prep_ae[["data"]] |>
-mentry(
-trtvar = "TRTA",
-trtsort = "TRTAN",
-trttotalyn = "N",
-byvar = "FMQ_NAM"
-)
+  mentry(
+    trtvar = "TRTA",
+    trtsort = "TRTAN",
+    trttotalyn = "N",
+    byvar = "FMQ_NAM"
+  )
 ## prepare data for plot
 prep_event_analysis <- prep_entry |>
   process_event_analysis(

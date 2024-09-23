@@ -251,7 +251,7 @@ mod_goutput_server <- function(id, sourcedata, repName, filters, process_btn) {
       req(filters()$process_tornado_data)
 
       print("AE Tornado Plot process start")
-      withProgress(message = "Generating Volcano Plot", value = 0, {
+      withProgress(message = "Generating Tornado Plot", value = 0, {
         rv$goutput <- try(tornado_plot(
           datain = filters()$process_tornado_data,
           trt_left_label = filters()$treatment1_label,
@@ -275,6 +275,47 @@ mod_goutput_server <- function(id, sourcedata, repName, filters, process_btn) {
         ))
       })
       print("AE Tornado Plot process end")
+    }) %>%
+      bindEvent(process_btn())
+
+    observe({
+      req(filters()$ae_pre)
+
+      series_opts <- plot_aes_opts(
+        filters()$ae_pre,
+        series_color = NA,
+        series_shape = "circlefilled~trianglefilled",
+        series_size = c(1.5, 1.5)
+      )
+
+      withProgress(message = "Generating eDISH Plot", value = 0, {
+        rv$goutput <- edish_plot(
+          datain = filters()$ae_pre,
+          axis_opts = plot_axis_opts(
+            xlinearopts = list(
+              breaks = c(0.1, 1, 2, 10),
+              limits = c(0.1, 10),
+              labels = c("0.1", "1", "2x ULN", "10")
+            ),
+            ylinearopts = list(
+              breaks = c(0.1, 1, 3, 10),
+              limits = c(0.1, 10),
+              labels = c("0.1", "1", "3x ULN", "10")
+            )
+          ),
+          xrefline = c("2", "gray30", "dashed"),
+          yrefline = c("3", "gray30", "dashed"),
+          quad_labels =
+            "Potential Hy's Law Cases~Temple's Corollary~Gilberts Syndrome or Cholestasis~Normal",
+          legend_opts = list(
+            label = "Treatment",
+            pos = "bottom", dir = "horizontal"
+          ),
+          series_opts = series_opts,
+          plot_title = NULL,
+          interactive = "N"
+        )
+      })
     }) %>%
       bindEvent(process_btn())
 

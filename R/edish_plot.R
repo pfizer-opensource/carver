@@ -1,138 +1,296 @@
-#' Incidence of Laboratory Test Abnormalities (Without Regard to Baseline Abnormality)
+
+#' Process data for eDISH plot
 #'
-#' @param datain Input dataset (`adlb`).
-#' @param crit_vars Criteria variables
-#' @param pctdisp Denominator to calculate percentages by.
-#' Values: `"TRT", "VAR","COL", "SUBGRP", "SGRPN", "CAT", "NONE", "NO", "DPTVAR"`
-#' @param a_subset Subset conditions for analysis of dependent variable.
-#' @param denom_subset Subset conditions for denominator eg. `"APSBLFL == 'Y'"`
+#' @param datain Input dataset.
+#' @param xvar To determine how `ast` and `alt` should be derived and which should be the
+#' `x` variable for the plot. Possible values are: `"both"`, `"ast"`, `"alt"`.
+#' If it is "ast" or "alt", the `AVAL` for the corresponding "PARAMCD" is used as X variable.
+#' Alternatively, if "both" then the max value between ast and alt for each record is used as X
+#' variable.
+#' @param alt_paramcd `PARAMCD` value for `ALANINE AMINOTRANSFERASE` in `datain`.
+#' @param ast_paramcd `PARAMCD` value for `ASPARTATE AMINOTRANSFERASE` in `datain`.
+#' @param bili_paramcd `PARAMCD` value for `BILIRUBIN` in `datain`.
 #'
-#' @return `data.frame` with summary of laboratory abnormality incidence counts
+#' @return A `data.frame` required for `edish_plot`.
 #' @export
 #'
 #' @examples
-#' data("lab_data")
+#' data("adlb")
+#' data("adsl")
 #'
-#' lb_entry <- lab_data$adlb |>
+#' merged_data <- adsl_merge(
+#'   adsl = adsl,
+#'   dataset_add = adlb
+#' ) |>
 #'   mentry(
-#'     subset = NA_character_,
-#'     byvar = "PARCAT1~PARAM",
-#'     subgrpvar = NA_character_,
-#'     trtvar = "TRTA",
-#'     trtsort = "TRTAN",
-#'     trttotalyn = "N",
-#'     sgtotalyn = "N",
-#'     add_grpmiss = "N",
-#'     pop_fil = "SAFFL"
+#'     subset = "SAFFL == 'Y'",
+#'     trtvar = "TRT01A",
+#'     trtsort = "TRT01AN"
 #'   )
 #'
-#' out <-
-#'   lb_entry |>
-#'   lab_abnormality_summary(
-#'     crit_vars = "CRIT3~CRIT4",
-#'     pctdisp = "SUBGRP",
-#'     a_subset = NA_character_,
-#'     denom_subset = NA_character_
-#'   ) |>
-#'   display_bign_head(mentry_data = lb_entry) |>
-#'   tbl_processor(
-#'     dptlabel = ""
+#' merged_data |>
+#'   process_edish_data(
+#'     xvar = "both",
+#'     alt_paramcd = "ALT",
+#'     ast_paramcd = "AST",
+#'     bili_paramcd = "BILI"
 #'   )
 #'
-#' out
-#'
-#' # `flextable` output
-#' out |>
-#'   tbl_display(
-#'     bylabel = "Parameter Category~Parameter",
-#'     dpthead = "Primary Criteria"
-#'   )
-#'
-lab_abnormality_summary <- function(datain,
-                                    crit_vars = "CRIT3~CRIT4",
-                                    pctdisp = "SUBGRP",
-                                    a_subset = NA_character_,
-                                    denom_subset = NA_character_) {
-  # Data checks and error messages
-  stopifnot(is.data.frame(datain) && nrow(datain) > 0)
-  dptvars <- toupper(str_to_vec(crit_vars))
-  dptvars_fl <- glue("{dptvars}FL")
-  byvars <- var_start(datain, "BYVAR")
-  byvarsN <- glue("{byvars}N")
-  stopifnot("Criteria Variables/Flags not present in `datain`" = all(dptvars %in% names(datain)) ||
-    all(dptvars_fl %in% names(datain)))
-  # handle denom_subset when not specified
-  if (is.na(denom_subset) || str_squish(denom_subset) == "") {
-    if ("APSBLFL" %in% names(datain)) {
-      message("`denom_subset` not specified, set to APSBLFL == 'Y'")
-      dsubset <- c("APSBLFL == 'Y'")
-    } else {
-      stop(
-        "`APSBLFL` not present in `datain`, please provide a valid denominator subset condition"
+process_edish_data <- function(datain,
+                               xvar = "both",
+                               alt_paramcd = "L00030S",
+                               ast_paramcd = "L00028S",
+                               bili_paramcd = "L00021S") {
+  stopifnot(is.data.frame(datain))
+  stopifnot("`xvar` must be one of 'alt', 'ast' or 'both'" = xvar %in% c("alt", "ast", "both"))
+  stopifnot(
+    "Please provide valid PARAMCD" =
+      all(c(alt_paramcd, ast_paramcd, bili_paramcd) %in% datain$PARAMCD)
+  )
+  
+  hy_data <- datain |>
+    filter(.data$PARAMCD %in% c(alt_paramcd, ast_paramcd, bili_paramcd)) |>
+    mutate(maxv = .data$AVAL / .data$ANRHI) |>
+    mutate(
+      PARM = case_when(
+        .data$PARAMCD == alt_paramcd ~ "alt",
+        .data$PARAMCD == ast_paramcd ~ "ast",
+        TRUE ~ "bili"
       )
-    }
+    )
+  
+  hy <- hy_data |>
+    group_by(across(all_of(c("USUBJID", "TRTVAR", "PARAMCD", "PARAM", "PARM")))) |>
+    summarise(x = max(.data$maxv)) |>
+    pivot_wider(
+      id_cols = c(USUBJID, TRTVAR),
+      names_from = PARM,
+      values_from = x
+    )
+  
+  if (xvar %in% c("alt", "ast")) {
+    hy <- hy |> mutate(XVAR = .data[[xvar]])
   } else {
-    dsubset <- denom_subset
+    hy <- hy |> mutate(XVAR = pmax(.data$ast, .data$alt))
   }
-  # Pre process adlb
-  adlb <- datain |>
-    filter(!str_sub(.data[["PARAMCD"]], start = -2L) %in% c("PL", "SL")) |>
-    # Replace missing values numeric equivalent grouping variables with 0
-    mutate(across(any_of(byvarsN), ~ replace_na(., 0)))
-  # Calculate lab abnormalities by Criteria Flags
-  seq_along(dptvars) |>
-    map(\(dptval) {
-      asubset <- glue("{dptvars_fl[dptval]} == 'Y'")
-      if (!is.na(a_subset) &&
-        str_squish(a_subset) != "") {
-        asubset <- glue("{a_subset} & {asubset}")
-      }
-      ## add lab abnormality counts
-      adlb |>
-        count_abnormalities(
-          asubset,
-          dsubset,
-          toupper(byvars),
-          dptvars[[dptval]],
-          pctdisp
-        )
-    }) |>
-    # combine and display lab abnormality table
-    bind_rows() |>
-    mutate(across(c("DENOMN", "CVALUE"), as.character)) |>
-    rename(N = DENOMN, n = CVALUE) |>
-    pivot_longer(c("N", "n"), names_to = "SUBGRPVARX", values_to = "CVALUE") |>
-    mutate(SUBGRPVARXN = 9999)
+  
+  hy |>
+    mutate(
+      text = paste0(
+        "Subjid = ",
+        USUBJID,
+        "\n",
+        ifelse(xvar == "both", "Max of ALT/AST = ",
+               paste("value of", toupper(xvar), "=")
+        ),
+        round(XVAR, 3),
+        "\n",
+        "Bilirubin = ",
+        round(bili, 3)
+      ),
+      YVAR = .data[["bili"]]
+    ) |>
+    na.omit()
 }
 
-#' Count Lab Abnormalities
+#' eDISH Plot
 #'
-#' @inheritParams lab_abnormality_summary
+#' @param datain Input dataset for the plot retreived from `process_edish_data()`
+#' @inheritParams scatter_plot
+#' @param xrefline `Xaxis` reference line format.
+#' @param yrefline `Yaxis` reference line format.
+#' @param quad_labels Labels for each quadrant in the plot, as a vector or a single tilde-separated
+#' string.
+#' @param interactive Interactive plot (`'Y'/'N'`).
 #'
-#' @return List of data frames
-#' @noRd
+#' @details
+#' \itemize{
+#'  \item `axis_opts` - The breaks and limits should not be `NULL`/empty.
+#'  \item `quad_labels` - The label for the each quadrant should be populated in the following
+#'  order: "upper right~lower right~upper left~lower left" or as a vector of length 4
+#' }
 #'
-count_abnormalities <-
-  function(datain,
-           a_subset,
-           denom_subset,
-           byvars,
-           dptvars,
-           pctdisp) {
-    crit_df <-
-      datain |>
-      filter(.data[[dptvars]] != "") |>
-      group_by(across(all_of(c(byvars, dptvars)))) |>
-      distinct() |>
-      ungroup() |>
-      rename(DPTVAR = all_of(dptvars))
-    ## summarize categorical variables on data filtered by criteria flags
-    crit_df |>
-      mcatstat(
-        a_subset = a_subset,
-        denom_subset = denom_subset,
-        dptvar = "DPTVAR",
-        pctdisp = pctdisp,
-        pctsyn = "N"
-      )
+#' @return A `ggplot` or `plotly` object
+#' @export
+#'
+#' @examples
+#' data("adsl")
+#' data("adlb")
+#'
+#' merged_data <- adsl_merge(
+#'   adsl = adsl,
+#'   dataset_add = adlb
+#' ) |>
+#'   mentry(
+#'     subset = "SAFFL == 'Y'",
+#'     trtvar = "TRT01A",
+#'     trtsort = "TRT01AN"
+#'   )
+#'
+#' pt_data <- process_edish_data(
+#'   datain = merged_data,
+#'   xvar = "both",
+#'   alt_paramcd = "ALT",
+#'   ast_paramcd = "AST",
+#'   bili_paramcd = "BILI"
+#' )
+#'
+#' series_opts <- plot_aes_opts(pt_data,
+#'   series_color = NA,
+#'   series_shape = "circlefilled~trianglefilled",
+#'   series_size = c(1.5, 1.5)
+#' )
+#' edish_plot(
+#'   datain = pt_data,
+#'   axis_opts = plot_axis_opts(
+#'     xlinearopts = list(
+#'       breaks = c(0.1, 1, 2, 10),
+#'       limits = c(0.1, 10),
+#'       labels = c("0.1", "1", "2x ULN", "10")
+#'     ),
+#'     ylinearopts = list(
+#'       breaks = c(0.1, 1, 3, 10),
+#'       limits = c(0.1, 10),
+#'       labels = c("0.1", "1", "3x ULN", "10")
+#'     )
+#'   ),
+#'   xrefline = c("2", "gray30", "dashed"),
+#'   yrefline = c("3", "gray30", "dashed"),
+#'   quad_labels =
+#'     "Potential Hy's Law Cases~Temple's Corollary~Gilberts Syndrome or Cholestasis~Normal",
+#'   legend_opts = list(
+#'     label = "Treatment",
+#'     pos = "bottom", dir = "horizontal"
+#'   ),
+#'   series_opts = series_opts,
+#'   plot_title = NULL,
+#'   interactive = "N"
+#' )
+#'
+edish_plot <- function(datain,
+                       axis_opts = plot_axis_opts(
+                         xlinearopts = list(
+                           breaks = c(0.1, 1, 2, 10),
+                           limits = c(0.1, 10),
+                           labels = c("0.1", "1", "2x ULN", "10")
+                         ),
+                         ylinearopts = list(
+                           breaks = c(0.1, 1, 3, 10),
+                           limits = c(0.1, 10),
+                           labels = c("0.1", "1", "3x ULN", "10")
+                         )
+                       ),
+                       xrefline = c("2", "gray30", "dashed"),
+                       yrefline = c("3", "gray30", "dashed"),
+                       quad_labels = c(
+                         "Potential Hy's Law Cases",
+                         "Temple's Corollary",
+                         "Gilberts Syndrome or Cholestasis",
+                         "Normal"
+                       ),
+                       series_opts = series_opts,
+                       plot_title = "",
+                       griddisplay = "N",
+                       legend_opts = list(
+                         label = "Treatment",
+                         pos = "bottom",
+                         dir = "horizontal"
+                       ),
+                       interactive = "N") {
+  stopifnot(is.data.frame(datain))
+  
+  ### Modified  plot options ####
+  if (length(axis_opts$Xbrks) > 0 && length(axis_opts$Xlims) > 0) {
+    axis_opts$Xlims[2] <- max(ceiling(max(datain$XVAR)), axis_opts$Xlims)
+    axis_opts$Xbrks[which.max(axis_opts$Xbrks)] <- min(
+      ceiling(max(datain$XVAR)),
+      max(axis_opts$Xbrks)
+    )
   }
+  
+  if (length(axis_opts$Ybrks) > 0 && length(axis_opts$Ylims) > 0) {
+    axis_opts$Ylims[2] <- max(ceiling(max(datain$XVAR)), axis_opts$Ylims)
+    axis_opts$Ybrks[which.max(axis_opts$Ybrks)] <- min(
+      ceiling(max(datain$XVAR)),
+      max(axis_opts$Ybrks)
+    )
+  }
+  # plot and options
+  # setting labels for each quadrants
+  quad_labels <- str_to_vec(quad_labels)
+  quad_labels_opts_x <- c(
+    max(axis_opts$Xbrks) - 1, max(axis_opts$Xbrks) - 1,
+    as.numeric(xrefline[1]) - 1,
+    as.numeric(xrefline[1]) - 1
+  )
+  quad_labels_opts_y <- c(
+    max(as.numeric(yrefline[1]), max(axis_opts$Ybrks)),
+    as.numeric(yrefline[1]) - 0.2,
+    max(as.numeric(yrefline[1]), max(axis_opts$Ybrks)),
+    as.numeric(yrefline[1]) - 0.2
+  )
+  
+  # for ploting values per subject
+  
+  sp <- datain |>
+    scatter_plot(
+      axis_opts = axis_opts,
+      series_var = "TRTVAR",
+      series_labelvar = ifelse("TRTTXT" %in% names(datain), "TRTTXT", "TRTVAR"),
+      series_opts = series_opts,
+      legend_opts = legend_opts,
+      plot_title = plot_title,
+      griddisplay = griddisplay
+    ) +
+    aes(text = .data[["text"]]) +
+    geom_hline(
+      yintercept = as.numeric(yrefline[1]),
+      color = yrefline[2],
+      linetype = yrefline[3]
+    ) +
+    geom_vline(
+      xintercept = as.numeric(xrefline[1]),
+      color = xrefline[2],
+      linetype = xrefline[3]
+    ) +
+    geom_hline(
+      yintercept = 1,
+      color = "grey30",
+      linetype = "solid"
+    ) +
+    geom_vline(
+      xintercept = 1,
+      color = "grey30",
+      linetype = "solid"
+    ) + # Add annotations to graph
+    annotate(
+      geom = "text",
+      x = quad_labels_opts_x[1],
+      y = quad_labels_opts_y[1],
+      label = quad_labels[1]
+    ) +
+    annotate(
+      geom = "text",
+      x = quad_labels_opts_x[2],
+      y = quad_labels_opts_y[2],
+      label = quad_labels[2]
+    ) +
+    annotate(
+      geom = "text",
+      x = quad_labels_opts_x[3],
+      y = quad_labels_opts_y[3],
+      label = quad_labels[3]
+    ) +
+    annotate(
+      geom = "text",
+      x = quad_labels_opts_x[4],
+      y = quad_labels_opts_y[4],
+      label = quad_labels[4]
+    )
+  
+  # ggplotly if interactive
+  if (interactive == "Y") {
+    sp <- as_plotly(plot = sp, hover = c("text"))
+  }
+  sp
+}
