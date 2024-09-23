@@ -596,15 +596,15 @@ mod_generic_filters_server <-
             selectInput(
               inputId = ns("ae_catvar"),
               label = "AE Categorical Variable",
-              choices = colnames(sourcedata()[[domain()]]),
+              choices = colnames(sourcedata()[[domain()]])[
+                  colnames(sourcedata()[[domain()]]) %in% c("AESEV", "ASEV", "AETOXGR", "ATOXGR")],
               selected = "AESEV"
             )
           })
           updateSelectInput(
             session,
             "ae_hlt",
-            choices = colnames(sourcedata()[[domain()]]),
-            selected = "AESOC"
+            selected = c("Primary System Organ Class (AESOC)" = "AESOC")
           )
         }
       }) %>%
