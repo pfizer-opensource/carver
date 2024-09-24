@@ -77,7 +77,7 @@ mod_generic_filters_ui <- function(id) {
             inline = TRUE
           )
         )
-      )
+        )
     ),
     box(
       id = ns("box_2"),
@@ -266,6 +266,79 @@ mod_generic_filters_ui <- function(id) {
           uiOutput(ns("trtgrp_UI"))
         )
       )
+    ),
+    box(
+      id = ns("adsl_1"),
+      title = tags$strong("ADSL Summary Inputs"),
+      maximizable = TRUE,
+      width = 12,
+      fluidRow(
+        column(width = 4,
+               uiOutput(ns("byvar_ui"))),
+        column(width = 4,
+               textInput(
+                 ns("bylabel"),
+                 "By Group Label",
+                 value = NULL
+               )),
+        column(width = 4,
+               uiOutput(ns("subgrp_ui"))),
+        column(width = 4,
+               uiOutput(ns("subtot_ui"))),
+        column(width = 4,
+               uiOutput(ns("subbign_ui")))
+      ),
+      fluidRow(
+        column(width = 6, uiOutput(ns("dptvar_ui"))),
+        column(width = 6, uiOutput(ns("dptlabel_ui")))),
+      fluidRow(
+        column(width = 4,
+               selectInput(
+                 ns("pctdisp_adsl"),
+                 "Percentage Denominator",
+                 choices = c("Treatment" = "TRT", "None" = "NO", "Total"  = "VAR",
+                             "Row-wise" = "CAT", "Column-wise" = "COL", "Treat-Subgrp" = "SUBGRP",
+                             "Group-category" = "DPTVAR")
+               )),
+        column(
+          width = 4,
+          radioButtons(
+            inputId = ns("misscat"),
+            label = "Display Missing Categories",
+            choices = c("Y", "N"),
+            selected = "N",
+            inline = TRUE
+          )
+        ),
+        column(
+          width = 4,
+          radioButtons(
+            inputId = ns("totcat"),
+            label = "Display Total Category row",
+            choices = c("Y", "N"),
+            selected = "N",
+            inline = TRUE
+          )
+        )
+      ),
+      fluidRow(
+        column(
+          width = 4,
+          textInput(
+            ns("statvar"),
+            label = "Statistics",
+            value = "N~Range~Meansd~Median~q1q3"
+          )
+        ),
+        column(
+          width = 4,
+          textInput(
+            ns("statlabel"),
+            label = "Statistics Labels",
+            value = "N~Range~Mean (SD)~Median~(Q1, Q3)"
+          )
+        )
+      )
     )
   )
 }
@@ -278,7 +351,9 @@ mod_generic_filters_server <-
     moduleServer(id, function(input, output, session) {
       ns <- session$ns
 
-      rv <- reactiveValues(ae_pre = NULL, ae_pre_comp = 0, ment_out = NULL, process_tornado_data = NA)
+      rv <- reactiveValues(ae_pre = NULL, ae_pre_comp = 0,
+                           ment_out = NULL, process_tornado_data = NA,
+                           adsl_sum_data = NULL)
 
       # Generic Outputs change between graph and table:
       observe({
@@ -341,12 +416,11 @@ mod_generic_filters_server <-
         } else {
           hide("box_2")
         }
-
-        # if (repName() %in% c("ae_forest_plot", "ae_volcano_plot", "adae_risk_summary")) {
-        #   show("box_3")
-        # } else {
-        #   hide("box_3")
-        # }
+        if (repName() %in% c("ae_forest_plot", "ae_volcano_plot", "adae_risk_summary")) {
+          show("box_3")
+        } else {
+          hide("box_3")
+        }
         if (repName() %in% c("ae_forest_plot", "ae_volcano_plot")) {
           show("pvalcut")
           show("X_ref")
@@ -399,6 +473,12 @@ mod_generic_filters_server <-
           show("treatment2")
           show("treatment1_label")
           show("treatment2_label")
+        }
+        
+        if (tolower(repName()) == "adsl_summary") {
+          show("adsl_1")
+        } else {
+          hide("adsl_1")
         }
       })
 
@@ -473,6 +553,9 @@ mod_generic_filters_server <-
         req(popfilter())
         req(input$overall_subset)
         req(!tolower(repName()) %in% c("tornado_plot", "km plot", "eDISH_plot"))
+        byv <- NA
+        subv <- NA
+        subtotyn <- "N"
         if (tolower(domain()) == "adae") {
           req(rv$ae_pre)
           print("AE byVar processing start")
@@ -480,31 +563,39 @@ mod_generic_filters_server <-
           if (repType() == "Table" ||
             tolower(repName()) %in% c("ae_volcano_plot", "ae_forest_plot", "event analysis")) {
             byv <- input$ae_hlt
-          } else {
-            byv <- NA
           }
           print("AE byVar processing end")
           datain <- rv$ae_pre[["data"]]
         } else {
-          byv <- NA
           datain <- sourcedata()[[domain()]]
           ## Take input$byvar here, if applicable
         }
-        # Mentry processing - common
+        if (repName() == "adsl_summary") {
+          if (!is.null(input$byvar) && input$byvar != "") {
+            byv <- input$byvar
+          }
+          if (!is.null(input$subgrp) && input$subgrp != "") {
+            subv <- input$subgrp
+            if (!is.null(input$subtotyn)) {
+              subtotyn <- input$subtotyn
+            }
+          }
+        }
+      # Mentry processing - common
         print("Start Mentry process")
         withProgress(
           rv$ment_out <- mentry(
             datain = datain,
             subset = input$overall_subset,
             byvar = byv,
-            subgrpvar = NA, # take input$subgrpvar as required here
+            subgrpvar = subv, # take input$subgrpvar as required here
             trtvar = toupper(trt_var()),
             trtsort = trt_sort(),
             pop_fil = str_trim(unlist(strsplit(
               unique(popfilter()), "~"
             ))[1]),
             trttotalyn = ifelse(repType() == "Table", input$trttotalyn, "N"),
-            sgtotalyn = "N",
+            sgtotalyn = subtotyn,
             add_grpmiss = ifelse(repType() == "Table", input$grpvarmiss, "N")
           ),
           message = "Executing mentry processing...",
@@ -518,7 +609,7 @@ mod_generic_filters_server <-
         bindEvent(
           list(
             repName(), input$overall_subset, input$trttotalyn, trt_var(),
-            trt_sort(), popfilter(), input$ae_hlt
+            trt_sort(), popfilter(), input$ae_hlt, input$byvar, input$subgrp, input$subtotyn
           )
         )
 
@@ -526,7 +617,8 @@ mod_generic_filters_server <-
       observe({
         req(rv$ae_pre)
         req(rv$ment_out)
-        if (tolower(repName()) %in% c("tornado_plot", "ae_volcano_plot", "ae_forest_plot", "adae_risk_summary")) {
+        if (tolower(repName()) %in% c("tornado_plot", "ae_volcano_plot",
+                                      "ae_forest_plot", "adae_risk_summary")) {
           print("AE treatment pair processing start")
 
           TRTCD <- unique(rv$ment_out$TRTVAR[rv$ment_out$TRTVAR != ""])
@@ -624,7 +716,121 @@ mod_generic_filters_server <-
         bindEvent(list(
           repName()
         ))
-
+      
+      #ADSL table
+      observe({
+        req(sourcedata())
+        req(domain())
+        req(repName())
+        if (tolower(repName()) == "adsl_summary") {
+          print("adsl inputs")
+        tempdata <- sourcedata()[[domain()]]
+        byvars <- names(which(sapply(tempdata, \(.) !is.numeric(.))))
+        output$byvar_ui <- renderUI({
+          req(tolower(repName()) == "adsl_summary")
+            selectInput(
+              ns("byvar"),
+              "By group Variable",
+              choices = byvars,
+              multiple = TRUE,
+              selected = NULL
+            )
+        })
+        output$subgrp_ui <- renderUI({
+          req(tolower(repName()) == "adsl_summary")
+          if (!is.null(input$byvar) && input$byvar != "") {
+            subvar <- byvars[!byvars %in% input$byvar]
+          } else {
+            subvar <- names(which(sapply(tempdata, \(.) !is.numeric(.))))
+          }
+          selectInput(
+            ns("subgrp"),
+            "Sub-group Variable",
+            choices = subvar,
+            multiple = TRUE,
+            selected = NULL
+          )
+        })
+        
+        output$subbign_ui <- renderUI({
+          req(input$subgrp)
+          req(tolower(repName()) == "adsl_summary")
+          radioButtons(
+            inputId = ns("subbign"),
+            label = "Display Subgroup 'N'",
+            choices = c("Y", "N"),
+            selected = "N",
+            inline = TRUE
+          )
+        })
+        output$subtot_ui <- renderUI({
+          req(input$subgrp)
+          req(tolower(repName()) == "adsl_summary")
+          radioButtons(
+            inputId = ns("subtotyn"),
+            label = "Display Subgroup Total Column",
+            choices = c("Y", "N"),
+            selected = "N",
+            inline = TRUE
+          )
+        })
+        output$dptvar_ui <- renderUI({
+          req(tolower(repName()) == "adsl_summary")
+          textInput(
+            ns("dptvar"),
+            "Analysis Variables",
+            value = "AGEGR1~AGE-S~SEX~RACE"
+          )
+        })
+        output$dptlabel_ui <- renderUI({
+          req(tolower(repName()) == "adsl_summary")
+          textInput(
+            ns("dptlabel"),
+            "Analysis Variable Labels",
+            value = "Age Group, n (%)~Age (Years)~Sex, n (%)~Race, n (%)"
+          )
+        })
+        }
+      }) |>
+        bindEvent(repName())
+      
+      # ADSL table process start
+      observe({
+        req(sourcedata())
+        req(domain())
+        req(repName())
+        req(tolower(repName()) == "adsl_summary")
+        req(rv$ment_out)
+        req(input$dptvar)
+        req(input$statvar)
+        req(input$a_subset)
+        req(input$pctdisp_adsl)
+        req(input$totcat)
+        req(input$misscat)
+        print("adsl_summary starts")
+        withProgress(
+          message = "Processing ADSL Summary",
+          value = 1,
+          {
+          rv$adsl_sum_data <- adsl_summary(
+            datain = rv$ment_out,
+            vars = input$dptvar,
+            stat_vars = input$statvar,
+            pctdisp = input$pctdisp_adsl,
+            total_catyn = input$totcat,
+            total_catlabel = "Total",
+            miss_catyn = input$misscat,
+            miss_catlabel = "Missing",
+            a_subset = input$a_subset,
+            denom_subset = NA_character_
+          )
+          }
+        )
+        print("adsl_summary ends")
+      }) |>
+        bindEvent(list(repName(), rv$ment_out, input$dptvar, input$statvar, input$pctdisp_adsl,
+                       input$totcat, input$misscat, input$a_subset))
+      
       observe({
         req(sourcedata())
         req(domain())
@@ -634,7 +840,6 @@ mod_generic_filters_server <-
         req(trt_sort())
         req(popfilter())
         req(input$ae_filter)
-        # req(input$subgrpvar)
         req(input$ae_catvar)
         req(input$treatment1)
         req(input$treatment2)
@@ -752,6 +957,7 @@ mod_generic_filters_server <-
         list(
           ae_pre = rv$ae_pre,
           ment_out = rv$ment_out,
+          adsl_sum_data = rv$adsl_sum_data,
           trt_var = trt_var(),
           a_subset = input$a_subset,
           trtbign = input$trtbign,
@@ -776,7 +982,11 @@ mod_generic_filters_server <-
           riskScale = input$riskScale,
           X_ref = input$X_ref,
           pvalue_label = input$pvalue_label,
-          ref_line = input$ref_line
+          ref_line = input$ref_line,
+          dptlabel = input$dptlabel,
+          statlabel = input$statlabel,
+          bylabel = input$bylabel,
+          subbign = input$subbign
         )
       })
       filters

@@ -58,7 +58,7 @@ mod_toutput_server <- function(id, repName, filters, popfilter, process_btn) {
       req(repName())
       req(popfilter())
       req(filters())
-      req(tolower(repName()) %in% c("adae_risk_summary", "adae_tier_summary"))
+      if (tolower(repName()) %in% c("adae_risk_summary", "adae_tier_summary")) {
       req(filters()$ae_pre)
       req(filters()$ae_filter)
       req(filters()$ae_llt)
@@ -158,9 +158,45 @@ mod_toutput_server <- function(id, repName, filters, popfilter, process_btn) {
             autofit()
         )
       }
+      } else if (tolower(repName()) == "adsl_summary") {
+        print("ADSL Summary Output starts")
+        req(filters()$adsl_sum_data)
+        req(filters()$ment_out)
+        if (!is.null(filters()$bylabel)) {
+          bylabel <- filters()$bylabel
+        } else {
+          bylabel <- NA_character_
+        }
+        rv$title <- paste0("Demographic Summary Table \n", popfilter(), " population")
+        withProgress(message = "Generating ADSL Summary table", value = 1, {
+          rv$outdata <- try(
+            tbl_processor(
+              datain = filters()$adsl_sum_data,
+              dptlabel = filters()$dptlabel,
+              statlabel = filters()$statlabel,
+              addrowvars = "DPTVAR"
+            ) |>
+              display_bign_head(
+                mentry_data = filters()$ment_out,
+                trtbignyn = filters()$trtbign,
+                subbignyn = filters()$subbign
+              )
+          )
+          print("Out data created")
+          rv$tout <- try(
+            tbl_display(
+              datain = rv$outdata,
+              bylabel = bylabel
+            ) |>
+              autofit()
+          )
+        }
+        )
+        print("ADSL Summary Output ends")
+      }
     }) %>%
       bindEvent(process_btn())
-
+    
     output$table_UI <- renderUI({
       req(rv$tout)
       ft <- rv$tout %>%
