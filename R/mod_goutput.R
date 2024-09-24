@@ -478,13 +478,15 @@ mod_goutput_server <- function(id, sourcedata, repName, filters, process_btn) {
             hterm = filters()$ae_hlt,
             ht_val = input$hlt_val,
             ht_scope = ifelse(filters()$ae_hlt %in% c("SMQ_NAM", "FMQ_NAM", "CQ_NAM"),
-                              input$hlt_cat,
-                              ""),
+              input$hlt_cat,
+              ""
+            ),
             lterm = filters()$ae_llt,
             lt_val = input$llt_val,
             lt_scope = ifelse(filters()$ae_llt %in% c("SMQ_NAM", "FMQ_NAM", "CQ_NAM"),
-                              input$llt_cat,
-                              "")
+              input$llt_cat,
+              ""
+            )
           )
         )
         rv$goutput <- try(
