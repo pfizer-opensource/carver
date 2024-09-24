@@ -77,7 +77,7 @@ mod_generic_filters_ui <- function(id) {
             inline = TRUE
           )
         )
-        )
+      )
     ),
     box(
       id = ns("box_2"),
@@ -273,33 +273,48 @@ mod_generic_filters_ui <- function(id) {
       maximizable = TRUE,
       width = 12,
       fluidRow(
-        column(width = 4,
-               uiOutput(ns("byvar_ui"))),
-        column(width = 4,
-               textInput(
-                 ns("bylabel"),
-                 "By Group Label",
-                 value = NULL
-               )),
-        column(width = 4,
-               uiOutput(ns("subgrp_ui"))),
-        column(width = 4,
-               uiOutput(ns("subtot_ui"))),
-        column(width = 4,
-               uiOutput(ns("subbign_ui")))
+        column(
+          width = 4,
+          uiOutput(ns("byvar_ui"))
+        ),
+        column(
+          width = 4,
+          textInput(
+            ns("bylabel"),
+            "By Group Label",
+            value = NULL
+          )
+        ),
+        column(
+          width = 4,
+          uiOutput(ns("subgrp_ui"))
+        ),
+        column(
+          width = 4,
+          uiOutput(ns("subtot_ui"))
+        ),
+        column(
+          width = 4,
+          uiOutput(ns("subbign_ui"))
+        )
       ),
       fluidRow(
         column(width = 6, uiOutput(ns("dptvar_ui"))),
-        column(width = 6, uiOutput(ns("dptlabel_ui")))),
+        column(width = 6, uiOutput(ns("dptlabel_ui")))
+      ),
       fluidRow(
-        column(width = 4,
-               selectInput(
-                 ns("pctdisp_adsl"),
-                 "Percentage Denominator",
-                 choices = c("Treatment" = "TRT", "None" = "NO", "Total"  = "VAR",
-                             "Row-wise" = "CAT", "Column-wise" = "COL", "Treat-Subgrp" = "SUBGRP",
-                             "Group-category" = "DPTVAR")
-               )),
+        column(
+          width = 4,
+          selectInput(
+            ns("pctdisp_adsl"),
+            "Percentage Denominator",
+            choices = c(
+              "Treatment" = "TRT", "None" = "NO", "Total" = "VAR",
+              "Row-wise" = "CAT", "Column-wise" = "COL", "Treat-Subgrp" = "SUBGRP",
+              "Group-category" = "DPTVAR"
+            )
+          )
+        ),
         column(
           width = 4,
           radioButtons(
@@ -351,9 +366,11 @@ mod_generic_filters_server <-
     moduleServer(id, function(input, output, session) {
       ns <- session$ns
 
-      rv <- reactiveValues(ae_pre = NULL, ae_pre_comp = 0,
-                           ment_out = NULL, process_tornado_data = NA,
-                           adsl_sum_data = NULL)
+      rv <- reactiveValues(
+        ae_pre = NULL, ae_pre_comp = 0,
+        ment_out = NULL, process_tornado_data = NA,
+        adsl_sum_data = NULL
+      )
 
       # Generic Outputs change between graph and table:
       observe({
@@ -474,7 +491,7 @@ mod_generic_filters_server <-
           show("treatment1_label")
           show("treatment2_label")
         }
-        
+
         if (tolower(repName()) == "adsl_summary") {
           show("adsl_1")
         } else {
@@ -581,7 +598,7 @@ mod_generic_filters_server <-
             }
           }
         }
-      # Mentry processing - common
+        # Mentry processing - common
         print("Start Mentry process")
         withProgress(
           rv$ment_out <- mentry(
@@ -617,8 +634,10 @@ mod_generic_filters_server <-
       observe({
         req(rv$ae_pre)
         req(rv$ment_out)
-        if (tolower(repName()) %in% c("tornado_plot", "ae_volcano_plot",
-                                      "ae_forest_plot", "adae_risk_summary")) {
+        if (tolower(repName()) %in% c(
+          "tornado_plot", "ae_volcano_plot",
+          "ae_forest_plot", "adae_risk_summary"
+        )) {
           print("AE treatment pair processing start")
 
           TRTCD <- unique(rv$ment_out$TRTVAR[rv$ment_out$TRTVAR != ""])
@@ -716,18 +735,18 @@ mod_generic_filters_server <-
         bindEvent(list(
           repName()
         ))
-      
-      #ADSL table
+
+      # ADSL table
       observe({
         req(sourcedata())
         req(domain())
         req(repName())
         if (tolower(repName()) == "adsl_summary") {
           print("adsl inputs")
-        tempdata <- sourcedata()[[domain()]]
-        byvars <- names(which(sapply(tempdata, \(.) !is.numeric(.))))
-        output$byvar_ui <- renderUI({
-          req(tolower(repName()) == "adsl_summary")
+          tempdata <- sourcedata()[[domain()]]
+          byvars <- names(which(sapply(tempdata, \(.) !is.numeric(.))))
+          output$byvar_ui <- renderUI({
+            req(tolower(repName()) == "adsl_summary")
             selectInput(
               ns("byvar"),
               "By group Variable",
@@ -735,65 +754,65 @@ mod_generic_filters_server <-
               multiple = TRUE,
               selected = NULL
             )
-        })
-        output$subgrp_ui <- renderUI({
-          req(tolower(repName()) == "adsl_summary")
-          if (!is.null(input$byvar) && input$byvar != "") {
-            subvar <- byvars[!byvars %in% input$byvar]
-          } else {
-            subvar <- names(which(sapply(tempdata, \(.) !is.numeric(.))))
-          }
-          selectInput(
-            ns("subgrp"),
-            "Sub-group Variable",
-            choices = subvar,
-            multiple = TRUE,
-            selected = NULL
-          )
-        })
-        
-        output$subbign_ui <- renderUI({
-          req(input$subgrp)
-          req(tolower(repName()) == "adsl_summary")
-          radioButtons(
-            inputId = ns("subbign"),
-            label = "Display Subgroup 'N'",
-            choices = c("Y", "N"),
-            selected = "N",
-            inline = TRUE
-          )
-        })
-        output$subtot_ui <- renderUI({
-          req(input$subgrp)
-          req(tolower(repName()) == "adsl_summary")
-          radioButtons(
-            inputId = ns("subtotyn"),
-            label = "Display Subgroup Total Column",
-            choices = c("Y", "N"),
-            selected = "N",
-            inline = TRUE
-          )
-        })
-        output$dptvar_ui <- renderUI({
-          req(tolower(repName()) == "adsl_summary")
-          textInput(
-            ns("dptvar"),
-            "Analysis Variables",
-            value = "AGEGR1~AGE-S~SEX~RACE"
-          )
-        })
-        output$dptlabel_ui <- renderUI({
-          req(tolower(repName()) == "adsl_summary")
-          textInput(
-            ns("dptlabel"),
-            "Analysis Variable Labels",
-            value = "Age Group, n (%)~Age (Years)~Sex, n (%)~Race, n (%)"
-          )
-        })
+          })
+          output$subgrp_ui <- renderUI({
+            req(tolower(repName()) == "adsl_summary")
+            if (!is.null(input$byvar) && input$byvar != "") {
+              subvar <- byvars[!byvars %in% input$byvar]
+            } else {
+              subvar <- names(which(sapply(tempdata, \(.) !is.numeric(.))))
+            }
+            selectInput(
+              ns("subgrp"),
+              "Sub-group Variable",
+              choices = subvar,
+              multiple = TRUE,
+              selected = NULL
+            )
+          })
+
+          output$subbign_ui <- renderUI({
+            req(input$subgrp)
+            req(tolower(repName()) == "adsl_summary")
+            radioButtons(
+              inputId = ns("subbign"),
+              label = "Display Subgroup 'N'",
+              choices = c("Y", "N"),
+              selected = "N",
+              inline = TRUE
+            )
+          })
+          output$subtot_ui <- renderUI({
+            req(input$subgrp)
+            req(tolower(repName()) == "adsl_summary")
+            radioButtons(
+              inputId = ns("subtotyn"),
+              label = "Display Subgroup Total Column",
+              choices = c("Y", "N"),
+              selected = "N",
+              inline = TRUE
+            )
+          })
+          output$dptvar_ui <- renderUI({
+            req(tolower(repName()) == "adsl_summary")
+            textInput(
+              ns("dptvar"),
+              "Analysis Variables",
+              value = "AGEGR1~AGE-S~SEX~RACE"
+            )
+          })
+          output$dptlabel_ui <- renderUI({
+            req(tolower(repName()) == "adsl_summary")
+            textInput(
+              ns("dptlabel"),
+              "Analysis Variable Labels",
+              value = "Age Group, n (%)~Age (Years)~Sex, n (%)~Race, n (%)"
+            )
+          })
         }
       }) |>
         bindEvent(repName())
-      
+
       # ADSL table process start
       observe({
         req(sourcedata())
@@ -812,25 +831,27 @@ mod_generic_filters_server <-
           message = "Processing ADSL Summary",
           value = 1,
           {
-          rv$adsl_sum_data <- adsl_summary(
-            datain = rv$ment_out,
-            vars = input$dptvar,
-            stat_vars = input$statvar,
-            pctdisp = input$pctdisp_adsl,
-            total_catyn = input$totcat,
-            total_catlabel = "Total",
-            miss_catyn = input$misscat,
-            miss_catlabel = "Missing",
-            a_subset = input$a_subset,
-            denom_subset = NA_character_
-          )
+            rv$adsl_sum_data <- adsl_summary(
+              datain = rv$ment_out,
+              vars = input$dptvar,
+              stat_vars = input$statvar,
+              pctdisp = input$pctdisp_adsl,
+              total_catyn = input$totcat,
+              total_catlabel = "Total",
+              miss_catyn = input$misscat,
+              miss_catlabel = "Missing",
+              a_subset = input$a_subset,
+              denom_subset = NA_character_
+            )
           }
         )
         print("adsl_summary ends")
       }) |>
-        bindEvent(list(repName(), rv$ment_out, input$dptvar, input$statvar, input$pctdisp_adsl,
-                       input$totcat, input$misscat, input$a_subset))
-      
+        bindEvent(list(
+          repName(), rv$ment_out, input$dptvar, input$statvar, input$pctdisp_adsl,
+          input$totcat, input$misscat, input$a_subset
+        ))
+
       observe({
         req(sourcedata())
         req(domain())
