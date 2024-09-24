@@ -474,14 +474,6 @@ mod_generic_filters_server <-
         if (repName() == "tornado_plot") {
           hide("ui_llt")
           hide("ae_llt")
-          hide("pvalcut")
-          hide("alpha")
-          hide("riskScale")
-          hide("X_ref")
-          hide("pvalue_label")
-          hide("ref_line")
-          hide("statistics")
-          hide("cutoff")
           hide("summary_by")
         } else {
           show("ui_hlt")
