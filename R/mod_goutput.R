@@ -156,7 +156,8 @@ mod_goutput_server <- function(id, sourcedata, repName, filters, process_btn) {
         value = 1
       )
       rv$outdata <- rv$outdata |>
-        filter(!is.nan(.data[["RISK"]]), !is.infinite(.data[["RISK"]]))
+        filter(!is.nan(.data[["RISK"]]), !is.infinite(.data[["RISK"]])) |>
+        mutate(key = dplyr::row_number())
       print("AE risk_stat process end")
       rv$output_trigger <- rv$output_trigger + 1
     }) %>%
@@ -476,10 +477,14 @@ mod_goutput_server <- function(id, sourcedata, repName, filters, process_btn) {
             summary_by = filters()$summary_by,
             hterm = filters()$ae_hlt,
             ht_val = input$hlt_val,
-            ht_scope = input$hlt_cat,
+            ht_scope = ifelse(filters()$ae_hlt %in% c("SMQ_NAM", "FMQ_NAM", "CQ_NAM"),
+                              input$hlt_cat,
+                              ""),
             lterm = filters()$ae_llt,
             lt_val = input$llt_val,
-            lt_scope = input$llt_cat
+            lt_scope = ifelse(filters()$ae_llt %in% c("SMQ_NAM", "FMQ_NAM", "CQ_NAM"),
+                              input$llt_cat,
+                              "")
           )
         )
         rv$goutput <- try(
@@ -498,9 +503,7 @@ mod_goutput_server <- function(id, sourcedata, repName, filters, process_btn) {
       event <- plotly::event_data("plotly_click", source = "plot_output")
       req(length(event) > 0)
 
-      if (tolower(repName()) == "ae_forest_plot") {
-        test <- rv$goutput$drill_plt$data[as.numeric(event$key), ]
-      } else if (tolower(repName()) == "ae_volcano_plot") {
+      if (tolower(repName()) %in% c("ae_forest_plot", "ae_volcano_plot")) {
         test <- rv$outdata[as.numeric(event$key), ]
       } else {
         if (event$curveNumber == 0 && event$x > 0) {
@@ -544,7 +547,7 @@ mod_goutput_server <- function(id, sourcedata, repName, filters, process_btn) {
       req(length(plotly::event_data("plotly_click", source = "plot_output")) > 0)
       runjs("Shiny.setInputValue('plotly_click-plot_output', null);")
     }) %>%
-      bindEvent(list(repName(), rv$goutput$drill_plt$data, rv$goutput$plot$data))
+      bindEvent(list(repName(), rv$goutput$x$data, rv$goutput$plot$data))
 
     observe({
       if (is.null(plotly::event_data("plotly_click", source = "plot_output"))) {
@@ -597,7 +600,7 @@ mod_goutput_server <- function(id, sourcedata, repName, filters, process_btn) {
       "plot_profile_1",
       sourcedata = reactive(sourcedata()),
       sel_rows = reactive(input$plot_listing_rows_selected),
-      datain = reactive(filters()$ae_pre$dout),
+      datain = reactive(filters()$ae_pre),
       plot_data = plot_data
     )
 
