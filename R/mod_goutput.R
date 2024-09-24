@@ -156,7 +156,8 @@ mod_goutput_server <- function(id, sourcedata, repName, filters, process_btn) {
         value = 1
       )
       rv$outdata <- rv$outdata |>
-        filter(!is.nan(.data[["RISK"]]), !is.infinite(.data[["RISK"]]))
+        filter(!is.nan(.data[["RISK"]]), !is.infinite(.data[["RISK"]])) |>
+        mutate(key = dplyr::row_number())
       print("AE risk_stat process end")
       rv$output_trigger <- rv$output_trigger + 1
     }) %>%
@@ -498,9 +499,7 @@ mod_goutput_server <- function(id, sourcedata, repName, filters, process_btn) {
       event <- plotly::event_data("plotly_click", source = "plot_output")
       req(length(event) > 0)
 
-      if (tolower(repName()) == "ae_forest_plot") {
-        test <- rv$goutput$drill_plt$data[as.numeric(event$key), ]
-      } else if (tolower(repName()) == "ae_volcano_plot") {
+      if (tolower(repName()) %in% c("ae_forest_plot", "ae_volcano_plot")) {
         test <- rv$outdata[as.numeric(event$key), ]
       } else {
         if (event$curveNumber == 0 && event$x > 0) {
