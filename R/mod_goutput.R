@@ -543,7 +543,7 @@ mod_goutput_server <- function(id, sourcedata, repName, filters, process_btn) {
       req(length(plotly::event_data("plotly_click", source = "plot_output")) > 0)
       runjs("Shiny.setInputValue('plotly_click-plot_output', null);")
     }) %>%
-      bindEvent(list(repName(), rv$goutput$drill_plt$data, rv$goutput$plot$data))
+      bindEvent(list(repName(), rv$goutput$x$data, rv$goutput$plot$data))
 
     observe({
       if (is.null(plotly::event_data("plotly_click", source = "plot_output"))) {
@@ -596,7 +596,7 @@ mod_goutput_server <- function(id, sourcedata, repName, filters, process_btn) {
       "plot_profile_1",
       sourcedata = reactive(sourcedata()),
       sel_rows = reactive(input$plot_listing_rows_selected),
-      datain = reactive(filters()$ae_pre$dout),
+      datain = reactive(filters()$ae_pre),
       plot_data = plot_data
     )
 
