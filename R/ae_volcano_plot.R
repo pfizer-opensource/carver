@@ -116,7 +116,8 @@ ae_volcano_plot <- function(datain,
         x = .data[["RISK"]],
         y = .data[["PVALUE"]],
         text = .data[["HOVER_TEXT"]],
-        fill = .data[["BYVAR1"]]
+        fill = .data[["BYVAR1"]],
+        key = .data[["key"]]
       )
     ) + # color code by SOC
     geom_point(aes(size = .data[["CTRL_N"]]), pch = 21, alpha = 0.5)

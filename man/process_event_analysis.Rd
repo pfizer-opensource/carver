@@ -7,9 +7,6 @@
 process_event_analysis(
   datain,
   a_subset = NA_character_,
-  trtvar,
-  trtsort = NA_character_,
-  trttotalyn = "N",
   summary_by = "Events",
   hterm,
   ht_val,
@@ -23,14 +20,6 @@ process_event_analysis(
 \item{datain}{Input dataset can be any \code{ADaM} data.}
 
 \item{a_subset}{Analysis subset condition.}
-
-\item{trtvar}{Treatment variable name string assigned as \code{TRTVAR}.}
-
-\item{trtsort}{Treatment sorting variable name string - numeric or
-character variable assigned as \code{TRTSORT}.}
-
-\item{trttotalyn}{Add total treatment values to be displayed as column in
-table or category in plot (\code{"Y"/"N"}).}
 
 \item{summary_by}{Set to \code{'Events'} or \code{'Patients'}.}
 
@@ -63,14 +52,17 @@ prep_ae <- adae |>
     obs_residual = 0,
     fmq_data = FMQ_Consolidated_List
   )
-
-## prepare data for plot
-prep_event_analysis <- prep_ae[["data"]] |>
-  process_event_analysis(
-    a_subset = glue::glue("AOCCPFL == 'Y' & {prep_ae$a_subset}"),
+prep_entry <- prep_ae[["data"]] |>
+  mentry(
     trtvar = "TRTA",
     trtsort = "TRTAN",
-    trttotalyn = "Y",
+    trttotalyn = "N",
+    byvar = "FMQ_NAM"
+  )
+## prepare data for plot
+prep_event_analysis <- prep_entry |>
+  process_event_analysis(
+    a_subset = glue::glue("AOCCPFL == 'Y' & {prep_ae$a_subset}"),
     summary_by = "Events",
     hterm = "FMQ_NAM",
     ht_val = "ABDOMINAL PAIN",

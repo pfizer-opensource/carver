@@ -21,7 +21,7 @@
 #' @export
 #'
 #' @examples
-#' library(tlfcarver)
+#' library(carver)
 #' library(ggplot2)
 #' ggplot(data = mtcars, mapping = aes(x = mpg, y = hp)) +
 #'   geom_point() +
@@ -68,10 +68,9 @@ g_seriescol <- function(gdata,
   if (!is.factor(gdata[[SERIESVAR]])) gdata[[SERIESVAR]] <- as.factor(gdata[[SERIESVAR]])
 
   # Set names as factor levels
-  seriescols <- setNames(
-    col_list[seq_along(unique(gdata[[SERIESVAR]]))],
-    levels(unique(gdata[[SERIESVAR]]))
-  )
+  levs <- levels(unique(gdata[[SERIESVAR]]))
+  vals <- levs[levs %in% unique(gdata[[SERIESVAR]])]
+  seriescols <- setNames(col_list[seq_along(vals)], vals)
   return(seriescols)
 }
 
@@ -139,10 +138,10 @@ g_seriessym <- function(gdata,
   }
 
   # Set names as factor levels
-  ptshapes <- setNames(
-    shapelist[seq_along(unique(gdata[[SERIESVAR]]))],
-    levels(unique(gdata[[SERIESVAR]]))
-  )
+  # Set names as factor levels
+  levs <- levels(unique(gdata[[SERIESVAR]]))
+  vals <- levs[levs %in% unique(gdata[[SERIESVAR]])]
+  ptshapes <- setNames(shapelist[seq_along(vals)], vals)
   return(ptshapes)
 }
 
@@ -160,7 +159,7 @@ g_seriessym <- function(gdata,
 #' @export
 #'
 #' @examples
-#' library(tlfcarver)
+#' library(carver)
 #' empty_plot()
 empty_plot <- function(message = "No data available for these values",
                        fontsize = 8) {
@@ -205,7 +204,7 @@ def_axis_spec <- function(arg, vec, val) {
 #' @export
 #'
 #' @examples
-#' library(tlfcarver)
+#' library(carver)
 #'
 #' plot_axis_opts(
 #'   xlinearopts = list(
@@ -581,7 +580,7 @@ plot_title_nsubj <- function(datain, plot_data, by) {
   } else {
     plot_data <- bind_cols(plot_data, adsin_count)
   }
-  return(plot_data)
+  plot_data
 }
 
 #' Convert dataframe into ggplot object table
@@ -600,7 +599,7 @@ plot_title_nsubj <- function(datain, plot_data, by) {
 #' @export
 #'
 #' @examples
-#' library(tlfcarver)
+#' library(carver)
 #' MPG <- ggplot2::mpg
 #' MPG[["cyl"]] <- as.character(MPG[["cyl"]])
 #' tbl_to_plot(

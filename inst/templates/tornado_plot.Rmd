@@ -1,0 +1,164 @@
+---
+output:
+  pdf_document:
+    toc: no
+  html_document:
+    toc: no
+    toc_float: yes
+    toc_collapsed: no
+    highlight: kate
+    theme: spacelab
+    fig_caption: yes
+    df_print: paged
+params:
+  G_ADSL_DSIN: tornado_plot_data[["adsl"]]
+  G_ADSL_SUBSET: "SAFFL == 'Y'"
+  G_A_DSIN: tornado_plot_data[["adae"]]
+  G_GTL_A_SUBSET: !r NA_character_
+  G_S_TRTVAR: ARMCD
+  G_GTL_TRTSORT: !r NA_character_
+  G_TRT1: A
+  G_TRT1_LABEL: Drug B
+  G_TRT2: A
+  G_TRT2_LABEL: Drug C
+  G_GROUP: AESEV
+  G_GTL_FMQ_DATA: !r NA_character_
+  G_GTL_AE_FILTER: "Treatment emergent"
+  G_GTL_AEOBSRESIDUAL: !r 30
+  G_GTL_DENOM_SUBSET: !r NA_character_
+  G_GTL_POPULATION_FILTER: "Overall Population"
+  G_GTL_PCTDISP: TRT
+  G_GTL_SPLITBY: !r NA_character_
+  G_GTL_SPLITLAB: ""
+  G_BARCHART_OPTIONS: !r list(bar_width = 0.5)
+  G_D_MARKER_COLOR: blue~yellow~red
+  G_GTL_LEGENDOPTS: !r list(label = "Severity", pos = c(0.15, 0.15), dir = "vertical")
+  G_XAXIS_LABEL: Percentage of Subjects
+  G_GTL_XAXISLINEAROPTS: !r list(breaks = seq(-100, 100, 10), labels = (c(seq(100, 0, -10), seq(10, 100, 10))))
+  G_YAXIS_GRID: N
+  G_YAXIS_LABEL: Primary System Organ Class
+  G_YAXIS_VAR: AEBODSYS
+  G_GTL_LEGEND_BIGN: N
+  TITLE: "Tornado Plot"
+  FOOTNOTE: ""
+header-includes:
+  - \usepackage{fancyhdr}
+  - \usepackage{lastpage}
+  - \pagestyle{fancy}
+  - \fancyhf{}
+  - \fancyhead[R]{Page \thepage\, of\, \pageref*{LastPage}}
+  - \renewcommand{\headrulewidth}{0pt}
+  - '`r paste0("\\fancyhead[L]{\\textbf{", params$TITLE, "}}")`'
+  - '`r paste0("\\fancyfoot[L]{", params$FOOTNOTE, "}")`'
+  - \setlength{\headsep}{10pt}
+  - \setlength{\headheight}{50pt}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
+library(tlfcarver)
+library(dplyr)
+library(ggplot2)
+library(purrr)
+library(rlang, include.only = "parse_expr")
+
+is_html <- knitr::opts_knit$get("rmarkdown.pandoc.to") == "html"
+title <-  gsub("\\\\", "<br>", params$TITLE)
+footer <- gsub("\\\\", "<br>", params$FOOTNOTE)
+```
+
+```{r tornado_data, message=FALSE, eval=TRUE}
+# Tornado Plot Preprocess
+plot_data <-
+  process_tornado_data(
+    dataset_adsl = eval(parse_expr(params$G_ADSL_DSIN)),
+    dataset_analysis = eval(parse_expr(params$G_A_DSIN)),
+    adsl_subset = params$G_ADSL_SUBSET,
+    analysis_subset = params$G_GTL_A_SUBSET,
+    ae_filter = params$G_GTL_AE_FILTER,
+    obs_residual = params$G_GTL_AEOBSRESIDUAL,
+    fmq_data = params$G_GTL_FMQ_DATA,
+    ae_catvar = params$G_GROUP,
+    split_by = params$G_GTL_SPLITBY,
+    trtvar = params$G_S_TRTVAR,
+    trt_left = params$G_TRT1,
+    trt_right = params$G_TRT2,
+    trtsort = params$G_GTL_TRTSORT,
+    pop_fil = params$G_GTL_POPULATION_FILTER,
+    pctdisp = params$G_GTL_PCTDISP,
+    denom_subset = params$G_GTL_DENOM_SUBSET,
+    legendbign = params$G_GTL_LEGEND_BIGN,
+    yvar = params$G_YAXIS_VAR
+ )
+
+## Split Data by grouping variables `G_GTL_SPLITBY`
+data_list <- split_data_by_var(
+  datain = plot_data,
+  split_by_prefix = ifelse(
+    !is.na(params$G_GTL_SPLITBY) & params$G_GTL_SPLITBY != "",
+    "SUBGRPVAR", ""
+  )
+)
+
+```
+
+```{r,echo=FALSE, message=FALSE, eval=TRUE , warning=FALSE, results='hide'}
+series_opts <- g_seriescol(plot_data, params$G_D_MARKER_COLOR, "BYVAR1")
+
+# Create plot output
+plot_list <- map(
+  seq_along(data_list),
+  function(i) {
+    stopifnot(is.data.frame(data_list[[i]]))
+    stopifnot(nrow(data_list[[i]]) > 0)
+      tornado_plot(
+       datain = data_list[[i]],
+       trt_left_label = params$G_TRT1_LABEL,
+       trt_right_label = params$G_TRT2_LABEL,
+       bar_width = params$G_BARCHART_OPTIONS$bar_width,
+       axis_opts = plot_axis_opts(
+         xaxis_label = params$G_YAXIS_LABEL,
+         yaxis_label = params$G_XAXIS_LABEL,
+         ylinearopts = params$G_GTL_XAXISLINEAROPTS
+       ),
+       legend_opts = params$G_GTL_LEGENDOPTS,
+       series_opts = series_opts,
+       griddisplay = params$G_YAXIS_GRID
+     )
+  }
+)
+```
+ 
+<b>`r if (is_html) title`</b>
+
+```{r output, fig.align='right', fig.height=6, fig.width=9, warning=FALSE, results = "asis"}
+# Split section headers
+section_headers <-
+  split_section_headers(
+    datain = plot_data,
+    split_by_prefix = if_else(
+      params$G_GTL_SPLITBY == "" |
+        is.na(params$G_GTL_SPLITBY),
+      "", "SUBGRPVAR"
+    ),
+    split_lab = params$G_GTL_SPLITLAB
+  )
+
+
+## printing plot outputs
+walk(
+  seq_along(plot_list),
+  function(i) {
+    cat("#### ", section_headers[[i]], "\n\n")
+    print(plot_list[[i]])
+    cat("\n")
+    if (!is_html) {
+      cat("\n\n\n\\pagebreak\n")
+    } else {
+      cat("\n")
+    }
+  }
+)
+```
+
+`r if (is_html) footer`

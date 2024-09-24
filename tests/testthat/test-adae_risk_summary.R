@@ -57,7 +57,8 @@ test_that("High cutoff as expected", {
       cutoff = 20,
       sort_opt = "Ascending",
       sort_var = "Count"
-    ))
+    )
+  )
 })
 
 test_that("Errors Resolved correctly", {

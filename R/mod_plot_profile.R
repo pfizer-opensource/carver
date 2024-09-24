@@ -105,7 +105,7 @@ mod_plot_profile_server <- function(id, sourcedata, sel_rows, datain, plot_data)
     observe({
       req(sel_rows())
       req(datain())
-      datain <- list(AE = datain())
+      datain <- list(AE = datain()$data)
       dom_names <- names(rv$sourcedata)
       if (any(c("cm", "adcm") %in% dom_names)) {
         datain[["CM"]] <- rv$sourcedata[[dom_names[endsWith(dom_names, "cm")][1]]]

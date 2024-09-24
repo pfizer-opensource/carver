@@ -85,7 +85,7 @@ risk_stat <-
       "Invalid Risk Statistics; specify any one of `Risk Ratio` or `Risk Difference`" =
         statistics %in% c("Risk Ratio", "Risk Difference")
     )
-    trt_list <- datain[["TRTVAR"]]
+    trt_list <- levels(datain[["TRTVAR"]])
     ## getting equivalent data variable for given summary by selection
     summ_var <-
       recode(tolower(summary_by),
@@ -117,8 +117,6 @@ risk_stat <-
           dptvar = eventvar,
           pctdisp = "TRT"
         )
-
-        stopifnot(nrow(mcat_out) > 0, !is.null(mcat_out))
 
         rout <- add_risk_stat(
           mcatout = mcat_out,
@@ -157,7 +155,8 @@ risk_stat <-
         risk_hover_text(summary_by, eventvar) |>
         ord_summ_df(sort_var, sort_opt, g_sort_by_ht)
       risk_out[["TRTVAR"]] <- factor(risk_out[["TRTVAR"]],
-                                     levels = unique(risk_out[["TRTVAR"]][order(trt_list)]))
+        levels = trt_list, ordered = TRUE
+      )
     }
     risk_out
   }
@@ -179,6 +178,9 @@ add_risk_stat <- function(mcatout,
                           statistics = "Risk Ratio",
                           alpha = 0.05,
                           cutoff = 2) {
+  if (nrow(mcatout) < 1 || !all(c(ctrlgrp, trtgrp) %in% unique(mcatout$TRTVAR))) {
+    return(data.frame())
+  }
   risk_prep <- mcatout |>
     mutate(
       TRTCD =
@@ -235,7 +237,6 @@ add_risk_stat <- function(mcatout,
     rename(CTRL_N = "FREQ_CTRLGRP", CTRL_PCT = "PCT_CTRLGRP") |>
     select(-c("risk_out", any_of(starts_with("DENOMN")), any_of(ends_with("TRTGRP")))) |>
     pivot_longer(c("CTRL", "ACTIVE"), values_to = "TRTVAR", names_to = NULL)
-
 }
 
 #' Calculate Risk Statistics

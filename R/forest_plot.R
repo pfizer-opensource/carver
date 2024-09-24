@@ -72,7 +72,8 @@ forest_plot_base <- function(datain,
       xmin = .data[[xminvar]],
       xmax = .data[[xmaxvar]],
       text = .data[[hovervar]],
-      group = .data[[series_var]], color = .data[[series_var]]
+      group = .data[[series_var]], color = .data[[series_var]],
+      key = .data[["key"]]
     )
   ) +
     ggstance::geom_errorbarh(
@@ -168,7 +169,8 @@ forest_plot_scatter <- function(datain,
       color = .data[[series_var]],
       shape = .data[[series_var]],
       size = .data[[series_var]],
-      text = .data[[hovervar]]
+      text = .data[[hovervar]],
+      key = .data[["key"]]
     )
   ) +
     geom_point() +
