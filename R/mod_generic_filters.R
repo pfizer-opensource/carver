@@ -366,11 +366,8 @@ mod_generic_filters_server <-
     moduleServer(id, function(input, output, session) {
       ns <- session$ns
 
-      rv <- reactiveValues(
-        ae_pre = NULL, ae_pre_comp = 0,
-        ment_out = NULL, process_tornado_data = NA,
-        adsl_sum_data = NULL
-      )
+      rv <- reactiveValues(ae_pre = NULL, ae_pre_comp = 0,
+                           ment_out = NULL, process_tornado_data = NA)
 
       # Generic Outputs change between graph and table:
       observe({
@@ -831,18 +828,18 @@ mod_generic_filters_server <-
           message = "Processing ADSL Summary",
           value = 1,
           {
-            rv$adsl_sum_data <- adsl_summary(
-              datain = rv$ment_out,
-              vars = input$dptvar,
-              stat_vars = input$statvar,
-              pctdisp = input$pctdisp_adsl,
-              total_catyn = input$totcat,
-              total_catlabel = "Total",
-              miss_catyn = input$misscat,
-              miss_catlabel = "Missing",
-              a_subset = input$a_subset,
-              denom_subset = NA_character_
-            )
+          rv$ae_pre <- adsl_summary(
+            datain = rv$ment_out,
+            vars = input$dptvar,
+            stat_vars = input$statvar,
+            pctdisp = input$pctdisp_adsl,
+            total_catyn = input$totcat,
+            total_catlabel = "Total",
+            miss_catyn = input$misscat,
+            miss_catlabel = "Missing",
+            a_subset = input$a_subset,
+            denom_subset = NA_character_
+          )
           }
         )
         print("adsl_summary ends")
@@ -978,7 +975,6 @@ mod_generic_filters_server <-
         list(
           ae_pre = rv$ae_pre,
           ment_out = rv$ment_out,
-          adsl_sum_data = rv$adsl_sum_data,
           trt_var = trt_var(),
           a_subset = input$a_subset,
           trtbign = input$trtbign,

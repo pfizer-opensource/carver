@@ -160,7 +160,7 @@ mod_toutput_server <- function(id, repName, filters, popfilter, process_btn) {
         }
       } else if (tolower(repName()) == "adsl_summary") {
         print("ADSL Summary Output starts")
-        req(filters()$adsl_sum_data)
+        req(filters()$ae_pre)
         req(filters()$ment_out)
         if (!is.null(filters()$bylabel)) {
           bylabel <- filters()$bylabel
@@ -170,17 +170,17 @@ mod_toutput_server <- function(id, repName, filters, popfilter, process_btn) {
         rv$title <- paste0("Demographic Summary Table \n", popfilter(), " population")
         withProgress(message = "Generating ADSL Summary table", value = 1, {
           rv$outdata <- try(
-            tbl_processor(
-              datain = filters()$adsl_sum_data,
+            display_bign_head(
+              datain = filters()$ae_pre,
+              mentry_data = filters()$ment_out,
+              trtbignyn = filters()$trtbign,
+              subbignyn = ifelse(!is.null(filters()$subbign), filters()$subbign, "N")
+            ) |>
+              tbl_processor(
               dptlabel = filters()$dptlabel,
               statlabel = filters()$statlabel,
               addrowvars = "DPTVAR"
-            ) |>
-              display_bign_head(
-                mentry_data = filters()$ment_out,
-                trtbignyn = filters()$trtbign,
-                subbignyn = filters()$subbign
-              )
+            )
           )
           print("Out data created")
           rv$tout <- try(
