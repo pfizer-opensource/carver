@@ -177,10 +177,10 @@ mod_toutput_server <- function(id, repName, filters, popfilter, process_btn) {
               subbignyn = ifelse(!is.null(filters()$subbign), filters()$subbign, "N")
             ) |>
               tbl_processor(
-              dptlabel = filters()$dptlabel,
-              statlabel = filters()$statlabel,
-              addrowvars = "DPTVAR"
-            )
+                dptlabel = filters()$dptlabel,
+                statlabel = filters()$statlabel,
+                addrowvars = "DPTVAR"
+              )
           )
           print("Out data created")
           rv$tout <- try(
