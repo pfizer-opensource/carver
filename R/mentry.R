@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-#' Function to read in and process data with subsets and variables.
+#' Read and process data with subsets and variables
 #'
 #' @description
 #'
@@ -33,6 +33,8 @@
 #' @param trttotalyn Add total treatment values to be displayed as column in
 #' table or category in plot (`"Y"/"N"`).
 #' @param trttotlabel Label for total Treatment column/group
+#' @param trtmissyn Retain Missing treatment counts in Total (if `trttotalyn` = Y). Missing
+#' treatment will not be considered as a column in analysis in any case.
 #' @param sgtotalyn Add total subgroup values to be displayed as column in
 #' table or category in plot (`"Y"/"N"`).
 #' @param add_grpmiss Add row or column for missing category in grouping
@@ -99,10 +101,13 @@ mentry <- function(datain,
                    trtsort = NA,
                    trttotalyn = "N",
                    trttotlabel = "Total",
+                   trtmissyn = "N",
                    sgtotalyn = "N",
                    add_grpmiss = "N",
                    pop_fil = "Overall Population") {
-  stopifnot(is.data.frame(datain), nrow(datain) > 0)
+  if (!is.data.frame(datain) || nrow(datain) == 0) {
+    return(data.frame())
+  }
   byvarlist <- sep_var_order(byvar)
   byvar <- byvarlist[["vars"]]
   sgvarlist <- sep_var_order(subgrpvar)
@@ -147,7 +152,7 @@ mentry <- function(datain,
   ## TRTVARs
   if (!is.na(trtvar) && str_squish(trtvar) != "") {
     dsin <- dsin |>
-      create_trtvar(trtvar, trtsort, trttotalyn, trttotlabel)
+      create_trtvar(trtvar, trtsort, trttotalyn, trttotlabel, trtmissyn)
   }
   # Remove invalid Treatment Values
   if ("TRTVAR" %in% names(dsin)) {
@@ -157,7 +162,9 @@ mentry <- function(datain,
         "SCREEN FAILURE",
         "SCRNFAIL",
         "NOTRT",
-        "NOTASSGN"
+        "NOTASSGN",
+        "",
+        NA_character_
       )
     ))
   }
@@ -181,10 +188,10 @@ create_grpvars <- function(dsin, vars, varN, new_var = "BYVAR", totalyn = "N", t
     grpvarN <- paste0(grpvar, "N")
     var <- vars[x]
     varN <- varN[x]
-
+    
     df <- dsin |>
       mutate(!!grpvar := as.character(.data[[var]]))
-
+    
     if (varN %in% names(df)) {
       df <- df |>
         mutate(!!grpvarN := .data[[varN]])
@@ -192,7 +199,7 @@ create_grpvars <- function(dsin, vars, varN, new_var = "BYVAR", totalyn = "N", t
       df <- df |>
         mutate(!!grpvarN := as.numeric(factor(.data[[var]])))
     }
-
+    
     if (totalyn == "Y") {
       df <- df |>
         bind_rows(mutate(df, !!grpvar := totlabel, !!grpvarN := 9999))
@@ -213,19 +220,25 @@ create_grpvars <- function(dsin, vars, varN, new_var = "BYVAR", totalyn = "N", t
 #' @param trtvar Treatment Variable
 #' @param trtsort Treatment Sorting variable
 #' @param trttotalyn Display treatment total (`Y/N`)
+#' @param trtmissyn Retain Missing treatment counts in Total (if `trttotalyn` = Y)
 #'
 #' @return Data frame with added `TRT` variables
 #' @noRd
-create_trtvar <- function(dsin, trtvar, trtsort, trttotalyn, trttotlabel = "Total") {
+create_trtvar <- function(dsin, trtvar, trtsort, trttotalyn, trttotlabel = "Total", trtmissyn) {
   map <- c(trt = "TRTVAR", sort = "TRTSORT")
-
+  
   df <- dsin |>
     mutate(!!unname(map["trt"]) := .data[[trtvar]])
-
+  # keep missing treatments in total if trtmissyn is given (always removed in post)
+  if (trtmissyn != "Y") {
+    df <- df |>
+      filter(!(.data[["TRTVAR"]] %in% c("", NA_character_)))
+  }
+  # Create trt sorting variable
   if (is.na(trtsort) || str_squish(trtsort) == "") {
     trtsort <- trtvar
   }
-
+  
   if (trtsort %in% names(df) && is.numeric(df[[trtsort]])) {
     df <- df |>
       mutate(!!unname(map["sort"]) := .data[[trtsort]])
@@ -233,16 +246,16 @@ create_trtvar <- function(dsin, trtvar, trtsort, trttotalyn, trttotlabel = "Tota
     df <- df |>
       mutate(!!unname(map["sort"]) := as.numeric(factor(.data[[trtsort]])))
   }
-
+  
   if (trttotalyn == "Y") {
     df <- df |>
       bind_rows(mutate(df, !!unname(map["trt"]) := trttotlabel, !!unname(map["sort"]) := 999))
   }
-
+  
   df |>
     mutate(!!unname(map["trt"]) := factor(.data[[unname(map["trt"])]],
-      levels = unique(.data[[unname(map["trt"])]][order(.data[[unname(map["sort"])]])]),
-      ordered = TRUE
+                                          levels = unique(.data[[unname(map["trt"])]][order(.data[[unname(map["sort"])]])]),
+                                          ordered = TRUE
     ))
 }
 
@@ -266,7 +279,7 @@ sep_var_order <- function(vars, var_sep = "~", ord_sep = "/") {
       }
       sep_vars
     })
-
+  
   bind_cols(map(set_names(unique(names(flatten(var_list)))), \(col) {
     map_chr(var_list, \(df) pluck(df, col))
   }))

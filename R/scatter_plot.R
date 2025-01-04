@@ -1,3 +1,17 @@
+# Copyright 2024 Pfizer Inc
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
 #' Create Scatter Plot
 #'
 #' @param datain `data.frame` retrieved from `process_vx_scatter_data()`.
@@ -126,10 +140,10 @@ scatter_plot <-
     stopifnot(series_var %in% names(datain))
     stopifnot(length(series_opts$shape) == length(series_opts$color))
     stopifnot(length(series_opts$size) == length(series_opts$color))
-
+    
     legend_label <- legend_opts$label
     series_labels <- series_leg_lab(datain, series_var, series_labelvar)
-
+    
     g <- ggplot(
       datain,
       aes(
@@ -232,15 +246,15 @@ process_vx_scatter_data <-
     if (!is.na(split_by) && str_squish(split_by) != "") {
       stopifnot(all(str_to_vec(split_by) %in% toupper(names(dataset_adsl))))
     }
-
+    
     adsl_sub <- adsl_merge(
       dataset_adsl,
       adsl_subset,
       dataset_analysis
     )
-
+    
     stopifnot(nrow(adsl_sub) > 0)
-
+    
     mentry_df <- adsl_sub |>
       mentry(
         subset = analysis_subset,
@@ -250,19 +264,19 @@ process_vx_scatter_data <-
         add_grpmiss = "N",
         pop_fil = "Overall Population"
       )
-
+    
     stopifnot(nrow(mentry_df) > 0)
-
+    
     a_dsin <- mentry_df |>
       mutate(Vars = case_when(
         !!!parse_exprs(xvar) ~ "XVAR",
         !!!parse_exprs(yvar) ~ "YVAR"
       ))
-
+    
     if (all(is.na(a_dsin[["Vars"]]))) {
       stop("`xvar/yvar` are invalid")
     }
-
+    
     a_dsin_ <- pivot_wider(
       a_dsin,
       id_cols = c(SUBJID, TRTVAR, starts_with("SUBGRPVAR")),
@@ -270,6 +284,6 @@ process_vx_scatter_data <-
       values_from = AVAL
     ) |>
       plot_display_bign(mentry_df, bignyn = legendbign)
-
+    
     return(a_dsin_)
   }

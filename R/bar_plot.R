@@ -46,7 +46,8 @@
 #' adsl_sum <- msumstat(
 #'   datain = adsl_entry,
 #'   dptvar = "AGE",
-#'   statvar = "mean"
+#'   statvar = "mean",
+#'   figyn = "Y"
 #' )[["gsum"]] |>
 #'   plot_display_bign(adsl_entry) |>
 #'   dplyr::mutate(
@@ -94,7 +95,7 @@ bar_plot <- function(datain,
   # Remove empty rows
   datain <- datain |>
     mutate(YVAR = as.numeric(YVAR))
-
+  
   # Bar plot:
   # Legend Labels if based on other variable:
   series_labels <- series_leg_lab(datain, series_var, series_labelvar)
@@ -110,7 +111,7 @@ bar_plot <- function(datain,
       values = series_opts$color,
       labels = series_labels
     )
-
+  
   if (bar_pos == "stacked") {
     g_plot <- g_plot +
       geom_bar(stat = "identity", width = bar_width)
@@ -140,7 +141,7 @@ bar_plot <- function(datain,
       y = axis_opts$yaxis_label
     ) +
     theme_std(axis_opts, legend_opts, griddisplay)
-
+  
   # Rotate plot if needed:
   if (flip_plot == "Y") {
     g_plot <- g_plot + coord_flip()

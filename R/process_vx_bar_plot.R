@@ -79,17 +79,17 @@ process_vx_bar_plot <- function(dataset_adsl,
   stopifnot(nrow(dataset_analysis) > 0)
   stopifnot(trtvar %in% toupper(names(dataset_adsl)))
   stopifnot("AVAL" %in% toupper(names(dataset_analysis)))
-
+  
   if (!is.na(split_by) && str_squish(split_by) != "") {
     stopifnot(all(str_to_vec(split_by) %in% toupper(names(dataset_adsl))))
   }
-
+  
   adsl_out <- adsl_merge(
     dataset_adsl,
     adsl_subset,
     dataset_analysis
   )
-
+  
   mentry_out <- mentry(
     datain = adsl_out,
     subset = overall_subset,
@@ -99,19 +99,20 @@ process_vx_bar_plot <- function(dataset_adsl,
     trtsort = trtsort,
     add_grpmiss = "N"
   )
-
+  
   mcatstat_out <- mcatstat(
     datain = mentry_out,
     a_subset = analysis_subset,
     denom_subset = denom_subset,
     uniqid = "USUBJID",
     dptvar = xvar,
-    pctdisp = pctdisp
+    pctdisp = pctdisp,
+    sparseyn = "N"
   ) |>
     mutate(
       YVAR = as.numeric(.data[[yvar]]),
       XVAR = factor(XVAR,
-        levels = unique(XVAR[order(DPTVALN)])
+                    levels = unique(XVAR[order(DPTVALN)])
       )
     )
   plotdata <- plot_title_nsubj(
@@ -120,6 +121,6 @@ process_vx_bar_plot <- function(dataset_adsl,
     var_start(mcatstat_out, "SUBGRP")
   ) |>
     plot_display_bign(mentry_out, bignyn = legendbign)
-
+  
   return(plotdata)
 }

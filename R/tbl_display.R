@@ -80,29 +80,32 @@ tbl_processor <- function(datain,
   if (any(keepvars == "")) {
     rep <- rep |>
       select(
-        -any_of(c("DENOMN", "TRTTXT", "FREQ", "PCT", "XVAR", "TOTAL_N", "TRTPAIR", dropvars)),
+        -any_of(c(
+          "DENOMN", "TRTTXT", "FREQ", "PCT", "CPCT", "XVAR",
+          "TOTAL_N", "TRTPAIR", dropvars
+        )),
         -starts_with("HOVER")
       )
   } else {
     rep <- rep |>
       select(
         any_of(c(BYVAR, "DPTVAR", "DPTVAL",
-          "DPTVAL" = "STAT", "TRTVAR", SUBGRP, BYVARN, SUBGRPN,
-          "DPTVARN", "DPTVALN", "DPTVALN" = "STATN", "CVALUE", "CN", keepvars
+                 "DPTVAL" = "STAT", "TRTVAR", SUBGRP, BYVARN, SUBGRPN,
+                 "DPTVARN", "DPTVALN", "DPTVALN" = "STATN", "CVALUE", "CN", keepvars
         ))
       )
   }
-
+  
   # IF treatment, subgroup exists, pivot and perform operations
   if (any(c("TRTVAR", SUBGRP) %in% names(rep))) {
     # Workaround for pivot_wider to accept "duplicate" spanned column names (Total)
     rep <- rep |>
       mutate(across(any_of(SUBGRP), ~
-        ifelse(
-          get(paste0(cur_column(), "N")) == 9999,
-          paste0(.x, paste(rep(" ", which(SUBGRP == cur_column())), collapse = "")),
-          .x
-        ))) |>
+                      ifelse(
+                        get(paste0(cur_column(), "N")) == 9999,
+                        paste0(.x, paste(rep(" ", which(SUBGRP == cur_column())), collapse = "")),
+                        .x
+                      ))) |>
       arrange(across(any_of(c("TRTVAR", SUBGRPN)))) |>
       select(-any_of(SUBGRPN)) |>
       pivot_wider(
@@ -116,6 +119,15 @@ tbl_processor <- function(datain,
         -any_of(c(BYVAR, "DPTVAR", "DPTVAL")) & where(is.character),
         ~ ifelse(.data[["CN"]] == "C", gsub("^-$", "0", .x), .x)
       ))
+  }
+  # Only N and uniqN should be 0 instead of -
+  if ("DPTVAL" %in% names(rep) && any(c("n", "nmiss", "nobs") %in% unique(rep$DPTVAL))) {
+    rep <- rep |> mutate(across(
+      -any_of(c(BYVAR, "DPTVAR", "DPTVAL")) & where(is.character),
+      ~ if_else(.data[["DPTVAL"]] %in% c("n", "nmiss", "nobs"),
+                gsub("^-$", "0", .x), .x
+      )
+    ))
   }
   # If additional dataset is given:
   if (is.data.frame(extra_df)) {
@@ -134,8 +146,8 @@ tbl_processor <- function(datain,
     rep <- rep |>
       mutate(
         DPTVAL = ifelse(.data[["CN"]] == "N",
-          recode(.data[["DPTVAL"]], !!!statn),
-          .data[["DPTVAL"]]
+                        recode(.data[["DPTVAL"]], !!!statn),
+                        .data[["DPTVAL"]]
         )
       )
   }
@@ -158,7 +170,7 @@ tbl_processor <- function(datain,
   # arrange rows and then proceed; combine groups if dptlabel is suitably passed
   rep |>
     arrange(across(any_of(c(BYVARN, "DPTVARN", "DPTVALN")))) |>
-    filter(if_all(any_of("DPTVAL"), ~ !grepl("NONE$|_NONE_$|JOIN$", toupper(.x)))) |>
+    filter(if_all(any_of("DPTVAL"), ~ !grepl("_NONE_$|_JOIN_$", toupper(.x)))) |>
     select(any_of(c(BYVAR, "DPTVAR", "DPTVAL")), everything(), -any_of(BYVARN))
 }
 
@@ -175,18 +187,25 @@ set_cat_labels <- function(data,
                            dptlabel) {
   vals <- data |>
     arrange(.data[["DPTVARN"]]) |>
-    pull(.data[["DPTVAR"]]) |>
+    select(all_of(c("DPTVAR", "DPTVARN"))) |>
     unique()
   # # Labels for categories
   if (all(is.na(dptlabel))) {
-    dptlabel <- setNames(str_to_title(vals), vals)
+    dptlabel <- setNames(str_to_title(vals[["DPTVAR"]]), vals[["DPTVAR"]])
+    label_df <- data |>
+      mutate(DPTVAR = recode(.data[["DPTVAR"]], !!!dptlabel))
   } else {
     cats <- str_to_vec(dptlabel)
-    stopifnot("Supply same number of labels as variables" = length(cats) == length(vals))
-    dptlabel <- setNames(str_to_vec(dptlabel), vals)
+    stopifnot(
+      "Supply same number of labels as variables" = length(cats) == length(vals[["DPTVARN"]])
+    )
+    label_df <- bind_cols(vals, new_var = cats) |>
+      select(-DPTVAR) |>
+      right_join(data, by = "DPTVARN") |>
+      mutate(DPTVAR = new_var) |>
+      select(-new_var)
   }
-  data |>
-    mutate(DPTVAR = recode(.data[["DPTVAR"]], !!!dptlabel))
+  label_df
 }
 
 #' Add empty row for dptvar
@@ -205,18 +224,25 @@ add_row_var <- function(datain,
   len <- length(addrowvar)
   dptvaln <- seq(0, 0.9, length.out = len)
   pad <- strrep("\t\t", seq_len(len + 1) - 1)
+  if ("DPTVAL" %in% names(datain)) {
+    val_var <- "DPTVAL"
+  } else {
+    val_var <- "DPTVAR"
+  }
+  val_varn <- paste0(val_var, "N")
   purrr::map(seq_along(addrowvar), \(i) {
+    varn <- paste0(addrowvar[[i]], "N")
     var <- addrowvar[[i]]
     datain |>
-      distinct(across(any_of(unique(c(byvar, byvarn, var, "DPTVARN"))))) |>
+      distinct(across(any_of(unique(c(byvar, byvarn, var, varn))))) |>
       mutate(
-        DPTVALN = dptvaln[i],
-        DPTVAL = paste0(pad[i], .data[[var]])
+        !!val_varn := dptvaln[i],
+        !!val_var := paste0(pad[i], .data[[var]])
       )
   }) |>
     bind_rows(
       datain |>
-        mutate(DPTVAL = paste0(pad[len + 1], .data[["DPTVAL"]]))
+        mutate(!!val_var := paste0(pad[len + 1], .data[[val_var]]))
     )
 }
 
@@ -263,6 +289,7 @@ clear_dup_rows <- function(col, target) {
 #' @param dpthead String to become name of the column containing categories (`DPTVAL`) in output.
 #' @param font Font face for text inside table
 #' @param fontsize Font size for text inside table
+#' @param boldheadyn Y/N to determine if table header should be bold
 #'
 #' @return flextable object
 #' @export
@@ -296,10 +323,11 @@ clear_dup_rows <- function(col, target) {
 #'   dpthead = "  "
 #' )
 tbl_display <- function(datain,
-                        bylabel,
+                        bylabel = NA,
                         dpthead = "  ",
                         font = "Arial",
-                        fontsize = 10) {
+                        fontsize = 10,
+                        boldheadyn = "N") {
   BYVAR <- var_start(datain, "BYVAR")
   # If by variables exist, process for aptly merging the columns in output
   lenby <- length(BYVAR)
@@ -318,8 +346,8 @@ tbl_display <- function(datain,
     )))
   tout <- rep |>
     flextable(col_keys = grep("DPTVARN|^CN$|DPTVALN",
-      names(rep),
-      invert = TRUE, value = TRUE
+                              names(rep),
+                              invert = TRUE, value = TRUE
     )) |>
     ftExtra::span_header("_") |>
     font(fontname = font, part = "all") |>
@@ -337,6 +365,10 @@ tbl_display <- function(datain,
         hline(i = rowh[rowh != 0], j = b:lenby, border = small_border)
     }
   }
+  if (boldheadyn != "N") {
+    tout <- tout |>
+      bold(part = "header")
+  }
   tout |>
     hline(j = (lenby + 1):last, border = small_border) |>
     border_outer(part = "all", border = big_border) |>
@@ -344,3 +376,23 @@ tbl_display <- function(datain,
     vline(part = "all", border = small_border) |>
     fix_border_issues()
 }
+
+#' Return table if output is empty
+#'
+#' @param text Text to display under table creation
+#'
+#' @return flextable output
+#' @export
+#'
+#' @examples
+#' empty_tbl()
+empty_tbl <- function(text = "No participant meets the reporting criteria") {
+  flextable(data.frame("X" = text)) |>
+    set_header_labels(X = "Table not created") |>
+    bold(part = "header") |>
+    font(fontname = "Arial", part = "all") |>
+    theme_box() |>
+    align(align = "center", part = "all") |>
+    autofit()
+}
+

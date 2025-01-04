@@ -49,10 +49,10 @@ plotly_legend <- function(fig,
         lg_pos %in% c("top", "bottom", "right", "left")
     )
     opts <- switch(lg_pos,
-      "bottom" = list(0.3, -0.2, "left", "top", "right", "top"),
-      "top" = list(0.3, 1.1, "left", "bottom", "right", "bottom"),
-      "left" = list(-0.2, 0.8, "right", "top", "right", "bottom"),
-      "right" = list(1, 0.8, "left", "top", "left", "bottom")
+                   "bottom" = list(0.3, -0.2, "left", "top", "right", "top"),
+                   "top" = list(0.3, 1.1, "left", "bottom", "right", "bottom"),
+                   "left" = list(-0.2, 0.8, "right", "top", "right", "bottom"),
+                   "right" = list(1, 0.8, "left", "top", "left", "bottom")
     )
   }
   # Legend title as annotation if exists

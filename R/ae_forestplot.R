@@ -90,7 +90,7 @@
 #'   trtgrp = "Xanomeline High Dose",
 #'   statistics = "Risk Ratio",
 #'   alpha = 0.05,
-#'   cutoff = 5,
+#'   cutoff_where = "FREQ >5",
 #'   sort_opt = "Ascending",
 #'   sort_var = "Count"
 #' ) |>
@@ -134,7 +134,9 @@ ae_forest_plot <-
            interactive = "N") {
     # Common processing for all plots:
     datain <- datain |>
-      filter(!is.nan(.data[["RISK"]]), !is.infinite(.data[["RISK"]]))
+      group_by(across(all_of(c("DPTVAL", "TRTPAIR")))) |>
+      filter(!any(.data[["FREQ"]] == 0)) |>
+      ungroup()
     # Check risk data exists:
     stopifnot("Input ae_forest_plot data is empty" = nrow(datain) != 0)
     # If axis position not added, default it:
@@ -153,8 +155,8 @@ ae_forest_plot <-
           per_page <- split(
             events,
             rep(seq_along(events),
-              each = terms_perpg,
-              length.out = length(events)
+                each = terms_perpg,
+                length.out = length(events)
             )
           )
         } else {
@@ -178,7 +180,7 @@ ae_forest_plot <-
               dat_out <- dat_out |>
                 mutate(
                   YCAT = ifelse(.data[["BYVAR1"]] == lead(.data[["BYVAR1"]], default = "last"),
-                    "", .data[["BYVAR1"]]
+                                "", .data[["BYVAR1"]]
                   ),
                   XVAR = "HT"
                 )
@@ -271,15 +273,14 @@ ae_forest_hlt_sig <- function(plotin,
       TRUE ~ NA_character_
     )) |>
     filter(!is.na(.data[["EFFECT"]]))
-
+  
   plotin +
     geom_point(
       data = hltpts,
       aes(
         x = .data[["PCT"]],
         y = .data[["DPTVAL"]],
-        fill = .data[["EFFECT"]],
-        key = .data[["key"]]
+        fill = .data[["EFFECT"]]
       ),
       inherit.aes = FALSE,
       shape = 23,

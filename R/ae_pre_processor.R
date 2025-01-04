@@ -21,9 +21,19 @@
 #' Permissible Values: "ANY", "ANY EVENT", "TREATMENT EMERGENT", "SERIOUS",
 #' "DRUG-RELATED", "RELATED", "MILD", "MODERATE", "SEVERE", "RECOVERED/RESOLVED",
 #' "RECOVERING/RESOLVING", "NOT RECOVERING/NOT RESOLVING", "FATAL", "GRADE N"
+#' @param subset Analysis subset condition to be applied to `ADAE` dataset prior to ADSL join;
+#' will be appended to `ae_filter`
 #' @param obs_residual If not NA, use this argument to pass a period (numeric) to extend the
 #' observation period. If passed as NA, overall study duration is considered for analysis.
 #' eg. if 5, only events occurring upto 5 days past the TRTEDT are considered.
+#' @param max_sevctc If needed to filter maximum severity/ctc grade rows. Values: NA/"SEV"/"CTC"
+#' @param sev_ctcvar Variable to determine max severity. eg: ASEVN, ATOXGRN
+#' @param hterm High Level Event Term (req for max Sev tables only)
+#' @param lterm Low Level Event Term (req for max Sev tables only)
+#' @param rpt_byvar Page/report by variable if any, to identify max sev/ctc
+#' @param trtvar Treatment Variable
+#' @param pt_total Required to calculate total of preferred terms? Y/N
+#'
 #' @return : a list containing 2 objects
 #'  \itemize{
 #'  \item data - Processed dataframe output for further utilities (pass to `mentry()`)
@@ -49,8 +59,18 @@ ae_pre_processor <- function(datain,
                              fmq_data = NULL,
                              date_vars = c("ASTDT", "AENDT", "TRTSDT", "TRTEDT"),
                              ae_filter = "Any Event",
-                             obs_residual = NA_real_) {
-  stopifnot("Empty Data Frame passed" = nrow(datain) != 0)
+                             subset = NA,
+                             obs_residual = NA_real_,
+                             max_sevctc = NA_character_,
+                             sev_ctcvar = "ASEVN",
+                             hterm = "AEBODSYS",
+                             lterm = "AEDECOD",
+                             rpt_byvar = character(0),
+                             trtvar = "TRTA",
+                             pt_total = "N") {
+  if (nrow(datain) == 0) {
+    return(list(data = datain, a_subset = NA_character_))
+  }
   # Processing FMQ values if exists
   if (is.data.frame(fmq_data)) {
     fmq <- fmq_data |>
@@ -65,7 +85,7 @@ ae_pre_processor <- function(datain,
       mutate(PT = str_trim(toupper(.data[["AEDECOD"]]))) |>
       left_join(fmq, by = "PT")
   }
-
+  
   # Standardizing date format to common format
   data_pro <- datain |>
     mutate(across(
@@ -78,7 +98,7 @@ ae_pre_processor <- function(datain,
   if ("ASTDT" %in% names(data_pro) && any(is.na(data_pro[["AEDECOD"]]))) {
     data_pro <- data_pro |>
       mutate(AEDECOD = if_else(!is.na(.data[["ASTDT"]]) & is.na(.data[["AEDECOD"]]),
-        "Not Yet Coded", .data[["AEDECOD"]]
+                               "Not Yet Coded", .data[["AEDECOD"]]
       ))
   }
   # AE-Specific filter conditions
@@ -86,7 +106,9 @@ ae_pre_processor <- function(datain,
     data_pro,
     ae_filter
   )
-
+  if (!is.na(subset)) {
+    filters <- paste(na.omit(c(filters, subset)), collapse = " & ")
+  }
   # filter for events occurring in given observation period
   obs_residual <- as.numeric(obs_residual)
   if (!is.na(obs_residual) && obs_residual >= 0) {
@@ -94,12 +116,57 @@ ae_pre_processor <- function(datain,
       "Obs period cannot be used; dates unavailable" =
         all(c("ASTDT", "TRTSDT", "TRTEDT") %in% names(data_pro))
     )
-    filters <- c(filters, glue("(ASTDT > TRTSDT) & (ASTDT < (TRTEDT + {obs_residual}))")) |>
-      na.omit() |>
-      paste(collapse = " & ")
+    filters <- paste(na.omit(
+      c(filters, glue("(ASTDT > TRTSDT) & (ASTDT < (TRTEDT + {obs_residual}))"))
+    ), collapse = " & ")
   }
+  
+  # Apply AE filters if exist:
+  if (!is.na(filters) && filters != "") {
+    data_pro <- data_pro |>
+      filter(!!!parse_exprs(filters))
+    if (nrow(data_pro) < 1) {
+      return(list(data = data_pro, a_subset = filters))
+    }
+  }
+  ################### Max SEV/CTC##############
+  # If maximum severity or CTC required:
+  # Filter analysis dataset and also flag max variable
+  # Any AE flag to be set
+  # Flag for high level term and max sevc/ctc
+  if (!is.na(max_sevctc) && toupper(max_sevctc) %in% c("SEV", "CTC")) {
+    data_pro <- data_pro |>
+      group_by(across(
+        any_of(c(rpt_byvar, trtvar, "USUBJID", hterm, lterm))
+      )) |>
+      mutate(
+        MAX_SEVCTC = ifelse(.data[[sev_ctcvar]] == max(.data[[sev_ctcvar]], na.rm = TRUE), 1, 0)
+      ) |>
+      filter(MAX_SEVCTC == 1) |>
+      group_by(across(any_of(c(rpt_byvar, trtvar, "USUBJID")))) |>
+      mutate(
+        ANY = ifelse(.data[[sev_ctcvar]] == max(.data[[sev_ctcvar]], na.rm = TRUE), 1, 0)
+      ) |>
+      group_by(across(
+        any_of(c(rpt_byvar, trtvar, "USUBJID", hterm))
+      )) |>
+      mutate(
+        HT_FL = ifelse(.data[[sev_ctcvar]] == max(.data[[sev_ctcvar]], na.rm = TRUE), 1, 0)
+      )
+    # For preferred term total count
+    if (toupper(max_sevctc) == "SEV" && pt_total == "Y") {
+      data_pro <- data_pro |>
+        group_by(across(any_of(c(rpt_byvar, trtvar, lterm, "USUBJID")))) |>
+        mutate(
+          PT_CNT = ifelse(.data[[sev_ctcvar]] == max(.data[[sev_ctcvar]], na.rm = TRUE), 1, 0)
+        )
+    }
+    filters <- paste(na.omit(c(filters, "MAX_SEVCTC == 1")), collapse = " & ")
+  }
+  ################### ENDax SEV/CTC##############
+  
   # Return processed dataframe and filter conditions
-  return(list(data = data_pro, a_subset = filters))
+  return(list(data = ungroup(data_pro), a_subset = filters))
 }
 
 #' Create filter condition for Adverse Events from keyword

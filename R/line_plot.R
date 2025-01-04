@@ -87,7 +87,7 @@ line_plot <- function(datain,
     )) +
     geom_line(aes(color = .data[[series_var]])) +
     geom_point(aes(color = .data[[series_var]]),
-      shape = 16
+               shape = 16
     ) +
     labs(
       title = plot_title,

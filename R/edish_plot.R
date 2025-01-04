@@ -1,3 +1,17 @@
+# Copyright 2024 Pfizer Inc
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
 #' Process data for eDISH plot
 #'
 #' @param datain Input dataset.
@@ -9,17 +23,17 @@
 #' @param alt_paramcd `PARAMCD` value for `ALANINE AMINOTRANSFERASE` in `datain`.
 #' @param ast_paramcd `PARAMCD` value for `ASPARTATE AMINOTRANSFERASE` in `datain`.
 #' @param bili_paramcd `PARAMCD` value for `BILIRUBIN` in `datain`.
+#' @param legendbign (`string`) Display BIGN in Legend (`Y/N`).
 #'
 #' @return A `data.frame` required for `edish_plot`.
 #' @export
 #'
 #' @examples
-#' data("adlb")
-#' data("adsl")
+#' data("lab_data")
 #'
 #' merged_data <- adsl_merge(
-#'   adsl = adsl,
-#'   dataset_add = adlb
+#'   adsl = lab_data$adsl,
+#'   dataset_add = lab_data$adlb
 #' ) |>
 #'   mentry(
 #'     subset = "SAFFL == 'Y'",
@@ -30,25 +44,31 @@
 #' merged_data |>
 #'   process_edish_data(
 #'     xvar = "both",
-#'     alt_paramcd = "ALT",
-#'     ast_paramcd = "AST",
-#'     bili_paramcd = "BILI"
+#'     alt_paramcd = "L00030S",
+#'     ast_paramcd = "L00028S",
+#'     bili_paramcd = "L00021S"
 #'   )
 #'
 process_edish_data <- function(datain,
                                xvar = "both",
                                alt_paramcd = "L00030S",
                                ast_paramcd = "L00028S",
-                               bili_paramcd = "L00021S") {
-  stopifnot(is.data.frame(datain))
+                               bili_paramcd = "L00021S",
+                               legendbign = "Y") {
+  if (!is.data.frame(datain) || nrow(datain) == 0) {
+    return(data.frame())
+  }
   stopifnot("`xvar` must be one of 'alt', 'ast' or 'both'" = xvar %in% c("alt", "ast", "both"))
   stopifnot(
     "Please provide valid PARAMCD" =
       all(c(alt_paramcd, ast_paramcd, bili_paramcd) %in% datain$PARAMCD)
   )
-
+  
   hy_data <- datain |>
-    filter(.data$PARAMCD %in% c(alt_paramcd, ast_paramcd, bili_paramcd)) |>
+    filter(
+      .data$PARAMCD %in% c(alt_paramcd, ast_paramcd, bili_paramcd),
+      !is.na(.data$ANRHI)
+    ) |>
     mutate(maxv = .data$AVAL / .data$ANRHI) |>
     mutate(
       PARM = case_when(
@@ -57,7 +77,7 @@ process_edish_data <- function(datain,
         TRUE ~ "bili"
       )
     )
-
+  
   hy <- hy_data |>
     group_by(across(all_of(c("USUBJID", "TRTVAR", "PARAMCD", "PARAM", "PARM")))) |>
     summarise(x = max(.data$maxv)) |>
@@ -66,13 +86,13 @@ process_edish_data <- function(datain,
       names_from = PARM,
       values_from = x
     )
-
+  
   if (xvar %in% c("alt", "ast")) {
     hy <- hy |> mutate(XVAR = .data[[xvar]])
   } else {
     hy <- hy |> mutate(XVAR = pmax(.data$ast, .data$alt))
   }
-
+  
   hy |>
     mutate(
       text = paste0(
@@ -80,7 +100,7 @@ process_edish_data <- function(datain,
         USUBJID,
         "\n",
         ifelse(xvar == "both", "Max of ALT/AST = ",
-          paste("value of", toupper(xvar), "=")
+               paste("value of", toupper(xvar), "=")
         ),
         round(XVAR, 3),
         "\n",
@@ -89,7 +109,7 @@ process_edish_data <- function(datain,
       ),
       YVAR = .data[["bili"]]
     ) |>
-    na.omit()
+    plot_display_bign(datain, bignyn = legendbign)
 }
 
 #' eDISH Plot
@@ -113,12 +133,11 @@ process_edish_data <- function(datain,
 #' @export
 #'
 #' @examples
-#' data("adsl")
-#' data("adlb")
+#' data("lab_data")
 #'
 #' merged_data <- adsl_merge(
-#'   adsl = adsl,
-#'   dataset_add = adlb
+#'   adsl = lab_data$adsl,
+#'   dataset_add = lab_data$adlb
 #' ) |>
 #'   mentry(
 #'     subset = "SAFFL == 'Y'",
@@ -129,9 +148,9 @@ process_edish_data <- function(datain,
 #' pt_data <- process_edish_data(
 #'   datain = merged_data,
 #'   xvar = "both",
-#'   alt_paramcd = "ALT",
-#'   ast_paramcd = "AST",
-#'   bili_paramcd = "BILI"
+#'   alt_paramcd = "L00028S",
+#'   ast_paramcd = "L00030S",
+#'   bili_paramcd = "L00021S"
 #' )
 #'
 #' series_opts <- plot_aes_opts(pt_data,
@@ -143,9 +162,9 @@ process_edish_data <- function(datain,
 #'   datain = pt_data,
 #'   axis_opts = plot_axis_opts(
 #'     xlinearopts = list(
-#'       breaks = c(0.1, 1, 2, 10),
-#'       limits = c(0.1, 10),
-#'       labels = c("0.1", "1", "2x ULN", "10")
+#'       breaks = c(0.1, 1, 2, 5),
+#'       limits = c(0.1, 5),
+#'       labels = c("0.1", "1", "2x ULN", "5")
 #'     ),
 #'     ylinearopts = list(
 #'       breaks = c(0.1, 1, 3, 10),
@@ -196,24 +215,7 @@ edish_plot <- function(datain,
                          dir = "horizontal"
                        ),
                        interactive = "N") {
-  stopifnot(is.data.frame(datain))
-
-  ### Modified  plot options ####
-  if (length(axis_opts$Xbrks) > 0 && length(axis_opts$Xlims) > 0) {
-    axis_opts$Xlims[2] <- max(ceiling(max(datain$XVAR)), axis_opts$Xlims)
-    axis_opts$Xbrks[which.max(axis_opts$Xbrks)] <- min(
-      ceiling(max(datain$XVAR)),
-      max(axis_opts$Xbrks)
-    )
-  }
-
-  if (length(axis_opts$Ybrks) > 0 && length(axis_opts$Ylims) > 0) {
-    axis_opts$Ylims[2] <- max(ceiling(max(datain$XVAR)), axis_opts$Ylims)
-    axis_opts$Ybrks[which.max(axis_opts$Ybrks)] <- min(
-      ceiling(max(datain$XVAR)),
-      max(axis_opts$Ybrks)
-    )
-  }
+  stopifnot(is.data.frame(datain) && nrow(datain) > 0)
   # plot and options
   # setting labels for each quadrants
   quad_labels <- str_to_vec(quad_labels)
@@ -228,9 +230,9 @@ edish_plot <- function(datain,
     max(as.numeric(yrefline[1]), max(axis_opts$Ybrks)),
     as.numeric(yrefline[1]) - 0.2
   )
-
+  
   # for ploting values per subject
-
+  
   sp <- datain |>
     scatter_plot(
       axis_opts = axis_opts,
@@ -252,16 +254,6 @@ edish_plot <- function(datain,
       color = xrefline[2],
       linetype = xrefline[3]
     ) +
-    geom_hline(
-      yintercept = 1,
-      color = "grey30",
-      linetype = "solid"
-    ) +
-    geom_vline(
-      xintercept = 1,
-      color = "grey30",
-      linetype = "solid"
-    ) + # Add annotations to graph
     annotate(
       geom = "text",
       x = quad_labels_opts_x[1],
@@ -286,7 +278,7 @@ edish_plot <- function(datain,
       y = quad_labels_opts_y[4],
       label = quad_labels[4]
     )
-
+  
   # ggplotly if interactive
   if (interactive == "Y") {
     sp <- as_plotly(plot = sp, hover = c("text"))

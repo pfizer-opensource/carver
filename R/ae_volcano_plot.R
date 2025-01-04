@@ -66,7 +66,7 @@
 #'   trtgrp = "Xanomeline High Dose",
 #'   statistics = "Risk Ratio",
 #'   alpha = 0.05,
-#'   cutoff = 5,
+#'   cutoff_where = "FREQ >5",
 #'   sort_opt = "Ascending",
 #'   sort_var = "Count"
 #' )
@@ -116,12 +116,11 @@ ae_volcano_plot <- function(datain,
         x = .data[["RISK"]],
         y = .data[["PVALUE"]],
         text = .data[["HOVER_TEXT"]],
-        fill = .data[["BYVAR1"]],
-        key = .data[["key"]]
+        fill = .data[["BYVAR1"]]
       )
     ) + # color code by SOC
     geom_point(aes(size = .data[["CTRL_N"]]), pch = 21, alpha = 0.5)
-
+  
   # Error when there are no adjusted p-values <= 0.05 so remove FDR adjusted P when no
   # adjusted p <= p value cutoff
   check_sig <- datain |>

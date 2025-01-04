@@ -40,17 +40,12 @@
 #'   )
 #'
 #' ## prepare data for plot
-#' prep_entry <- prep_ae[["data"]] |>
-#'   mentry(
-#'     trtvar = "TRTA",
-#'     trtsort = "TRTAN",
-#'     trttotalyn = "N",
-#'     byvar = "FMQ_NAM"
-#'   )
-#' ## prepare data for plot
-#' prep_event_analysis <- prep_entry |>
+#' prep_event_analysis <- prep_ae[["data"]] |>
 #'   process_event_analysis(
 #'     a_subset = glue::glue("AOCCPFL == 'Y' & {prep_ae$a_subset}"),
+#'     trtvar = "TRTA",
+#'     trtsort = "TRTAN",
+#'     trttotalyn = "Y",
 #'     summary_by = "Events",
 #'     hterm = "FMQ_NAM",
 #'     ht_val = "ABDOMINAL PAIN",
@@ -132,7 +127,7 @@ event_analysis_plot <-
       query_plot <- query_plot +
         geom_hline(yintercept = ref_line, linetype = "dashed") +
         ggtitle(query_title)
-
+      
       p <- cowplot::plot_grid(
         pt_plot,
         query_plot,
@@ -145,7 +140,7 @@ event_analysis_plot <-
         event_plotly(ref_line, pt_title)
       query_plot <- query_plot |>
         event_plotly(ref_line, query_title)
-
+      
       p <- subplot(
         pt_plot,
         query_plot,
@@ -184,17 +179,14 @@ event_analysis_plot <-
 #'     obs_residual = 0,
 #'     fmq_data = FMQ_Consolidated_List
 #'   )
-#' prep_entry <- prep_ae[["data"]] |>
-#'   mentry(
-#'     trtvar = "TRTA",
-#'     trtsort = "TRTAN",
-#'     trttotalyn = "N",
-#'     byvar = "FMQ_NAM"
-#'   )
+#'
 #' ## prepare data for plot
-#' prep_event_analysis <- prep_entry |>
+#' prep_event_analysis <- prep_ae[["data"]] |>
 #'   process_event_analysis(
 #'     a_subset = glue::glue("AOCCPFL == 'Y' & {prep_ae$a_subset}"),
+#'     trtvar = "TRTA",
+#'     trtsort = "TRTAN",
+#'     trttotalyn = "Y",
 #'     summary_by = "Events",
 #'     hterm = "FMQ_NAM",
 #'     ht_val = "ABDOMINAL PAIN",
@@ -210,6 +202,9 @@ event_analysis_plot <-
 process_event_analysis <-
   function(datain,
            a_subset = NA_character_,
+           trtvar,
+           trtsort = NA_character_,
+           trttotalyn = "N",
            summary_by = "Events",
            hterm,
            ht_val,
@@ -224,42 +219,48 @@ process_event_analysis <-
     )
     ht_val <- get_event_scope(hterm, ht_val, ht_scope)
     lt_val <- get_event_scope(lterm, lt_val, lt_scope, ht_val)
-
+    
     ae_counts <- datain |>
+      mentry(
+        byvar = hterm,
+        trtvar = trtvar,
+        trtsort = trtsort,
+        trttotalyn = trttotalyn
+      ) |>
       mcatstat(
         a_subset = a_subset,
         uniqid = ifelse(toupper(summary_by) == "PATIENTS", "USUBJID", "ALLCT"),
         dptvar = lterm,
-        pctdisp = "TRT"
+        pctdisp = "TRT",
+        sparseyn = "N",
+        pctsyn = "Y"
       )
-
+    
     hl_summ <- ae_counts |>
       filter_events(hterm, ht_val, "BYVAR1") |>
       mutate(
         HTERM = hterm,
         HVAL = str_remove_all(ht_val, glue("/{toupper(ht_scope)}")),
         LVAL = lt_val,
-        Percent = paste(.data$PCT, "% \n Low Term:", .data$DPTVAL),
-        PCT_N = as.numeric(.data$PCT)
+        Percent = paste0(.data$CPCT, " \n Low Term:", .data$DPTVAL)
       ) |>
       group_by(.data$TRTVAR) |>
       mutate(DECODh = ifelse(str_detect(
         toupper(.data$DPTVAL), toupper(lt_val)
       ), 9999, rank(.data$PCT))) |>
       ungroup()
-
+    
     stopifnot("No data available for higher terms" = nrow(hl_summ) > 0)
-
+    
     ll_summ <- ae_counts |>
       filter_events(lterm, lt_val, "DPTVAL") |>
       mutate(
-        PCT_N = as.numeric(.data$PCT),
-        Percent = paste(.data$PCT, "%")
+        Percent = .data$CPCT
       ) |>
-      arrange(.data$TRTVAR, .data$PCT_N)
-
+      arrange(.data$TRTVAR, .data$PCT)
+    
     stopifnot("No data available for preferred terms" = nrow(ll_summ) > 0)
-
+    
     list(hl_summ, ll_summ) |>
       set_names(c("query_df", "pt_df")) |>
       map(\(x) {
@@ -290,7 +291,7 @@ pt_plot <-
     df |>
       ggplot(aes(
         x = .data$TRTVAR,
-        y = .data$PCT_N,
+        y = .data$PCT,
         text = .data$Percent
       )) +
       geom_bar(
@@ -332,13 +333,13 @@ query_plot <-
         unique(df[["LVAL"]]),
         pt_color
       )
-
+    
     df |>
       mutate(across("DPTVAL", ~ toupper(.x))) |>
       ggplot(
         aes(
           x = .data$TRTVAR,
-          y = .data$PCT_N,
+          y = .data$PCT,
           fill = reorder(.data$DPTVAL, -.data$DECODh),
           group = .data$DECODh,
           text = .data$Percent
@@ -426,7 +427,7 @@ get_event_scope <- function(var, val, scope, hval = NULL) {
 get_yscales <- function(df) {
   ymax <- df |>
     group_by(.data$TRTVAR) |>
-    summarise(pct_s = sum(.data$PCT_N)) |>
+    summarise(pct_s = sum(.data$PCT)) |>
     ungroup() |>
     filter(.data$pct_s == max(.data$pct_s, na.rm = TRUE)) |>
     mutate(
@@ -434,7 +435,7 @@ get_yscales <- function(df) {
       .keep = "none"
     ) |>
     pull()
-
+  
   list(ymax = ymax, ybreak = ifelse(ymax > 40, 5, 2))
 }
 
@@ -480,8 +481,9 @@ event_plotly <- function(p, ref_line, title_text) {
       yref = "paper",
       xref = "paper",
       xanchor = "center",
-      yanchor = "bottom",
+      yanchor = "top",
       showarrow = FALSE,
+      yshift = 35,
       font = list(size = 12)
     )
 }

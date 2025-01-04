@@ -72,8 +72,7 @@ forest_plot_base <- function(datain,
       xmin = .data[[xminvar]],
       xmax = .data[[xmaxvar]],
       text = .data[[hovervar]],
-      group = .data[[series_var]], color = .data[[series_var]],
-      key = .data[["key"]]
+      group = .data[[series_var]], color = .data[[series_var]]
     )
   ) +
     ggstance::geom_errorbarh(
@@ -169,8 +168,7 @@ forest_plot_scatter <- function(datain,
       color = .data[[series_var]],
       shape = .data[[series_var]],
       size = .data[[series_var]],
-      text = .data[[hovervar]],
-      key = .data[["key"]]
+      text = .data[[hovervar]]
     )
   ) +
     geom_point() +
@@ -216,7 +214,8 @@ forest_plot_scatter <- function(datain,
 #' @param plot_height Height of plotly output, if specifically required
 #' @param xpos Where should X xaxis for `splot` and `fplot` be displayed in interactive plot?
 #' Values: "top"/"bottom". Value for static output is decided prior to passing in this function.
-#'
+#' @param legend_opts Legend styling option, a `list` containing `pos`(position) and
+#' `dir` (direction).
 #' @return plot_grid object or plotly forest plot object
 #' @export
 #'
@@ -263,7 +262,8 @@ forest_display <- function(plot_list,
                            rel_widths = c(0.25, 0.38, 0.27, 0.10),
                            interactive = "N",
                            plot_height = NULL,
-                           xpos = "top") {
+                           xpos = "top",
+                           legend_opts = list(pos = "bottom", dir = "horizontal")) {
   stopifnot(all(c("splot", "fplot") %in% names(plot_list)))
   stopifnot(
     "rel_widths should be equal to the number of plot columns" =
@@ -298,8 +298,9 @@ forest_display <- function(plot_list,
       plotly_legend(lg_pos = c(0.5, -0.2), dir = "h")
     combine_plot$x$source <- "plot_output"
   } else {
-    legend1 <- cowplot::get_legend(plot_list[["splot"]])
-    legend2 <- cowplot::get_legend(plot_list[["fplot"]])
+    legpattern <- paste0("guide-box-", trimws(legend_opts$pos))
+    legend1 <- cowplot::get_plot_component(plot_list[["splot"]], pattern = legpattern)
+    legend2 <- cowplot::get_plot_component(plot_list[["fplot"]], pattern = legpattern)
     plot_list[["splot"]] <- plot_list[["splot"]] + theme(legend.position = "none")
     plot_list[["fplot"]] <- plot_list[["fplot"]] + theme(legend.position = "none")
     # Combine for grid ggplot output

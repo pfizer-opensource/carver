@@ -1,3 +1,17 @@
+# Copyright 2024 Pfizer Inc
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
 #' Process data for Survival Analysis
 #'
 #' @inheritParams process_vx_scatter_data
@@ -46,7 +60,7 @@ surv_pre_processor <- function(dataset_adsl,
   stopifnot(
     "Please provide a valid Censoring variable" = censor_var %in% toupper(names(dataset_analysis))
   )
-
+  
   if (!is.na(split_by) && str_squish(split_by) != "") {
     stopifnot(all(str_to_vec(split_by) %in% toupper(names(dataset_adsl))))
   }
@@ -66,8 +80,8 @@ surv_pre_processor <- function(dataset_adsl,
       subgrpvar = str_remove_all(split_by, " ")
     )
   plot_display_bign(mentry_out,
-    mentry_data = mentry_out,
-    bignyn = "N"
+                    mentry_data = mentry_out,
+                    bignyn = "N"
   )
 }
 
@@ -79,8 +93,8 @@ surv_pre_processor <- function(dataset_adsl,
 #' @noRd
 #'
 pairwise_surv_stats <- function(datain) {
-  pairs <- utils::combn(sort(unique(datain[["TRTSORT"]])), 2)
-
+  pairs <- combn(sort(unique(datain[["TRTSORT"]])), 2)
+  
   pair_stat <- map_chr(seq_len(ncol(pairs)), \(i) {
     trt_index <- pairs[, i]
     pair_data <- datain |>
@@ -106,6 +120,6 @@ pairwise_surv_stats <- function(datain) {
       "HR ({trt_pair[1]} vs {trt_pair[2]}) = {HR}, 95% CI ({cil}, {ciu}), 2-sided p = {round_f(pval_2s, 4)}, 1-sided p = {pval_1s}" # nolint
     )
   })
-
+  
   paste0(pair_stat, collapse = "\n")
 }
