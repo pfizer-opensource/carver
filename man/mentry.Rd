@@ -2,7 +2,7 @@
 % Please edit documentation in R/mentry.R
 \name{mentry}
 \alias{mentry}
-\title{Function to read in and process data with subsets and variables.}
+\title{Read and process data with subsets and variables}
 \usage{
 mentry(
   datain,
@@ -13,6 +13,7 @@ mentry(
   trtsort = NA,
   trttotalyn = "N",
   trttotlabel = "Total",
+  trtmissyn = "N",
   sgtotalyn = "N",
   add_grpmiss = "N",
   pop_fil = "Overall Population"
@@ -39,6 +40,9 @@ character variable assigned as \code{TRTSORT}.}
 table or category in plot (\code{"Y"/"N"}).}
 
 \item{trttotlabel}{Label for total Treatment column/group}
+
+\item{trtmissyn}{Retain Missing treatment counts in Total (if \code{trttotalyn} = Y). Missing
+treatment will not be considered as a column in analysis in any case.}
 
 \item{sgtotalyn}{Add total subgroup values to be displayed as column in
 table or category in plot (\code{"Y"/"N"}).}

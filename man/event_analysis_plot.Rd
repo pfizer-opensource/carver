@@ -50,17 +50,12 @@ prep_ae <- adae |>
   )
 
 ## prepare data for plot
-prep_entry <- prep_ae[["data"]] |>
-  mentry(
-    trtvar = "TRTA",
-    trtsort = "TRTAN",
-    trttotalyn = "N",
-    byvar = "FMQ_NAM"
-  )
-## prepare data for plot
-prep_event_analysis <- prep_entry |>
+prep_event_analysis <- prep_ae[["data"]] |>
   process_event_analysis(
     a_subset = glue::glue("AOCCPFL == 'Y' & {prep_ae$a_subset}"),
+    trtvar = "TRTA",
+    trtsort = "TRTAN",
+    trttotalyn = "Y",
     summary_by = "Events",
     hterm = "FMQ_NAM",
     ht_val = "ABDOMINAL PAIN",

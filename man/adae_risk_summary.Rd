@@ -13,14 +13,21 @@ adae_risk_summary(
   ctrlgrp,
   trtgrp,
   statistics = "Risk Ratio",
+  riskdiff_pct = "N",
   alpha = 0.05,
-  cutoff = 5,
+  cutoff_where = NA,
   sort_opt = "Ascending",
-  sort_var = "Count"
+  sort_var = "Count",
+  sum_row = "N",
+  sum_row_label = "Participants with Any AE",
+  risklabels = tbl_risk_labels(),
+  sigdec_cat = 1,
+  pctsyn = "Y"
 )
 }
 \arguments{
-\item{datain}{Input dataset after pre_processing and running \code{mentry()} to \emph{ADAE} data}
+\item{datain}{Input data from \code{mentry()} output to get counts for each
+category}
 
 \item{a_subset}{Analysis Subset condition specific to categorical analysis.}
 
@@ -37,17 +44,30 @@ for \code{forest_plot()}.}
 
 \item{statistics}{Statistic to be calculated. Values: \verb{'Risk Ratio' or 'Risk Difference'}.}
 
+\item{riskdiff_pct}{To display risk and CI as \% if \code{statistic} = risk difference (Y/N)}
+
 \item{alpha}{Alpha value to determine confidence interval for risk calculation. Default: \code{0.05}}
 
-\item{cutoff}{Incidence Cutoff Value; consider only terms with \verb{incidence percentage > cutoff}.}
+\item{cutoff_where}{Filter condition for incidence/pct. Consider only terms with
+eg: "FREQ > 5" or "PCT <3". Must contain FREQ or PCT (count or percent)}
 
 \item{sort_opt}{How to sort terms, only for table/forest plot.
 Values: \verb{'Ascending','Descending','Alphabetical'}.}
 
 \item{sort_var}{Metric to sort by. Values: \verb{'Count','Percent','RiskValue'}.}
+
+\item{sum_row}{To show summary/any term row or not. 'Y'/'N'}
+
+\item{sum_row_label}{Label for Summary Row to be displayed, if Y.}
+
+\item{risklabels}{List containing labels for table with elements: risk, riskci, p, low, up, lowup}
+
+\item{sigdec_cat}{Number of decimal places for \% displayed in output}
+
+\item{pctsyn}{Display Percentage Sign in table or not. Values: \code{"Y"/"N"}}
 }
 \value{
-List of summarized data frames for Adverse Events based on high and lower term.
+Data frame to be displayed with risk/counts of higher and lower AE terms
 }
 \description{
 ADAE Summary with Risk Statistics
@@ -83,7 +103,7 @@ ae_risk <- ae_entry |>
     trtgrp = "Xanomeline Low Dose",
     statistics = "Risk Ratio",
     alpha = 0.05,
-    cutoff = 5,
+    cutoff_where = "PCT > 5",
     sort_opt = "Ascending",
     sort_var = "Count"
   )

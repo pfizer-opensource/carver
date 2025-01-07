@@ -9,7 +9,11 @@ lab_abnormality_summary(
   crit_vars = "CRIT3~CRIT4",
   pctdisp = "SUBGRP",
   a_subset = NA_character_,
-  denom_subset = NA_character_
+  denom_subset = NA_character_,
+  sigdec = 2,
+  sparseyn = "Y",
+  pctsyn = "N",
+  stathead = "n (\%)"
 )
 }
 \arguments{
@@ -17,12 +21,22 @@ lab_abnormality_summary(
 
 \item{crit_vars}{Criteria variables}
 
-\item{pctdisp}{Denominator to calculate percentages by.
+\item{pctdisp}{Method to calculate denominator (for \%) by.
+Possible values: \code{"TRT"}, \code{"VAR"}, \code{"COL"}, \code{"SUBGRP"}, \code{"CAT"}, \code{"NONE"}, \code{"NO"}, \code{"DPTVAR"},
+\code{"BYVARxyN"}}
+
+\item{a_subset}{Analysis Subset condition specific to categorical analysis.}
+
+\item{denom_subset}{Subset condition to be applied to data set for calculating denominator.}
+
+\item{sigdec}{Number of decimal places for \% displayed in output}
+
+\item{sparseyn}{To sparse missing categories/treatments or not? \code{"Y"/"N"}}
+
+\item{pctsyn}{Display Percentage Sign in table or not. Values: \code{"Y"/"N"}}
+
+\item{stathead}{Column label to display \code{n} in the output. Default is \verb{n (\%)}
 Values: \verb{"TRT", "VAR","COL", "SUBGRP", "SGRPN", "CAT", "NONE", "NO", "DPTVAR"}}
-
-\item{a_subset}{Subset conditions for analysis of dependent variable.}
-
-\item{denom_subset}{Subset conditions for denominator eg. \code{"APSBLFL == 'Y'"}}
 }
 \value{
 \code{data.frame} with summary of laboratory abnormality incidence counts
@@ -52,12 +66,11 @@ out <-
     crit_vars = "CRIT3~CRIT4",
     pctdisp = "SUBGRP",
     a_subset = NA_character_,
-    denom_subset = NA_character_
+    denom_subset = NA_character_,
+    sigdec = 1
   ) |>
   display_bign_head(mentry_data = lb_entry) |>
-  tbl_processor(
-    dptlabel = ""
-  )
+  tbl_processor()
 
 out
 

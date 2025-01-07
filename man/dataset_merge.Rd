@@ -4,7 +4,7 @@
 \alias{dataset_merge}
 \title{Merge Datasets}
 \usage{
-dataset_merge(..., byvars, subset = NULL)
+dataset_merge(..., byvars, subset = NULL, type = "left")
 }
 \arguments{
 \item{...}{Datasets to be merged.}
@@ -13,6 +13,8 @@ dataset_merge(..., byvars, subset = NULL)
 
 \item{subset}{Dataset specific subset conditions as \code{list}, default is \code{NULL}.
 Has to be specified in the same order of datasets to be merged}
+
+\item{type}{Type of join to perform. Values: "left", "right", "inner", "full", "semi", "anti"}
 }
 \value{
 A \code{data.frame}

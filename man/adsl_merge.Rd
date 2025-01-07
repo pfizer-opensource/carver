@@ -4,7 +4,7 @@
 \alias{adsl_merge}
 \title{Merge adsl dataset with the analysis dataset}
 \usage{
-adsl_merge(adsl = NULL, adsl_subset = "", dataset_add = NULL)
+adsl_merge(adsl = NULL, adsl_subset = "", dataset_add = NULL, byvars = NULL)
 }
 \arguments{
 \item{adsl}{adsl dataset}
@@ -12,6 +12,8 @@ adsl_merge(adsl = NULL, adsl_subset = "", dataset_add = NULL)
 \item{adsl_subset}{population variable subset condition}
 
 \item{dataset_add}{analysis dataset}
+
+\item{byvars}{Variables to merge the datasets by}
 }
 \value{
 merged dataset

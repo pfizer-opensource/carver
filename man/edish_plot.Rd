@@ -58,12 +58,11 @@ order: "upper right~lower right~upper left~lower left" or as a vector of length 
 }
 }
 \examples{
-data("adsl")
-data("adlb")
+data("lab_data")
 
 merged_data <- adsl_merge(
-  adsl = adsl,
-  dataset_add = adlb
+  adsl = lab_data$adsl,
+  dataset_add = lab_data$adlb
 ) |>
   mentry(
     subset = "SAFFL == 'Y'",
@@ -74,9 +73,9 @@ merged_data <- adsl_merge(
 pt_data <- process_edish_data(
   datain = merged_data,
   xvar = "both",
-  alt_paramcd = "ALT",
-  ast_paramcd = "AST",
-  bili_paramcd = "BILI"
+  alt_paramcd = "L00028S",
+  ast_paramcd = "L00030S",
+  bili_paramcd = "L00021S"
 )
 
 series_opts <- plot_aes_opts(pt_data,
@@ -88,9 +87,9 @@ edish_plot(
   datain = pt_data,
   axis_opts = plot_axis_opts(
     xlinearopts = list(
-      breaks = c(0.1, 1, 2, 10),
-      limits = c(0.1, 10),
-      labels = c("0.1", "1", "2x ULN", "10")
+      breaks = c(0.1, 1, 2, 5),
+      limits = c(0.1, 5),
+      labels = c("0.1", "1", "2x ULN", "5")
     ),
     ylinearopts = list(
       breaks = c(0.1, 1, 3, 10),

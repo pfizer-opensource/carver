@@ -9,7 +9,8 @@ process_edish_data(
   xvar = "both",
   alt_paramcd = "L00030S",
   ast_paramcd = "L00028S",
-  bili_paramcd = "L00021S"
+  bili_paramcd = "L00021S",
+  legendbign = "Y"
 )
 }
 \arguments{
@@ -26,6 +27,8 @@ variable.}
 \item{ast_paramcd}{\code{PARAMCD} value for \verb{ASPARTATE AMINOTRANSFERASE} in \code{datain}.}
 
 \item{bili_paramcd}{\code{PARAMCD} value for \code{BILIRUBIN} in \code{datain}.}
+
+\item{legendbign}{(\code{string}) Display BIGN in Legend (\code{Y/N}).}
 }
 \value{
 A \code{data.frame} required for \code{edish_plot}.
@@ -34,12 +37,11 @@ A \code{data.frame} required for \code{edish_plot}.
 Process data for eDISH plot
 }
 \examples{
-data("adlb")
-data("adsl")
+data("lab_data")
 
 merged_data <- adsl_merge(
-  adsl = adsl,
-  dataset_add = adlb
+  adsl = lab_data$adsl,
+  dataset_add = lab_data$adlb
 ) |>
   mentry(
     subset = "SAFFL == 'Y'",
@@ -50,9 +52,9 @@ merged_data <- adsl_merge(
 merged_data |>
   process_edish_data(
     xvar = "both",
-    alt_paramcd = "ALT",
-    ast_paramcd = "AST",
-    bili_paramcd = "BILI"
+    alt_paramcd = "L00030S",
+    ast_paramcd = "L00028S",
+    bili_paramcd = "L00021S"
   )
 
 }

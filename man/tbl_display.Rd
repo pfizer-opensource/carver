@@ -4,7 +4,14 @@
 \alias{tbl_display}
 \title{Create flextable output from display templates}
 \usage{
-tbl_display(datain, bylabel, dpthead = "  ", font = "Arial", fontsize = 10)
+tbl_display(
+  datain,
+  bylabel = NA,
+  dpthead = "  ",
+  font = "Arial",
+  fontsize = 10,
+  boldheadyn = "N"
+)
 }
 \arguments{
 \item{datain}{Input dataframe}
@@ -16,6 +23,8 @@ tbl_display(datain, bylabel, dpthead = "  ", font = "Arial", fontsize = 10)
 \item{font}{Font face for text inside table}
 
 \item{fontsize}{Font size for text inside table}
+
+\item{boldheadyn}{Y/N to determine if table header should be bold}
 }
 \value{
 flextable object

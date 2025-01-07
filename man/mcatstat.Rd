@@ -18,7 +18,11 @@ mcatstat(
   total_catlabel = "Total",
   dptvarn = 1,
   pctsyn = "Y",
-  denomyn = "N"
+  sigdec = 2,
+  denomyn = "N",
+  sparseyn = "N",
+  sparsebyvalyn = "N",
+  return_zero = "N"
 )
 }
 \arguments{
@@ -29,7 +33,7 @@ category}
 
 \item{denom_subset}{Subset condition to be applied to data set for calculating denominator.}
 
-\item{uniqid}{Variable to calculate unique counts of. Expected values: \code{"USUBJID"}, \code{"SITEID"},
+\item{uniqid}{Variable(s) to calculate unique counts of. eg. \code{"USUBJID"}, \code{"SITEID"},
 \code{"ALLCT"}}
 
 \item{dptvar}{Categorical Analysis variable and ordering variable if exists,
@@ -57,7 +61,16 @@ multiple \code{mcatstat()} outputs are created to be combined.}
 
 \item{pctsyn}{Display Percentage Sign in table or not. Values: \code{"Y"/"N"}}
 
+\item{sigdec}{Number of decimal places for \% displayed in output}
+
 \item{denomyn}{Display denominator in output or not. Values: \code{"Y"/"N"}}
+
+\item{sparseyn}{To sparse missing categories/treatments or not? \code{"Y"/"N"}}
+
+\item{sparsebyvalyn}{Sparse missing categories within by groups. \code{"Y"/"N"}}
+
+\item{return_zero}{Return rows with zero counts if analysis subset/ non-missing does not
+exist in data. \code{"Y"/"N"}}
 }
 \value{
 a data.frame with counts and/or percentages, passed to

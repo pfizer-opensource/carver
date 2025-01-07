@@ -74,7 +74,7 @@ ae_risk <- risk_stat(
   trtgrp = "Xanomeline High Dose",
   statistics = "Risk Ratio",
   alpha = 0.05,
-  cutoff = 5,
+  cutoff_where = "FREQ >5",
   sort_opt = "Ascending",
   sort_var = "Count"
 )
