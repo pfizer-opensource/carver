@@ -30,8 +30,8 @@ reverselog_trans <- function(base = exp(1)) {
   trans <- function(x) -log(x, base)
   inv <- function(x) base^(-x)
   scales::trans_new(paste0("reverselog-", format(base)), trans, inv,
-                    scales::log_breaks(base = base),
-                    domain = c(1e-100, Inf)
+    scales::log_breaks(base = base),
+    domain = c(1e-100, Inf)
   )
 }
 
@@ -63,10 +63,10 @@ g_seriescol <- function(gdata,
       "aquamarine1", "tan4", "skyblue1", "orchid3", "brown", "pink", "black"
     )
   }
-  
+
   # If not factor, convert it:
   if (!is.factor(gdata[[SERIESVAR]])) gdata[[SERIESVAR]] <- as.factor(gdata[[SERIESVAR]])
-  
+
   # Set names as factor levels
   levs <- levels(unique(gdata[[SERIESVAR]]))
   vals <- levs[levs %in% unique(gdata[[SERIESVAR]])]
@@ -131,12 +131,12 @@ g_seriessym <- function(gdata,
     # Standard shapes
     shapelist <- c(16, 17, 15, 1, 18, 2, 0, 8, 10, 3, 4, 5)
   }
-  
+
   # If not factor, convert it:
   if (!is.factor(gdata[[SERIESVAR]])) {
     gdata[[SERIESVAR]] <- as.factor(gdata[[SERIESVAR]])
   }
-  
+
   # Set names as factor levels
   # Set names as factor levels
   levs <- levels(unique(gdata[[SERIESVAR]]))
@@ -165,8 +165,8 @@ empty_plot <- function(message = "No data available for these values",
                        fontsize = 8) {
   g_plot <- ggplot() +
     annotate("text",
-             x = 1, y = 1, size = fontsize,
-             label = message
+      x = 1, y = 1, size = fontsize,
+      label = message
     ) +
     theme_void()
   fig <- ggplotly(g_plot, height = 200) |>
@@ -241,37 +241,39 @@ def_axis_spec <- function(arg, vec, val) {
 #' )
 #'
 plot_axis_opts <-
-  function(xlinearopts = list(
-    breaks = waiver(),
-    limits = NULL,
-    labels = waiver()
-  ),
-  ylinearopts = list(
-    breaks = waiver(),
-    limits = NULL,
-    labels = waiver()
-  ),
-  xaxis_scale = "identity",
-  yaxis_scale = "identity",
-  xaxis_label = "",
-  yaxis_label = "",
-  xopts = list(
-    labelsize = 12,
-    labelface = "plain",
-    ticksize = 8,
-    tickface = "plain",
-    angle = 0
-  ),
-  yopts = list(
-    labelsize = 12,
-    labelface = "plain",
-    ticksize = 8,
-    tickface = "plain",
-    angle = 0
-  )) {
+  function(
+    xlinearopts = list(
+      breaks = waiver(),
+      limits = NULL,
+      labels = waiver()
+    ),
+    ylinearopts = list(
+      breaks = waiver(),
+      limits = NULL,
+      labels = waiver()
+    ),
+    xaxis_scale = "identity",
+    yaxis_scale = "identity",
+    xaxis_label = "",
+    yaxis_label = "",
+    xopts = list(
+      labelsize = 12,
+      labelface = "plain",
+      ticksize = 8,
+      tickface = "plain",
+      angle = 0
+    ),
+    yopts = list(
+      labelsize = 12,
+      labelface = "plain",
+      ticksize = 8,
+      tickface = "plain",
+      angle = 0
+    )
+  ) {
     stopifnot(is.list(xlinearopts))
     stopifnot(is.list(ylinearopts))
-    
+
     list(
       Ybrks = def_axis_spec(
         arg = ylinearopts,

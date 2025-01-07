@@ -27,7 +27,7 @@ test_that("Case 1: Transformation works with expected input", {
 
 test_that("Case 1: Works with expected input", {
   trt_cols <- g_seriescol(ae_pre, "red~cyan~forestgreen~black~pink~green", "TRTVAR")
-  
+
   # Correct number of levels and colors assigned
   expect_equal(unname(trt_cols), c("red", "cyan", "forestgreen"))
   # Names as expected
@@ -40,7 +40,7 @@ test_that("Case 1: Works with expected input", {
 test_that("Case 2: Works with default", {
   trt_na <- g_seriescol(ae_pre, NA, "TRTVAR")
   # Default colors:
-  
+
   expect_equal(
     unname(trt_na),
     c("firebrick2", "blue4", "forestgreen")
@@ -72,7 +72,7 @@ test_that("Case 1: Works with expected input", {
     ae_pre,
     "triangle~circle~square~asterisk", "TRTVAR"
   )
-  
+
   # Correct number of levels and colors assigned
   expect_equal(unname(trt_shp), c(2, 1, 0))
   # Names as expected
@@ -80,7 +80,7 @@ test_that("Case 1: Works with expected input", {
     trt_shp,
     c("Placebo", "Xanomeline Low Dose", "Xanomeline High Dose")
   )
-  
+
   # Numeric Input:
   trt_shp1 <- g_seriessym(
     ae_pre,
@@ -96,7 +96,7 @@ test_that("Case 1: Works with expected input", {
 test_that("Case 2: Works with default", {
   trt_nashp <- g_seriessym(ae_pre, NA, "TRTVAR")
   # Default colors:
-  
+
   expect_equal(
     unname(trt_nashp),
     c(16, 17, 15)
@@ -253,7 +253,7 @@ test_that("empty_plot works as expected", {
   actual <- empty_plot()
   static_label <- "No data available for these values"
   exp_ptly_obj <- actual$ptly$x$data
-  
+
   expect_length(actual, 2)
   expect_length(actual$plot$data, 0)
   expect_equal(actual[["plot"]][["layers"]][[1]][["aes_params"]][["label"]], static_label)

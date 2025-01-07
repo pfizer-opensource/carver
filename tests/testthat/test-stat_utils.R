@@ -45,21 +45,21 @@ test_that("custom_cox_ph works with expected error when given wrong inputs", {
     pvalue_decimal = 4
   )
   expect_match(cp_error$err,
-               regex = "Spline fit is singular, try with smaller degrees of freedom"
+    regex = "Spline fit is singular, try with smaller degrees of freedom"
   )
   expect_equal(names(cp_error), c("out", "pval", "err"))
-  
-  
+
+
   dt <- data.frame(
     n = 100,
     timevar = rep(10, 100),
     cnsrvar = rep(0, 100),
     TRTVAR = sample(c("A", "B"), 100, replace = TRUE)
   )
-  
+
   new_cox <- custom_cox_ph(datain = dt)
   expect_match(new_cox$err,
-               regex = "Not enough data to fit the Proportional Hazards Regression Model"
+    regex = "Not enough data to fit the Proportional Hazards Regression Model"
   )
   expect_equal(names(new_cox), c("out", "pval", "err"))
 })
@@ -136,23 +136,23 @@ test_that("Test summary_functions outputs", {
 
 test_that("Test Tukey's stats", {
   exp <- min(dist[(dist >= (quantile(dist, 0.25, na.rm = TRUE) - 1.5 * IQR(dist, na.rm = TRUE))) &
-                    (dist <= quantile(dist, 0.25, na.rm = TRUE))], na.rm = TRUE)
+    (dist <= quantile(dist, 0.25, na.rm = TRUE))], na.rm = TRUE)
   expect_equal(whiskerlow(dist), exp)
   exp2 <- max(dist[(dist <= (quantile(dist, 0.75, na.rm = TRUE) + 1.5 * IQR(dist, na.rm = TRUE))) &
-                     (dist >= quantile(dist, 0.75, na.rm = TRUE))], na.rm = TRUE)
+    (dist >= quantile(dist, 0.75, na.rm = TRUE))], na.rm = TRUE)
   expect_equal(whiskerup(dist), exp2)
 })
 
 test_that("Test derv_stats", {
   actual <- msumstat(adsl,
-                     dptvar = "AGE",
-                     statvar = "stderr~mean(sd)",
-                     sigdec = "2~3(2)"
+    dptvar = "AGE",
+    statvar = "stderr~mean(sd)",
+    sigdec = "2~3(2)"
   )
   testout <- msumstat(adsl,
-                      dptvar = "AGE",
-                      statvar = "stderr~mean~sd",
-                      sigdec = "2~3~2"
+    dptvar = "AGE",
+    statvar = "stderr~mean~sd",
+    sigdec = "2~3~2"
   )
   expected <- testout$gsum |>
     dplyr::mutate(`mean(sd)` = paste0(.data[["mean"]], " (", .data[["sd"]], ")")) |>

@@ -167,7 +167,7 @@ summary_functions <- function(statvar, statdec) {
 #' @noRd
 whiskerlow <- function(x, na.rm = TRUE) {
   min(x[(x >= (quantile(x, 0.25, na.rm = TRUE) - 1.5 * IQR(x, na.rm = TRUE))) &
-          (x <= quantile(x, 0.25, na.rm = TRUE))], na.rm = na.rm)
+    (x <= quantile(x, 0.25, na.rm = TRUE))], na.rm = na.rm)
 }
 
 #' Upper Box Whiskers
@@ -179,7 +179,7 @@ whiskerlow <- function(x, na.rm = TRUE) {
 #' @noRd
 whiskerup <- function(x, na.rm = TRUE) {
   max(x[(x <= (quantile(x, 0.75, na.rm = TRUE) + 1.5 * IQR(x, na.rm = TRUE))) &
-          (x >= quantile(x, 0.75, na.rm = TRUE))], na.rm = na.rm)
+    (x >= quantile(x, 0.75, na.rm = TRUE))], na.rm = na.rm)
 }
 
 #' Concatenate to create complex statistics

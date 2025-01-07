@@ -21,7 +21,7 @@ test_that("process_vs_bar_data works as expected", {
   expect_s3_class(bar_pre, "data.frame")
   actual_trt <- unique(bar_pre$TRTVAR)
   actual_subgrp <- unique(bar_pre$SUBGRPVAR1)
-  
+
   expect_equal(actual_subgrp, sort(unique(vx_bar_data$adsl$SEX)))
   expect_equal(levels(actual_trt), c("Drug1", "Drug2", "Drug3"))
   expect_snapshot(print(bar_pre, width = Inf, n = Inf))

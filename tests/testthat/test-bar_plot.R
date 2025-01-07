@@ -37,9 +37,9 @@ test_that("Test Case 1: bar_plot works with expected inputs", {
     griddisplay = "N",
     plot_title = NULL
   )
-  
+
   legendgroups <- unique(bar_out[["data"]][["TRTVAR"]])
-  
+
   expect_type(bar_out, "list")
   expect_true(is.ggplot(bar_out))
   expect_equal(legendgroups, unique(bar_out[["data"]][["TRTVAR"]]))
@@ -68,9 +68,9 @@ test_that("Test Case 2: bar_plot works with modified inputs", {
     griddisplay = "N",
     plot_title = NULL
   )
-  
+
   legendgroups <- unique(bar_out[["data"]][["TRTVAR"]])
-  
+
   expect_type(bar_out, "list")
   expect_equal(legendgroups, unique(bar_out[["data"]][["TRTVAR"]]))
   expect_true(nrow(bar_out$data) > 0)

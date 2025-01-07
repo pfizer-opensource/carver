@@ -72,7 +72,7 @@ test_that("Test Case 2: tornado data works with expected inputs", {
 
 test_that("Test Case 3: tornado_plot works with expected inputs", {
   legendgroups <- unique(plot_out[["data"]][["BYVAR1"]])
-  
+
   expect_true(is.ggplot(plot_out))
   expect_type(plot_out, "list")
   expect_equal(legendgroups, unique(plot_out[["data"]][["BYVAR1"]]))

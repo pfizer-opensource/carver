@@ -145,7 +145,7 @@ test_that("Test 5: Sparse by value", {
     trtsort = "TRT01AN",
     pop_fil = NA
   )
-  
+
   adsl_sum <- adsl_entry |>
     msumstat(
       dptvar = "AGE",

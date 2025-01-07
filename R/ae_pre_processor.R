@@ -85,7 +85,7 @@ ae_pre_processor <- function(datain,
       mutate(PT = str_trim(toupper(.data[["AEDECOD"]]))) |>
       left_join(fmq, by = "PT")
   }
-  
+
   # Standardizing date format to common format
   data_pro <- datain |>
     mutate(across(
@@ -98,7 +98,7 @@ ae_pre_processor <- function(datain,
   if ("ASTDT" %in% names(data_pro) && any(is.na(data_pro[["AEDECOD"]]))) {
     data_pro <- data_pro |>
       mutate(AEDECOD = if_else(!is.na(.data[["ASTDT"]]) & is.na(.data[["AEDECOD"]]),
-                               "Not Yet Coded", .data[["AEDECOD"]]
+        "Not Yet Coded", .data[["AEDECOD"]]
       ))
   }
   # AE-Specific filter conditions
@@ -120,7 +120,7 @@ ae_pre_processor <- function(datain,
       c(filters, glue("(ASTDT > TRTSDT) & (ASTDT < (TRTEDT + {obs_residual}))"))
     ), collapse = " & ")
   }
-  
+
   # Apply AE filters if exist:
   if (!is.na(filters) && filters != "") {
     data_pro <- data_pro |>
@@ -164,7 +164,7 @@ ae_pre_processor <- function(datain,
     filters <- paste(na.omit(c(filters, "MAX_SEVCTC == 1")), collapse = " & ")
   }
   ################### ENDax SEV/CTC##############
-  
+
   # Return processed dataframe and filter conditions
   return(list(data = ungroup(data_pro), a_subset = filters))
 }

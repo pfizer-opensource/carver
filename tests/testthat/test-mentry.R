@@ -17,15 +17,15 @@ test_that("Test Case:1 mentry works with the inputs given and returns the expect
   )
   # it returns a dataframe
   expect_s3_class(data_out, "data.frame")
-  
+
   # testing asubset filter
   expect_equal(unique(data_out$EFFFL), "Y")
-  
+
   # testing population filter
   expect_equal(unique(data_out$SAFFL), "Y")
   # Treatment check
   expect_s3_class(data_out$TRTVAR, "factor")
-  
+
   # testing missing logic in byvar and subgrpvar
   expect_equal(
     unique(data_out$BYVAR1),
@@ -74,7 +74,7 @@ test_that("Total and Treatment Values", {
   )
   chdata <- data_out |>
     filter(.data[["TRTVAR"]] %in%
-             c("NOT ASSIGNED", "SCREEN FAILURE", "SCRNFAIL", "NOTRT", "NOTASSGN"))
+      c("NOT ASSIGNED", "SCREEN FAILURE", "SCRNFAIL", "NOTRT", "NOTASSGN"))
   expect_equal(nrow(chdata), 0)
   exp <- data_out |>
     mutate(

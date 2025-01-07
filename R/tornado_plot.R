@@ -89,7 +89,7 @@ tornado_plot <- function(datain,
     "XVAR Treatment values not in data" =
       all(c("XVAR", "trt_left", "trt_right") %in% names(datain))
   )
-  
+
   # Tornado plot - Flipped left and right Bar plots to ref line at 0
   g_plot <- datain |>
     ggplot(aes(x = XVAR)) +
@@ -105,7 +105,7 @@ tornado_plot <- function(datain,
       width = bar_width
     ) +
     coord_flip()
-  
+
   names(series_opts) <- rev(names(series_opts))
   # Adding Labels, Breaks, Colors, Ticks, Themes
   g_plot +
@@ -234,7 +234,7 @@ process_tornado_data <-
       "Given Subsets not present in Analysis Data" =
         nrow(mentry_out) != 0
     )
-    
+
     # Summary analysis for tornado plot dataset
     mcatstat_out <- mcatstat(
       datain = mentry_out,
@@ -246,21 +246,21 @@ process_tornado_data <-
       sparseyn = "N"
     ) |> (\(x) {
       mutate(x,
-             YVAR = as.numeric(PCT),
-             XVAR = factor(x$XVAR,
-                           levels = rev(x |>
-                                          group_by(XVAR) |>
-                                          mutate(XVARPCTS = sum(as.numeric(PCT))) |>
-                                          arrange(desc(.data$XVARPCTS)) |>
-                                          distinct(XVAR) |>
-                                          pull(XVAR))
-             ),
-             BYVAR1 = factor(x$BYVAR1, levels = rev(unique(x$BYVAR1)))
+        YVAR = as.numeric(PCT),
+        XVAR = factor(x$XVAR,
+          levels = rev(x |>
+            group_by(XVAR) |>
+            mutate(XVARPCTS = sum(as.numeric(PCT))) |>
+            arrange(desc(.data$XVARPCTS)) |>
+            distinct(XVAR) |>
+            pull(XVAR))
+        ),
+        BYVAR1 = factor(x$BYVAR1, levels = rev(unique(x$BYVAR1)))
       ) |>
         pivot_wider(names_from = "TRTVAR", values_from = "YVAR") |>
         mutate(trt_left = !!sym(trt_left), trt_right = !!sym(trt_right))
     })()
-    
+
     # Dataset for tornado plot
     plot_title_nsubj(
       mentry_out,

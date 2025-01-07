@@ -12,7 +12,7 @@ test_that("km_plot works with default options", {
   surv_df <- purrr::list_modify(p$data, survfit = NULL)
   p$theme$legend.background <- NULL
   fit <- purrr::list_modify(p[["data"]][["survfit"]][[1]], call = NULL, .Environment = NULL)
-  
+
   expect_snapshot(print(tibble::as_tibble(surv_df), n = Inf, width = Inf))
   expect_snapshot(p$theme)
   purrr::walk(p$labels, ~ expect_snapshot(.x))
@@ -37,7 +37,7 @@ test_that("km_plot works with different options", {
   surv_df <- purrr::list_modify(p$data, survfit = NULL)
   p$theme$legend.background <- NULL
   fit <- p[["data"]][["survfit"]][[1]]
-  
+
   expect_snapshot(print(tibble::as_tibble(surv_df), n = Inf, width = Inf))
   expect_snapshot(p$theme)
   purrr::walk(p$labels, ~ expect_snapshot(.x))
@@ -60,7 +60,7 @@ test_that("km_plot returns empty plot when `datain` is empty", {
         yaxis_label = "Probability of Progression Free Survival"
       )
     )
-  
+
   expected <- empty_plot("No data available")[["plot"]]
   expect_identical(actual[["data"]], expected[["data"]])
   expect_identical(actual[["mapping"]], expected[["mapping"]])

@@ -90,22 +90,22 @@ tbl_processor <- function(datain,
     rep <- rep |>
       select(
         any_of(c(BYVAR, "DPTVAR", "DPTVAL",
-                 "DPTVAL" = "STAT", "TRTVAR", SUBGRP, BYVARN, SUBGRPN,
-                 "DPTVARN", "DPTVALN", "DPTVALN" = "STATN", "CVALUE", "CN", keepvars
+          "DPTVAL" = "STAT", "TRTVAR", SUBGRP, BYVARN, SUBGRPN,
+          "DPTVARN", "DPTVALN", "DPTVALN" = "STATN", "CVALUE", "CN", keepvars
         ))
       )
   }
-  
+
   # IF treatment, subgroup exists, pivot and perform operations
   if (any(c("TRTVAR", SUBGRP) %in% names(rep))) {
     # Workaround for pivot_wider to accept "duplicate" spanned column names (Total)
     rep <- rep |>
       mutate(across(any_of(SUBGRP), ~
-                      ifelse(
-                        get(paste0(cur_column(), "N")) == 9999,
-                        paste0(.x, paste(rep(" ", which(SUBGRP == cur_column())), collapse = "")),
-                        .x
-                      ))) |>
+        ifelse(
+          get(paste0(cur_column(), "N")) == 9999,
+          paste0(.x, paste(rep(" ", which(SUBGRP == cur_column())), collapse = "")),
+          .x
+        ))) |>
       arrange(across(any_of(c("TRTVAR", SUBGRPN)))) |>
       select(-any_of(SUBGRPN)) |>
       pivot_wider(
@@ -125,7 +125,7 @@ tbl_processor <- function(datain,
     rep <- rep |> mutate(across(
       -any_of(c(BYVAR, "DPTVAR", "DPTVAL")) & where(is.character),
       ~ if_else(.data[["DPTVAL"]] %in% c("n", "nmiss", "nobs"),
-                gsub("^-$", "0", .x), .x
+        gsub("^-$", "0", .x), .x
       )
     ))
   }
@@ -146,8 +146,8 @@ tbl_processor <- function(datain,
     rep <- rep |>
       mutate(
         DPTVAL = ifelse(.data[["CN"]] == "N",
-                        recode(.data[["DPTVAL"]], !!!statn),
-                        .data[["DPTVAL"]]
+          recode(.data[["DPTVAL"]], !!!statn),
+          .data[["DPTVAL"]]
         )
       )
   }
@@ -346,8 +346,8 @@ tbl_display <- function(datain,
     )))
   tout <- rep |>
     flextable(col_keys = grep("DPTVARN|^CN$|DPTVALN",
-                              names(rep),
-                              invert = TRUE, value = TRUE
+      names(rep),
+      invert = TRUE, value = TRUE
     )) |>
     ftExtra::span_header("_") |>
     font(fontname = font, part = "all") |>
@@ -395,4 +395,3 @@ empty_tbl <- function(text = "No participant meets the reporting criteria") {
     align(align = "center", part = "all") |>
     autofit()
 }
-

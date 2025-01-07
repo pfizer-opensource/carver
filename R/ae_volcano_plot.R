@@ -120,7 +120,7 @@ ae_volcano_plot <- function(datain,
       )
     ) + # color code by SOC
     geom_point(aes(size = .data[["CTRL_N"]]), pch = 21, alpha = 0.5)
-  
+
   # Error when there are no adjusted p-values <= 0.05 so remove FDR adjusted P when no
   # adjusted p <= p value cutoff
   check_sig <- datain |>

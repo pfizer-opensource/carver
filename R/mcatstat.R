@@ -247,9 +247,9 @@ mcatstat <- function(datain = NULL,
       DPTVAR = dptvars$vars, XVAR = .data[["DPTVAL"]], DPTVARN = dptvarn, CN = "C"
     ) |>
     select(any_of(c(BYVAR, "TRTVAR", SUBGRP, "DPTVAR", "DPTVAL", "CVALUE")), everything())
-  
+
   message("mcatstat success")
-  
+
   df
 }
 
@@ -282,7 +282,7 @@ calc_denom <- function(counts,
   stopifnot(
     "Invalid pctdisp" =
       str_remove(pctdisp, "[[:digit:]]+") %in%
-      c("TRT", "VAR", "COL", "SUBGRP", "SGRPN", "CAT", "NONE", "NO", "DPTVAR", "BYVARN")
+        c("TRT", "VAR", "COL", "SUBGRP", "SGRPN", "CAT", "NONE", "NO", "DPTVAR", "BYVARN")
   )
   # Set denominator values for percentage
   if (pctdisp %in% c("NONE", "NO")) {
@@ -295,15 +295,15 @@ calc_denom <- function(counts,
       df <- counts |> mutate(DENOMN = nrow(unique(data_denom[uniqid])))
     } else {
       percgrp <- switch(gsub("[[:digit:]]", "", pctdisp),
-                        "TRT" = "TRTVAR",
-                        "CAT" = c(BYVAR, "DPTVAL"),
-                        "COL" = c("TRTVAR", SUBGRP),
-                        "SUBGRP" = c("TRTVAR", SUBGRP, BYVAR),
-                        "SGRPN" = SUBGRP,
-                        "DPTVAR" = c("TRTVAR", SUBGRP, BYVAR, "DPTVAL"),
-                        "BYVARN" = c("TRTVAR", paste0("BYVAR", str_to_vec(
-                          str_extract(pctdisp, "[[:digit:]]+"), ""
-                        )))
+        "TRT" = "TRTVAR",
+        "CAT" = c(BYVAR, "DPTVAL"),
+        "COL" = c("TRTVAR", SUBGRP),
+        "SUBGRP" = c("TRTVAR", SUBGRP, BYVAR),
+        "SGRPN" = SUBGRP,
+        "DPTVAR" = c("TRTVAR", SUBGRP, BYVAR, "DPTVAL"),
+        "BYVARN" = c("TRTVAR", paste0("BYVAR", str_to_vec(
+          str_extract(pctdisp, "[[:digit:]]+"), ""
+        )))
       ) |> intersect(names(data_denom))
       # Get denominator count per above variables
       df <- data_denom |>
@@ -311,7 +311,7 @@ calc_denom <- function(counts,
         summarise(DENOMN = n_distinct(across(any_of(uniqid)))) |>
         inner_join(counts, by = percgrp, multiple = "all")
     }
-    
+
     # Calculate percentage as PCT and concatenate as CVALUE
     p <- ifelse(pctsyn == "N", "", "%") # nolint
     df <- df |>

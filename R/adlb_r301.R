@@ -78,7 +78,7 @@ lab_abnormality_summary <- function(datain,
   byvars <- var_start(datain, "BYVAR")
   byvarsN <- glue("{byvars}N")
   stopifnot("Criteria Variables/Flags not present in `datain`" = all(dptvars %in% names(datain)) ||
-              all(dptvars_fl %in% names(datain)))
+    all(dptvars_fl %in% names(datain)))
   # handle denom_subset when not specified
   if (is.na(denom_subset) || str_squish(denom_subset) == "") {
     if ("APSBLFL" %in% names(datain)) {
@@ -102,7 +102,7 @@ lab_abnormality_summary <- function(datain,
     map(\(dptval) {
       asubset <- glue("{dptvars_fl[dptval]} == 'Y'")
       if (!is.na(a_subset) &&
-          str_squish(a_subset) != "") {
+        str_squish(a_subset) != "") {
         asubset <- glue("{a_subset} & {asubset}")
       }
       ## add lab abnormality counts

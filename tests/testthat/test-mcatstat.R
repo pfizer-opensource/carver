@@ -99,26 +99,26 @@ test_that("Case 3: Unique ID and sign variation", {
     pctdisp = "TRT",
     pctsyn = "N"
   )
-  
+
   # All groups and order except actual count values should be equal
   expect_equal(
     m_subj |> select(-all_of(c("DENOMN", "FREQ", "PCT", "CVALUE", "CPCT"))),
     m_na |> select(-all_of(c("DENOMN", "FREQ", "PCT", "CVALUE", "CPCT")))
   )
-  
+
   # Counts are different
   expect_false(setequal(unique(m_subj$DENOMN), unique(m_na$DENOMN)))
-  
+
   # Check values (for denominator, should also apply to numerator)
   check_na <- ae_entry |>
     ungroup() |>
     group_by(TRTVAR) |>
     summarise(DENOMN = n()) |>
     ungroup()
-  
+
   expect_equal(m_na |> distinct(across(all_of(c("TRTVAR", "DENOMN")))),
-               check_na,
-               ignore_attr = TRUE
+    check_na,
+    ignore_attr = TRUE
   )
   expect_false(any(grep("%", m_subj$CVALUE)))
 })
@@ -130,17 +130,17 @@ test_that("Case 4: Percentage denominator variation and denomyn", {
     dptvar = "SEX",
     pctdisp = "ABC"
   ), "Invalid pctdisp")
-  
+
   m_none <- mcatstat(
     datain = ad_entry,
     dptvar = "SEX",
     pctdisp = "NONE"
   )
-  
+
   # No percentage columns:
   expect_false(any(c("PCT", "DENOMN") %in% names(m_none)))
   expect_equal(as.character(m_none$FREQ), m_none$CVALUE)
-  
+
   # Variable total as denominator
   m_var <- mcatstat(
     datain = ad_entry,
@@ -162,7 +162,7 @@ test_that("Case 5: Cumulative Frequency and Total", {
     cum_ctyn = "Y"
   )
   expect_equal(m_cum[, c("TRTVAR", "FREQ", "DPTVAL")], ad_cum)
-  
+
   m_total <- mcatstat(
     datain = ad_entry,
     dptvar = "SEX",

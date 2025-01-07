@@ -22,7 +22,7 @@ test_that("Test Case 1: With standard arguments", {
     ) |>
     tidyr::drop_na(all_of("TRTSDT")) |>
     mutate(AEDECOD = if_else(is.na(.data[["AEDECOD"]]) & !is.na(.data[["ASTDT"]]),
-                             "Not Yet Coded", .data[["AEDECOD"]]
+      "Not Yet Coded", .data[["AEDECOD"]]
     ))
   expect_named(actual, c("data", "a_subset"))
   expect_equal(actual$data, expected)
