@@ -1,9 +1,26 @@
-ae_pre_process <- ae_pre_processor(
-  datain = adae,
-  ae_filter = "Any Event",
-  obs_residual = 0,
-  fmq_data = FMQ_Consolidated_List
+data("adae")
+data("adsl")
+data("ae_pre_process")
+adae1 <- adae |>
+  mutate(ASEVN = recode(.data[["AESEV"]], "MILD" = 1, "MODERATE" = 2, "SEVERE" = 3))
+ae_pre <- ae_pre_processor(
+  adae1,
+  subset = "TRTEMFL == 'Y'",
+  max_sevctc = "SEV",
+  pt_total = "Y"
 )
+ae_entry_max <- ae_pre[["data"]] |>
+  mentry(
+    subset = NA,
+    byvar = "AEBODSYS",
+    trtvar = "TRTA",
+    trtsort = "TRTAN",
+    trttotalyn = "N",
+    add_grpmiss = "N",
+    subgrpvar = "AESEV",
+    sgtotalyn = "N",
+    pop_fil = "Overall Population"
+  )
 ae_entry <- ae_pre_process[["data"]] |>
   mentry(
     subset = NA,
@@ -16,7 +33,7 @@ ae_entry <- ae_pre_process[["data"]] |>
     pop_fil = "Overall Population"
   )
 
-test_that("Standard inputs for occ_tier works", {
+test_that("occ_tier standard inputs works", {
   output <- occ_tier_summary(
     ae_entry,
     a_subset = ae_pre_process[["a_subset"]],
@@ -24,18 +41,17 @@ test_that("Standard inputs for occ_tier works", {
     hterm = "AEBODSYS",
     lterm = "AEDECOD",
     pctdisp = "TRT",
-    cutoff = 5,
+    cutoff_where = "PCT > 10 & FREQ > 20",
     apply_hrow_cutoff = "N",
     sort_opt = "Ascending",
     sort_var = "Count"
   )
   expect_s3_class(output, "data.frame")
-  # Check treatments are accounted:
-  all(unique(output$TRTVAR) %in% unique(ae_entry$TRTVAR))
-  expect_snapshot(output)
+  expect_true(unique(trimws(output$SUBGRPVARX)) == "n (%)")
+  expect_snapshot(print(output, n = Inf, width = Inf))
 })
 
-test_that("Standard inputs for occ_tier works", {
+test_that("occ_tier modified inputs works", {
   output <- occ_tier_summary(
     ae_entry,
     a_subset = ae_pre_process[["a_subset"]],
@@ -43,80 +59,65 @@ test_that("Standard inputs for occ_tier works", {
     hterm = "AEBODSYS",
     lterm = "AEDECOD",
     pctdisp = "TRT",
-    cutoff = 5,
-    apply_hrow_cutoff = "N",
-    sort_opt = "Ascending",
-    sort_var = "Count"
-  )
-  expect_s3_class(output, "data.frame")
-  # Check treatments are accounted:
-  all(unique(output$TRTVAR) %in% unique(ae_entry$TRTVAR))
-  expect_snapshot(output)
-})
-
-test_that("Cut off applied for occ_tier works", {
-  output <- occ_tier_summary(
-    ae_entry,
-    a_subset = ae_pre_process[["a_subset"]],
-    summary_by = "Patients",
-    hterm = "AEBODSYS",
-    lterm = "AEDECOD",
-    pctdisp = "TRT",
-    cutoff = 5,
+    cutoff_where = "PCT > 10 & FREQ > 20",
     apply_hrow_cutoff = "Y",
+    nolwrtierdispyn = "Y",
+    htermctyn = "N",
     sort_opt = "Alphabetical",
-    sort_var = "Count"
+    sum_row = "Y",
+    sum_row_label = "Any Adverse Event"
   )
   expect_s3_class(output, "data.frame")
-  # Check treatments are accounted:
-  all(unique(output$TRTVAR) %in% unique(ae_entry$TRTVAR))
-  expect_snapshot(output)
+  expect_true(unique(trimws(output$SUBGRPVARX)) == "n (%)")
+  expect_snapshot(print(output, n = Inf, width = Inf))
 })
 
-test_that("Cut off too high", {
+test_that("Empty Outputs", {
   output <- occ_tier_summary(
+    data.frame(),
+    a_subset = ae_pre_process[["a_subset"]],
+    summary_by = "Patients",
+    hterm = "AEBODSYS",
+    lterm = "AEDECOD",
+    pctdisp = "TRT",
+    apply_hrow_cutoff = "Y",
+    nolwrtierdispyn = "N",
+    htermctyn = "N",
+    sort_opt = "Alphabetical"
+  )
+  expect_s3_class(output, "data.frame")
+  expect_equal(nrow(output), 0)
+  output1 <- occ_tier_summary(
     ae_entry,
     a_subset = ae_pre_process[["a_subset"]],
     summary_by = "Patients",
     hterm = "AEBODSYS",
     lterm = "AEDECOD",
     pctdisp = "TRT",
-    cutoff = 40,
+    cutoff_where = "PCT > 50",
     apply_hrow_cutoff = "Y",
-    sort_opt = "Alphabetical",
-    sort_var = "Count"
+    htermctyn = "N",
+    sort_opt = "Alphabetical"
   )
-  expect_s3_class(output, "data.frame")
-  expect_equal(output, data.frame("Note" = "No low term data available under these conditions"))
+  expect_equal(nrow(output1), 0)
 })
 
-test_that("Errors resolved correctly", {
-  expect_error(
-    occ_tier_summary(
-      data.frame(),
-      a_subset = ae_pre_process[["a_subset"]],
-      summary_by = "Patients",
-      hterm = "AEBODSYS",
-      lterm = "AEDECOD",
-      pctdisp = "TRT",
-      cutoff = 0,
-      apply_hrow_cutoff = "Y",
-      sort_opt = "Alphabetical",
-      sort_var = "Count"
-    ), "Input data is empty"
+test_that("occ_tier standard inputs works max severity", {
+  output <- occ_tier_summary(
+    ae_entry_max,
+    a_subset = ae_pre[["a_subset"]],
+    summary_by = "Patients",
+    hterm = "AEBODSYS",
+    lterm = "AEDECOD",
+    cutoff_where = "FREQ > 5",
+    pctdisp = "TRT",
+    sum_row = "Y",
+    sum_row_label = "Any Adverse Event",
+    nolwrtierdispyn = "N",
+    sort_opt = "Alphabetical",
+    stathead = "n"
   )
-  expect_error(
-    occ_tier_summary(
-      ae_entry,
-      a_subset = ae_pre_process[["a_subset"]],
-      summary_by = "Patients",
-      hterm = "RACE",
-      lterm = "AEDECOD",
-      pctdisp = "TRT",
-      cutoff = 0,
-      apply_hrow_cutoff = "Y",
-      sort_opt = "Alphabetical",
-      sort_var = "Count"
-    )
-  )
+  expect_s3_class(output, "data.frame")
+  expect_true(unique(trimws(output$SUBGRPVARX)) == "n")
+  expect_snapshot(print(output, n = Inf, width = Inf))
 })

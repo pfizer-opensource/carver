@@ -4,15 +4,13 @@ tornado_df <- process_tornado_data(
   dataset_adsl = tornado_plot_data[["adsl"]],
   dataset_analysis = tornado_plot_data[["adae"]],
   adsl_subset = "SAFFL == 'Y'",
-  analysis_subset = NA_character_,
-  ae_filter = "Treatment emergent",
+  analysis_subset = "TRTEMFL == 'Y'",
   obs_residual = "30",
   fmq_data = NA,
-  ae_catvar = "AESEV",
+  ae_catvar = "AESEV/AESEVN",
   trtvar = "ARMCD",
   trt_left = "A",
   trt_right = "A",
-  pop_fil = "Overall Population",
   pctdisp = "TRT",
   denom_subset = NA_character_,
   legendbign = "N",
@@ -49,15 +47,13 @@ test_that("Test Case 1: process_tornado_data throws expected error message", {
       dataset_adsl = tornado_plot_data[["adsl"]],
       dataset_analysis = data.frame(),
       adsl_subset = "SAFFL == 'Y'",
-      analysis_subset = NA_character_,
-      ae_filter = "Treatment emergent",
+      analysis_subset = "TRTEMFL == 'Y'",
       obs_residual = "30",
       fmq_data = NA,
       ae_catvar = "AESEV",
       trtvar = "ARMCD",
       trt_left = "A",
       trt_right = "A",
-      pop_fil = "Overall Population",
       pctdisp = "TRT",
       denom_subset = NA_character_,
       legendbign = "N",
@@ -76,7 +72,7 @@ test_that("Test Case 2: tornado data works with expected inputs", {
 
 test_that("Test Case 3: tornado_plot works with expected inputs", {
   legendgroups <- unique(plot_out[["data"]][["BYVAR1"]])
-
+  
   expect_true(is.ggplot(plot_out))
   expect_type(plot_out, "list")
   expect_equal(legendgroups, unique(plot_out[["data"]][["BYVAR1"]]))
@@ -98,7 +94,7 @@ test_that("Test Case 4: tornado_plot throws expected error message", {
 
 test_that("Test Case 5: tornado_plot creates tornado plot", {
   purrr::walk(
-    plot_out, c("mapping", "theme", "labels"),
+    c("mapping", "theme", "labels"),
     \(y) expect_snapshot(plot_out[[y]])
   )
 })
