@@ -51,9 +51,9 @@
 #'
 process_edish_data <- function(datain,
                                xvar = "both",
-                               alt_paramcd = "L00030S",
-                               ast_paramcd = "L00028S",
-                               bili_paramcd = "L00021S",
+                               alt_paramcd = "ALT",
+                               ast_paramcd = "AST",
+                               bili_paramcd = "BILI",
                                legendbign = "Y") {
   if (!is.data.frame(datain) || nrow(datain) == 0) {
     return(data.frame())

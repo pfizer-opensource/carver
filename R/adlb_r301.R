@@ -24,9 +24,9 @@
 #' @export
 #'
 #' @examples
-#' data("lab_data")
+#' data("adlb")
 #'
-#' lb_entry <- lab_data$adlb |>
+#' lb_entry <- adlb |>
 #'   mentry(
 #'     subset = NA_character_,
 #'     byvar = "PARCAT1~PARAM",
@@ -42,7 +42,7 @@
 #' out <-
 #'   lb_entry |>
 #'   lab_abnormality_summary(
-#'     crit_vars = "CRIT3~CRIT4",
+#'     crit_vars = "CRIT1~CRIT2",
 #'     pctdisp = "SUBGRP",
 #'     a_subset = NA_character_,
 #'     denom_subset = NA_character_,
@@ -61,7 +61,7 @@
 #'   )
 #'
 lab_abnormality_summary <- function(datain,
-                                    crit_vars = "CRIT3~CRIT4",
+                                    crit_vars = "CRIT1~CRIT2",
                                     pctdisp = "SUBGRP",
                                     a_subset = NA_character_,
                                     denom_subset = NA_character_,

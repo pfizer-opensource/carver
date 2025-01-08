@@ -1,16 +1,17 @@
-data(tornado_plot_data)
+data("adsl")
+data("adae")
 
 tornado_df <- process_tornado_data(
-  dataset_adsl = tornado_plot_data[["adsl"]],
-  dataset_analysis = tornado_plot_data[["adae"]],
+  dataset_adsl = adsl,
+  dataset_analysis = adae,
   adsl_subset = "SAFFL == 'Y'",
   analysis_subset = "TRTEMFL == 'Y'",
   obs_residual = "30",
   fmq_data = NA,
   ae_catvar = "AESEV/AESEVN",
-  trtvar = "ARMCD",
-  trt_left = "A",
-  trt_right = "A",
+  trtvar = "ARM",
+  trt_left = "Xanomeline High Dose",
+  trt_right = "Xanomeline Low Dose",
   pctdisp = "TRT",
   denom_subset = NA_character_,
   legendbign = "N",
@@ -44,16 +45,16 @@ plot_out <- tornado_plot(
 test_that("Test Case 1: process_tornado_data throws expected error message", {
   expect_error(
     process_tornado_data(
-      dataset_adsl = tornado_plot_data[["adsl"]],
+      dataset_adsl = adsl,
       dataset_analysis = data.frame(),
       adsl_subset = "SAFFL == 'Y'",
       analysis_subset = "TRTEMFL == 'Y'",
       obs_residual = "30",
       fmq_data = NA,
       ae_catvar = "AESEV",
-      trtvar = "ARMCD",
-      trt_left = "A",
-      trt_right = "A",
+      trtvar = "ARM",
+      trt_left = "Xanomeline High Dose",
+      trt_right = "Xanomeline Low Dose",
       pctdisp = "TRT",
       denom_subset = NA_character_,
       legendbign = "N",

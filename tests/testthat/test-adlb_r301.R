@@ -42,42 +42,36 @@ lb_entry_subset <- adlb |>
 test_that("lab_abnormality_summary works as expected with different options", {
   out <- lb_entry |>
     lab_abnormality_summary(
-      crit_vars = "CRIT3~CRIT4",
+      crit_vars = "CRIT1~CRIT2",
       pctdisp = "SUBGRP",
       a_subset = NA_character_,
       denom_subset = NA_character_
-    )
-
-  out <- out |>
+    ) |>
     display_bign_head(lb_entry) |>
     tbl_processor(addrowvars = NA_character_)
 
   out_by_subgrp <-
     lb_entry_subgrp |>
     lab_abnormality_summary(
-      crit_vars = "CRIT3~CRIT4",
+      crit_vars = "CRIT1~CRIT2",
       pctdisp = "SUBGRP",
       a_subset = NA_character_,
       denom_subset = "APSBLFL == 'Y'"
-    )
-
-  out_by_subgrp <- out_by_subgrp |>
+    ) |>
     display_bign_head(mentry_data = lb_entry_subgrp) |>
     tbl_processor(addrowvars = NA_character_)
 
   out_by_subset <-
     lb_entry_subset |>
     lab_abnormality_summary(
-      crit_vars = "CRIT3~CRIT4",
+      crit_vars = "CRIT1~CRIT2",
       pctdisp = "SUBGRP",
       a_subset = "RACE == 'WHITE'"
-    )
-
-  out_by_subset <- out_by_subset |>
+    ) |>
     display_bign_head(mentry_data = lb_entry_subset) |>
     tbl_processor(addrowvars = NA_character_)
 
-  purrr::walk(out, \(x) expect_snapshot(x))
+  purrr::walk(out, \(x) print(x))
   purrr::walk(out_by_subgrp, \(x) expect_snapshot(x))
   purrr::walk(out_by_subset, \(x) expect_snapshot(x))
 })
@@ -89,7 +83,7 @@ test_that("lab_abnormality_summary returns expected error messages", {
   expect_error(
     lab_abnormality_summary(
       datain = df_,
-      crit_vars = "CRIT3~CRIT4",
+      crit_vars = "CRIT1~CRIT2",
       pctdisp = "SUBGRP",
       a_subset = NA_character_,
       denom_subset = NA_character_

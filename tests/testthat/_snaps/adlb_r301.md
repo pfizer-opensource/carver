@@ -3,265 +3,334 @@
     Code
       x
     Output
-      [1] "CLINICAL CHEMISTRY" "CLINICAL CHEMISTRY" "CLINICAL CHEMISTRY"
-      [4] "CLINICAL CHEMISTRY" "CLINICAL CHEMISTRY"
+      [1] "CHEM" "CHEM"
 
 ---
 
     Code
       x
     Output
-      [1] "Bilirubin (micromol/L)"                 
-      [2] "Aspartate Aminotransferase (microkat/L)"
-      [3] "Alanine Aminotransferase (microkat/L)"  
-      [4] "Sodium (mmol/L)"                        
-      [5] "Sodium (mmol/L)"                        
+      [1] "Sodium (mmol/L)"      "Cholesterol (mmol/L)"
 
 ---
 
     Code
       x
     Output
-      [1] "> 1.5x ULN"  "> 3.0x ULN"  "> 3.0x ULN"  "< 0.95x LLN" "> 1.05x ULN"
+      [1] "< 135x LLN"  "> 5.17x ULN"
 
 ---
 
     Code
       x
     Output
-      [1] 2 3 3 1 1
+      [1] 1 1
 
 ---
 
     Code
       x
     Output
-      [1] 2 2 2 1 2
+      [1] 1 2
 
 ---
 
     Code
       x
     Output
-      [1] "C" "C" "C" "C" "C"
+      [1] "C" "C"
 
 ---
 
     Code
       x
     Output
-      [1] "51" "50" "51" "51" "51"
+      [1] "5"  "61"
 
 ---
 
     Code
       x
     Output
-      [1] "0"        "3 (6.00)" "1 (1.96)" "1 (1.96)" "0"       
+      [1] "7 (140.00)"  "65 (106.56)"
 
 ---
 
     Code
       x
     Output
-      [1] "CLINICAL CHEMISTRY" "CLINICAL CHEMISTRY" "CLINICAL CHEMISTRY"
-      [4] "CLINICAL CHEMISTRY" "CLINICAL CHEMISTRY"
+      [1] "0" "7"
 
 ---
 
     Code
       x
     Output
-      [1] "Bilirubin (micromol/L)"                 
-      [2] "Aspartate Aminotransferase (microkat/L)"
-      [3] "Alanine Aminotransferase (microkat/L)"  
-      [4] "Sodium (mmol/L)"                        
-      [5] "Sodium (mmol/L)"                        
+      [1] "0"          "7 (100.00)"
 
 ---
 
     Code
       x
     Output
-      [1] "> 1.5x ULN"  "> 3.0x ULN"  "> 3.0x ULN"  "< 0.95x LLN" "> 1.05x ULN"
+      [1] "5"  "68"
 
 ---
 
     Code
       x
     Output
-      [1] 2 3 3 1 1
+      [1] "7 (140.00)"  "72 (105.88)"
 
 ---
 
     Code
       x
     Output
-      [1] 2 2 2 1 2
+      [1] "3"  "59"
 
 ---
 
     Code
       x
     Output
-      [1] "C" "C" "C" "C" "C"
+      [1] "5 (166.67)"  "60 (101.69)"
 
 ---
 
     Code
       x
     Output
-      [1] "43" "42" "43" "43" "43"
+      [1] "0" "3"
 
 ---
 
     Code
       x
     Output
-      [1] "0"        "3 (7.14)" "1 (2.33)" "1 (2.33)" "0"       
+      [1] "0"          "4 (133.33)"
 
 ---
 
     Code
       x
     Output
-      [1] "8" "8" "8" "8" "8"
+      [1] "3"  "62"
 
 ---
 
     Code
       x
     Output
-      [1] "0" "0" "0" "0" "0"
+      [1] "5 (166.67)"  "64 (103.23)"
 
 ---
 
     Code
       x
     Output
-      [1] "51" "50" "51" "51" "51"
+      [1] "7"  "50"
 
 ---
 
     Code
       x
     Output
-      [1] "0"        "3 (6.00)" "1 (1.96)" "1 (1.96)" "0"       
+      [1] "8 (114.29)"  "60 (120.00)"
 
 ---
 
     Code
       x
     Output
-      [1] "43" "42" "43" "43" "43"
+      [1] "1" "7"
 
 ---
 
     Code
       x
     Output
-      [1] "0"        "3 (7.14)" "1 (2.33)" "1 (2.33)" "0"       
+      [1] "1 (100.00)" "7 (100.00)"
 
 ---
 
     Code
       x
     Output
-      [1] "8" "8" "8" "8" "8"
+      [1] "8"  "57"
 
 ---
 
     Code
       x
     Output
-      [1] "0" "0" "0" "0" "0"
+      [1] "9 (112.50)"  "68 (119.30)"
 
 ---
 
     Code
       x
     Output
-      [1] "51" "50" "51" "51" "51"
+      [1] "15"  "170"
 
 ---
 
     Code
       x
     Output
-      [1] "0"        "3 (6.00)" "1 (1.96)" "1 (1.96)" "0"       
+      [1] "20 (133.33)"  "185 (108.82)"
 
 ---
 
     Code
       x
     Output
-      [1] "CLINICAL CHEMISTRY" "CLINICAL CHEMISTRY" "CLINICAL CHEMISTRY"
-      [4] "CLINICAL CHEMISTRY" "CLINICAL CHEMISTRY"
+      [1] "1"  "17"
 
 ---
 
     Code
       x
     Output
-      [1] "Bilirubin (micromol/L)"                 
-      [2] "Aspartate Aminotransferase (microkat/L)"
-      [3] "Alanine Aminotransferase (microkat/L)"  
-      [4] "Sodium (mmol/L)"                        
-      [5] "Sodium (mmol/L)"                        
+      [1] "1 (100.00)"  "18 (105.88)"
 
 ---
 
     Code
       x
     Output
-      [1] "> 1.5x ULN"  "> 3.0x ULN"  "> 3.0x ULN"  "< 0.95x LLN" "> 1.05x ULN"
+      [1] "16"  "187"
 
 ---
 
     Code
       x
     Output
-      [1] 2 3 3 1 1
+      [1] "21 (131.25)"  "204 (109.09)"
 
 ---
 
     Code
       x
     Output
-      [1] 2 2 2 1 2
+      [1] "CHEM" "CHEM"
 
 ---
 
     Code
       x
     Output
-      [1] "C" "C" "C" "C" "C"
+      [1] "Sodium (mmol/L)"      "Cholesterol (mmol/L)"
 
 ---
 
     Code
       x
     Output
-      [1] "43" "42" "43" "43" "43"
+      [1] "< 135x LLN"  "> 5.17x ULN"
 
 ---
 
     Code
       x
     Output
-      [1] "0"        "3 (7.14)" "1 (2.33)" "1 (2.33)" "0"       
+      [1] 1 1
 
 ---
 
     Code
       x
     Output
-      [1] "8" "8" "8" "8" "8"
+      [1] 1 2
 
 ---
 
     Code
       x
     Output
-      [1] "0" "0" "0" "0" "0"
+      [1] "C" "C"
+
+---
+
+    Code
+      x
+    Output
+      [1] "5"  "61"
+
+---
+
+    Code
+      x
+    Output
+      [1] "7 (140.00)"  "65 (106.56)"
+
+---
+
+    Code
+      x
+    Output
+      [1] "0" "7"
+
+---
+
+    Code
+      x
+    Output
+      [1] "0" "0"
+
+---
+
+    Code
+      x
+    Output
+      [1] "7"  "50"
+
+---
+
+    Code
+      x
+    Output
+      [1] "8 (114.29)"  "60 (120.00)"
+
+---
+
+    Code
+      x
+    Output
+      [1] "1" "7"
+
+---
+
+    Code
+      x
+    Output
+      [1] "0" "0"
+
+---
+
+    Code
+      x
+    Output
+      [1] "3"  "59"
+
+---
+
+    Code
+      x
+    Output
+      [1] "5 (166.67)"  "60 (101.69)"
+
+---
+
+    Code
+      x
+    Output
+      [1] "0" "3"
+
+---
+
+    Code
+      x
+    Output
+      [1] "0" "0"
 

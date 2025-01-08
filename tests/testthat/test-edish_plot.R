@@ -1,3 +1,6 @@
+data(adsl)
+data(adlb)
+
 merged_data <- adsl_merge(
   adsl = adsl,
   dataset_add = adlb
@@ -11,18 +14,18 @@ merged_data <- adsl_merge(
 pt_data <- process_edish_data(
   datain = merged_data,
   xvar = "both",
-  alt_paramcd = "L00030S",
-  ast_paramcd = "L00028S",
-  bili_paramcd = "L00021S"
+  alt_paramcd = "ALT",
+  ast_paramcd = "AST",
+  bili_paramcd = "BILI"
 )
 
 # dataset to test xvar for "ast/alt"
 dt_xvar <- process_edish_data(
   datain = merged_data,
   xvar = "ast",
-  alt_paramcd = "L00030S",
-  ast_paramcd = "L00028S",
-  bili_paramcd = "L00021S"
+  alt_paramcd = "ALT",
+  ast_paramcd = "AST",
+  bili_paramcd = "BILI"
 )
 series_opts <- plot_aes_opts(pt_data,
                              series_size = c(2, 2),
@@ -59,8 +62,8 @@ e_plot <- edish_plot(
 test_that("edish data Works with standard inputs", {
   actual_trt <- unique(pt_data$TRTVAR)
   
-  expect_equal(levels(actual_trt), c("Drug1"))
-  expect_equal(nrow(pt_data), 57)
+  expect_equal(levels(actual_trt), c("Placebo","Xanomeline Low Dose","Xanomeline High Dose"))
+  expect_equal(nrow(pt_data), 254)
   
   expect_error(process_edish_data(
     datain = merged_data,

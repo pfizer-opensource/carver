@@ -80,7 +80,7 @@ parse_stats <- function(statvar, statdec) {
         filter(Stat == statvar[s]) |>
         pull(base) |>
         str_to_vec("/")
-      d <- unlist(str_extract_all(statdec[s], "[0-9]+"))
+      d <- unlist(stringr::str_extract_all(statdec[s], "[0-9]+"))
       last <- d[length(d)]
       length(d) <- length(st)
       d[is.na(d)] <- last
