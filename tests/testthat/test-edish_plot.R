@@ -62,9 +62,9 @@ e_plot <- edish_plot(
 test_that("edish data Works with standard inputs", {
   actual_trt <- unique(pt_data$TRTVAR)
 
-  expect_equal(levels(actual_trt), c("Placebo","Xanomeline Low Dose","Xanomeline High Dose"))
+  expect_equal(levels(actual_trt), c("Placebo", "Xanomeline Low Dose", "Xanomeline High Dose"))
   expect_equal(nrow(pt_data), 254)
-  
+
   expect_error(process_edish_data(
     datain = merged_data,
     alt_paramcd = "L00030S",
