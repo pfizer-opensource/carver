@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-#' @import shiny ggplot2 dplyr scales shinyWidgets flextable htmltools tools ggsurvfit
+#' @import shiny ggplot2 dplyr scales shinyWidgets flextable htmltools tools ggsurvfit stringr
 #' @importFrom DT addRow colReorder datatable formatDate saveWidget
 #'             formatPercentage formatRound formatStyle selectCells
 #'             selectColumns selectPage selectRows showCols styleEqual
@@ -26,10 +26,6 @@
 #'             expr expr_interp expr_label exprs f_lhs f_rhs inform
 #'             is_missing new_formula parse_expr parse_exprs set_names sym
 #'             syms type_of warn eval_tidy is_expression
-#' @importFrom stringr str_c str_detect str_extract str_glue str_match str_sub
-#'             str_remove str_remove_all str_replace str_replace_all str_subset
-#'             str_trim str_to_lower str_to_title str_to_upper str_length
-#'             str_locate str_wrap str_split str_squish
 #' @importFrom stats na.omit p.adjust qnorm reorder setNames median IQR quantile qt sd
 #' @importFrom purrr map map2 pmap map_chr map_dbl keep discard modify modify_at
 #' modify_if reduce set_names every none compact every flatten pluck list_modify
