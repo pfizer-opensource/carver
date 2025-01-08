@@ -36,8 +36,9 @@
 #' df <- data_read(ui_data_source = "Default", ui_adam_data = "ADSL")
 #' dplyr::slice_head(df$adam$adsl, n = 10)
 data_read <- function(
-    ui_data_source,
-    ui_adam_data) {
+  ui_data_source,
+  ui_adam_data
+) {
   adam <- list()
   adam_attrib <- list()
   ### Reading data from local folders, based on the format of the file loaded in the shiny interface

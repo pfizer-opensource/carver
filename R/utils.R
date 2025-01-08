@@ -34,7 +34,7 @@ data_attrib <- function(datain) {
         names(datain),
         function(x) {
           ifelse(is.null(attr(datain[[x]], "label")),
-                 x, attr(datain[[x]], "label")
+            x, attr(datain[[x]], "label")
           )
         }
       ))
@@ -194,17 +194,17 @@ split_section_headers <- function(datain,
     split_by <- var_start(datain, split_by_prefix)
     stopifnot("No variables with split_by_prefix" = length(split_by) > 0)
   }
-  
+
   if (split_lab != "") {
     split_lab <- str_to_vec(split_lab)
   } else {
     split_lab <- NA_character_
   }
-  
+
   header_list <- datain |>
     group_by(!!!syms(split_by)) |>
     group_keys()
-  
+
   map(seq_along(split_by), \(x) {
     header_list |>
       mutate(
@@ -267,14 +267,14 @@ dataset_vignette <- function(df = NULL, disp_vars = NULL, subset = NA_character_
     out <- out |>
       filter(!!!parse_exprs(subset))
   }
-  
+
   if (!is.null(disp_vars)) {
     hide_columns <- which(!(colnames(out) %in% str_to_vec(disp_vars)))
     cols_to_hide <- list(list(targets = hide_columns - 1, visible = FALSE))
   } else {
     cols_to_hide <- list()
   }
-  
+
   DT::datatable(
     out,
     rownames = FALSE,
@@ -324,7 +324,7 @@ add_bigN <- function(data, dsin, grpvar, modvar, subjid = "USUBJID") {
   if (length(modvar) == 1 && is.factor(data[[modvar]])) {
     newvar <- paste0(modvar, "_BIGN")
     data[[newvar]] <- factor(data[[newvar]],
-                             levels = unique(data[[newvar]][order(data[[modvar]])])
+      levels = unique(data[[newvar]][order(data[[modvar]])])
     )
   }
   data
@@ -395,13 +395,13 @@ display_bign_head <- function(datain,
         mutate(across(any_of(lastvar), ~ paste0(.x, colformat)))
       if (lastvar == "TRTVAR") {
         datain[["TRTVAR"]] <- factor(datain[["TRTVAR"]],
-                                     levels = unique(datain[["TRTVAR"]][ord])
+          levels = unique(datain[["TRTVAR"]][ord])
         )
       }
     }
   } else {
     notrthead <- ifelse(any(c(trtbignyn, subbignyn) == "Y"),
-                        paste0(notrthead, " (N = ", length(unique(mentry_data[["USUBJID"]])), ")"), notrthead
+      paste0(notrthead, " (N = ", length(unique(mentry_data[["USUBJID"]])), ")"), notrthead
     )
     datain <- datain |>
       mutate(!!notrthead := as.character(.data[["CVALUE"]])) |>
@@ -486,7 +486,7 @@ sparse_vals <- function(datain,
     df_exp <- data_sparse |>
       tidyr::expand(!!!rlang::syms(c(TRTVAR, SUBGRP)), tidyr::nesting(DPTVAL, DPTVALN)) |>
       left_join(distinct(data_sparse, across(any_of(starts_with(c("DPTVAL", "BYVAR"))))),
-                by = c("DPTVAL", "DPTVALN")
+        by = c("DPTVAL", "DPTVALN")
       )
   }
   data_sparse <- ungroup(data_sparse)

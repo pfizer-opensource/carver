@@ -128,7 +128,7 @@ adae_risk_summary <- function(datain,
   if (!is.na(cutoff_where) && str_detect(cutoff_where, "PCT|FREQ")) {
     datain <- datain |>
       left_join(select(ae_lsumm, all_of(c("BYVAR1", "CUTFL")), {{ lterm }} := "DPTVAL"),
-                by = c("BYVAR1", lterm)
+        by = c("BYVAR1", lterm)
       )
     a_subset <- paste(na.omit(c(a_subset, "CUTFL == 'Y'")), collapse = "&")
   }
@@ -163,7 +163,7 @@ adae_risk_summary <- function(datain,
       mutate(DPTVAR = term, CN = "C")
   }) |>
     set_names(h_terms)
-  
+
   ## retrun empty flextable
   if (nrow(ae_hsumm[[1]]) < 1) {
     return(data.frame())

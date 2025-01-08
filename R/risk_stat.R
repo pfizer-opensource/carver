@@ -96,9 +96,9 @@ risk_stat <-
     ## getting equivalent data variable for given summary by selection
     summ_var <-
       recode(tolower(summary_by),
-             "participants" = "USUBJID",
-             "patients" = "USUBJID",
-             "events" = eventvar
+        "participants" = "USUBJID",
+        "patients" = "USUBJID",
+        "events" = eventvar
       )
     ## get sort variables to apply sorting post risk statistics calculation
     if (sort_opt == "Alphabetical") {
@@ -106,7 +106,7 @@ risk_stat <-
     } else {
       sort_var <- get_sort_var(sort_var)
     }
-    
+
     id_vars <- c("BYVAR1", "DPTVAL")
     value_vars <- c("FREQ", "PCT", "DENOMN")
     mcat_out <- mcatstat(
@@ -151,7 +151,7 @@ risk_stat <-
         if (nrow(rout) > 0) {
           rout <- mcat_out |>
             filter(.data[["TRTVAR"]] %in% c(ctrlgrp, trt) |
-                     str_detect(.data[["TRTVAR"]], "Total")) |>
+              str_detect(.data[["TRTVAR"]], "Total")) |>
             left_join(rout, by = intersect(names(mcat_out), names(rout))) |>
             mutate(across(any_of(c(value_vars)), \(x) as.double(x)), TOTAL_N = DENOMN) |>
             filter(!.data[["RISK"]] %in% c(NA, Inf, NaN))
@@ -164,7 +164,7 @@ risk_stat <-
       risk_out <- risk_out |>
         ord_summ_df(sort_var, sort_opt, g_sort_by_ht)
       risk_out[["TRTVAR"]] <- factor(risk_out[["TRTVAR"]],
-                                     levels = trt_list, ordered = TRUE
+        levels = trt_list, ordered = TRUE
       )
       if (hoveryn == "Y") {
         risk_out <- risk_hover_text(risk_out, summary_by, eventvar)
@@ -274,7 +274,7 @@ calc_risk_stat <-
         ),
         nrow = 2
       )
-    
+
     if (statistic == "Risk Difference") {
       risk_mat <-
         suppressWarnings(riskdiff_wald(risk_mat, conf.level = 1 - alpha))
@@ -335,7 +335,7 @@ riskdiff_wald <-
       "C.I."
     )
     names(dimnames(wald)) <- c(names(dimnames(x))[1], cn2)
-    
+
     rrs <- list(
       data = tmx,
       measure = wald,
@@ -403,7 +403,7 @@ extract_riskstats <- function(risk_mat, statistic) {
   pval <- risk_mat$p.value[2, 3]
   low_ci <- risk_mat$measure[2, 2]
   upp_ci <- risk_mat$measure[2, 3]
-  
+
   if (statistic == "Risk Difference") {
     out <- list(
       risk = 0 - risk,

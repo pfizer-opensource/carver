@@ -155,8 +155,8 @@ ae_forest_plot <-
           per_page <- split(
             events,
             rep(seq_along(events),
-                each = terms_perpg,
-                length.out = length(events)
+              each = terms_perpg,
+              length.out = length(events)
             )
           )
         } else {
@@ -180,7 +180,7 @@ ae_forest_plot <-
               dat_out <- dat_out |>
                 mutate(
                   YCAT = ifelse(.data[["BYVAR1"]] == lead(.data[["BYVAR1"]], default = "last"),
-                                "", .data[["BYVAR1"]]
+                    "", .data[["BYVAR1"]]
                   ),
                   XVAR = "HT"
                 )
@@ -273,7 +273,7 @@ ae_forest_hlt_sig <- function(plotin,
       TRUE ~ NA_character_
     )) |>
     filter(!is.na(.data[["EFFECT"]]))
-  
+
   plotin +
     geom_point(
       data = hltpts,

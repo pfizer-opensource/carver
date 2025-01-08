@@ -280,7 +280,7 @@ adsl_summary <- function(datain,
 #'
 split_var_types <- function(vars) {
   num_vars <- vars[stringr::str_which(vars, "-S")]
-  
+
   list(
     num_vars = str_replace_all(num_vars, "-S", ""),
     cat_vars = vars[!vars %in% num_vars],

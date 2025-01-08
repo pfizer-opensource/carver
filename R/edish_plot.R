@@ -63,7 +63,7 @@ process_edish_data <- function(datain,
     "Please provide valid PARAMCD" =
       all(c(alt_paramcd, ast_paramcd, bili_paramcd) %in% datain$PARAMCD)
   )
-  
+
   hy_data <- datain |>
     filter(
       .data$PARAMCD %in% c(alt_paramcd, ast_paramcd, bili_paramcd),
@@ -77,7 +77,7 @@ process_edish_data <- function(datain,
         TRUE ~ "bili"
       )
     )
-  
+
   hy <- hy_data |>
     group_by(across(all_of(c("USUBJID", "TRTVAR", "PARAMCD", "PARAM", "PARM")))) |>
     summarise(x = max(.data$maxv)) |>
@@ -86,13 +86,13 @@ process_edish_data <- function(datain,
       names_from = PARM,
       values_from = x
     )
-  
+
   if (xvar %in% c("alt", "ast")) {
     hy <- hy |> mutate(XVAR = .data[[xvar]])
   } else {
     hy <- hy |> mutate(XVAR = pmax(.data$ast, .data$alt))
   }
-  
+
   hy |>
     mutate(
       text = paste0(
@@ -100,7 +100,7 @@ process_edish_data <- function(datain,
         USUBJID,
         "\n",
         ifelse(xvar == "both", "Max of ALT/AST = ",
-               paste("value of", toupper(xvar), "=")
+          paste("value of", toupper(xvar), "=")
         ),
         round(XVAR, 3),
         "\n",
@@ -230,9 +230,9 @@ edish_plot <- function(datain,
     max(as.numeric(yrefline[1]), max(axis_opts$Ybrks)),
     as.numeric(yrefline[1]) - 0.2
   )
-  
+
   # for ploting values per subject
-  
+
   sp <- datain |>
     scatter_plot(
       axis_opts = axis_opts,
@@ -278,7 +278,7 @@ edish_plot <- function(datain,
       y = quad_labels_opts_y[4],
       label = quad_labels[4]
     )
-  
+
   # ggplotly if interactive
   if (interactive == "Y") {
     sp <- as_plotly(plot = sp, hover = c("text"))

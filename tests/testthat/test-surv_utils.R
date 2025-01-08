@@ -20,7 +20,7 @@ data_list <- split_data_by_var(
 test_that("surv_pre_processor works as expected", {
   actual_trt <- unique(sh_pre$TRTVAR)
   actual_subgrp <- unique(data_list[[1]]$SUBGRPVAR1)
-  
+
   expect_equal(actual_subgrp, unique(survival$adsl$SEX))
   expect_equal(levels(actual_trt), c("Drug1", "Drug2", "Drug3"))
   expect_equal(levels(actual_trt), sort(as.character(actual_trt)))
@@ -41,7 +41,7 @@ test_that("surv_pre_processor works as expected", {
     ),
     "Please provide a valid Censoring variable"
   )
-  
+
   expect_error(
     surv_pre_processor(
       dataset_adsl = survival$adsl,

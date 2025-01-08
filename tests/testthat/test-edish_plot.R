@@ -28,8 +28,8 @@ dt_xvar <- process_edish_data(
   bili_paramcd = "BILI"
 )
 series_opts <- plot_aes_opts(pt_data,
-                             series_size = c(2, 2),
-                             series_shape = "circle~square"
+  series_size = c(2, 2),
+  series_shape = "circle~square"
 )
 e_plot <- edish_plot(
   datain = pt_data,
@@ -61,7 +61,7 @@ e_plot <- edish_plot(
 
 test_that("edish data Works with standard inputs", {
   actual_trt <- unique(pt_data$TRTVAR)
-  
+
   expect_equal(levels(actual_trt), c("Placebo","Xanomeline Low Dose","Xanomeline High Dose"))
   expect_equal(nrow(pt_data), 254)
   
@@ -71,7 +71,7 @@ test_that("edish data Works with standard inputs", {
     ast_paramcd = "L00028S",
     bili_paramcd = "wefewf"
   ), "Please provide valid PARAMCD")
-  
+
   # test xvar for "ast/alt"
   expect_equal(dt_xvar$XVAR, dt_xvar$ast)
 })
@@ -88,8 +88,8 @@ test_that("edish_plot works with expected output", {
     "Peak Total Bilirubin (x ULN)"
   )
   expect_true(is.ggplot(e_plot))
-  
-  
+
+
   # plotly output comparison
   ptly <- edish_plot(
     datain = pt_data,

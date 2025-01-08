@@ -75,13 +75,13 @@ dataset_merge <- function(..., byvars, subset = NULL, type = "left") {
     "Type should be one of left, right, inner, full" =
       type %in% c("left", "right", "inner", "full")
   )
-  
+
   if (type == "full") {
     warning("For full join, subsets will not work as expected. Consider using adsl_merge() instead")
   }
   byvars <- str_to_vec(byvars)
   if (!every(dfs, \(x) all(byvars %in% names(x)))) stop("`byvars` not present")
-  
+
   if (length(subset) > 0) {
     stopifnot("Length of subsets and datasets should be equal" = length(dfs) == length(subset))
     if (every(subset, is.na)) stop("All subsets cannot be `NA`, use `subset = NULL` instead")
@@ -94,7 +94,7 @@ dataset_merge <- function(..., byvars, subset = NULL, type = "left") {
       df_sub
     })
   }
-  
+
   df_list <- map(seq_along(dfs), \(x) {
     out <- dfs[[x]]
     if (x < length(dfs)) {
@@ -137,7 +137,7 @@ adsl_merge <- function(adsl = NULL, adsl_subset = "", dataset_add = NULL, byvars
   if (is.null(byvars)) {
     byvars <- intersect(colnames(adsl), colnames(dataset_add))
   }
-  
+
   outdata <- full_join(adsl, dataset_add, by = byvars)
   if (adsl_subset != "" && !is.na(adsl_subset)) {
     outdata <- filter(outdata, !!!parse_exprs(adsl_subset))

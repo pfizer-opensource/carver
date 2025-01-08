@@ -264,7 +264,7 @@ occ_tier_summary <- function(datain,
     }
     h
   })
-  
+
   # Summary/Any Row Output
   if (sum_row != "N") {
     sum_data <- summary_row_cat(
@@ -280,7 +280,7 @@ occ_tier_summary <- function(datain,
   } else {
     sum_data <- NULL
   }
-  
+
   if ("PT_CNT" %in% names(datain)) {
     pt_data <- datain |>
       summary_row_cat(
@@ -319,7 +319,7 @@ occ_tier_summary <- function(datain,
       ord_summ_df(sort_var, sort_opt)
   }) |>
     post_occ_tier(ctrlgrp = ctrlgrp, sum_row = sum_data, pt_row = pt_data, stathead = stathead)
-  
+
   # To suppress any high term percentage counts, per variable htermctyn
   if (any(str_to_vec(htermctyn) == "N")) {
     htermctyn <- str_to_vec(htermctyn)
@@ -371,7 +371,7 @@ post_occ_tier <-
     final_cts <- final_cts |>
       mutate(
         DPTVAL = ifelse(.data[["DPTVALN"]] == 0,
-                        .data[["DPTVAL"]], paste0("\t\t\t", .data[["DPTVAL"]])
+          .data[["DPTVAL"]], paste0("\t\t\t", .data[["DPTVAL"]])
         ),
         SUBGRPVARX = paste0(stathead, strrep(" ", as.numeric(as.factor(.data[[repvar]])))),
         SUBGRPVARXN = 1
@@ -409,7 +409,7 @@ ord_by_ht <- function(df, ctrlgrp) {
         filter(df[["hterm_summ"]], .data[["TRTVAR"]] != ctrlgrp), "DPTVAL"
       ))
     )
-  
+
   map(names(df), \(x) {
     match_var <- recode(x, "hterm_summ" = "DPTVAL", "lterm_summ" = "BYVAR1")
     df_out <- df[[x]] |>
@@ -417,7 +417,7 @@ ord_by_ht <- function(df, ctrlgrp) {
       distinct() |>
       mutate(DPTVARN = match(.data[[match_var]], uniqHT)) |>
       filter(!is.na(.data[["DPTVARN"]]))
-    
+
     if (x == "hterm_summ") {
       df_out <- df_out |>
         mutate(DPTVALN = 0)

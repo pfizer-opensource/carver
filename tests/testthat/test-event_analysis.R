@@ -52,6 +52,6 @@ test_that("Test Case 2: event_analysis_plot works with expected inputs", {
     pt_color = "royalblue3",
     interactive = "Y"
   )
-  
+
   expect_snapshot(plot$x$data)
 })

@@ -105,7 +105,7 @@ test_that("Test 2: Check for exceptions", {
       sep = " & "
     ), "No variables with split_by_prefix"
   )
-  
+
   expect_error(
     split_section_headers(
       datain = adsl_entry,
@@ -157,7 +157,7 @@ test_that("Test 2: Check for exceptions", {
       split_by_prefix = "TSTVAR"
     ), "No variables with split_by_prefix"
   )
-  
+
   expect_error(
     split_data_by_var(
       datain = adsl_entry,
@@ -177,9 +177,9 @@ test_that("ord_summ_df works as expected", {
     ord_summ_df("Sepal.Length", "Descending")
   expected <- iris |>
     arrange(desc(.data[["Sepal.Length"]]))
-  
+
   expect_identical(actual, expected)
-  
+
   actual1 <- iris |>
     ord_summ_df("Petal.Width", "Alphabetical")
   expected1 <- iris |>
@@ -192,9 +192,9 @@ test_that("ord_summ_df works as expected", {
     group_by(across(any_of("BYVAR1"))) |>
     arrange(.data[["Sepal.Length"]], .by_group = TRUE) |>
     ungroup()
-  
+
   expect_identical(actual, expected)
-  
+
   expect_identical(actual1, expected1)
   expect_identical(actual2, expected2)
 })
@@ -203,12 +203,12 @@ test_that("get_sort_var works as expected", {
   actual <-
     map_chr(c("Count", "Percent", "RiskValue", "Alphabetical", "abc"), \(x) get_sort_var(x))
   expected <- c("CTRL_N", "CTRL_PCT", "RISK", "DPTVAL", "abc")
-  
+
   expect_identical(actual, expected)
 })
 
 mcat_data <- mcatstat(adsl_entry,
-                      dptvar = "RACE"
+  dptvar = "RACE"
 )
 
 test_that("add_bigN works as expected", {
@@ -251,7 +251,7 @@ test_that("display_bign_head works as expected", {
     select(-all_of("TRTVAR")) |>
     rename("TRTVAR" = "TRTVAR_BIGN")
   expect_equal(actual, exp, ignore_attr = TRUE)
-  
+
   # Only treatment no subgrp
   actual1 <- display_bign_head(
     datain = ae_pre,

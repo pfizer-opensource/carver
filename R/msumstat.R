@@ -91,7 +91,7 @@ msumstat <- function(datain = NULL,
   } else {
     datapro <- datain
   }
-  
+
   # Available and customized statistics
   if (is.null(statvar) || all(statvar == "")) {
     statinput <- c("n", "mean", "min", "median", "max", "sd")
@@ -157,11 +157,11 @@ msumstat <- function(datain = NULL,
   # Tidy into long dataframe for use in tabular display
   data_long <- data_wide |>
     pivot_longer(all_of(tolower(statinput)),
-                 names_to = "DPTVAL",
-                 values_to = "CVALUE"
+      names_to = "DPTVAL",
+      values_to = "CVALUE"
     ) |>
     mutate(DPTVALN = as.numeric(fct_inorder(.data[["DPTVAL"]])))
-  
+
   message("msum success")
   return(list(tsum = data_long, gsum = data_wide))
 }
