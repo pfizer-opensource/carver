@@ -21,7 +21,6 @@
 #' @export
 #'
 #' @examples
-#' library(tlfcarver)
 #' library(ggplot2)
 #' ggplot(data = mtcars, mapping = aes(x = mpg, y = hp)) +
 #'   geom_point() +
@@ -159,7 +158,6 @@ g_seriessym <- function(gdata,
 #' @export
 #'
 #' @examples
-#' library(tlfcarver)
 #' empty_plot()
 empty_plot <- function(message = "No data available for these values",
                        fontsize = 8) {
@@ -204,8 +202,6 @@ def_axis_spec <- function(arg, vec, val) {
 #' @export
 #'
 #' @examples
-#' library(tlfcarver)
-#'
 #' plot_axis_opts(
 #'   xlinearopts = list(
 #'     breaks = c(0.001, 0.01, 0.1, 1, 10, 100),
@@ -601,7 +597,6 @@ plot_title_nsubj <- function(datain, plot_data, by) {
 #' @export
 #'
 #' @examples
-#' library(tlfcarver)
 #' MPG <- ggplot2::mpg
 #' MPG[["cyl"]] <- as.character(MPG[["cyl"]])
 #' tbl_to_plot(

@@ -65,7 +65,7 @@ forest_plot_scatter(
     shape = g_seriessym(ae_risk, NA, "TRTVAR"),
     size = rep(1, 2)
   ),
-  hovervar = "HOVER_PCT",
+  hovervar = "HOVER_TEXT",
   xaxis_pos = "top"
 )
 

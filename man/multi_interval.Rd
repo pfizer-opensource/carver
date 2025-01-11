@@ -25,7 +25,6 @@ with the corresponding dataframes}
 Aligned Interval Plot for Adverse Events and Concomitant Medication
 }
 \examples{
-library(carver)
 data(adae)
 data(cm)
 multi_interval(

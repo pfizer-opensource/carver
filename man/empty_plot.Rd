@@ -22,6 +22,5 @@ a list containing 2 objects
 Empty plot with message
 }
 \examples{
-library(tlfcarver)
 empty_plot()
 }

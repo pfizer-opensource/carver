@@ -64,7 +64,7 @@ forest_plot_base(
   yvar = "DPTVAL",
   xminvar = "RISKCIL",
   xmaxvar = "RISKCIU",
-  hovervar = "HOVER_RISK",
+  hovervar = "HOVER_TEXT",
   series_var = "TRTPAIR",
   xrefline = 1,
   axis_opts = plot_axis_opts(

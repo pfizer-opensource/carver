@@ -7,9 +7,9 @@
 process_edish_data(
   datain,
   xvar = "both",
-  alt_paramcd = "L00030S",
-  ast_paramcd = "L00028S",
-  bili_paramcd = "L00021S",
+  alt_paramcd = "ALT",
+  ast_paramcd = "AST",
+  bili_paramcd = "BILI",
   legendbign = "Y"
 )
 }
@@ -37,11 +37,12 @@ A \code{data.frame} required for \code{edish_plot}.
 Process data for eDISH plot
 }
 \examples{
-data("lab_data")
+data("adlb")
+data("adsl")
 
 merged_data <- adsl_merge(
-  adsl = lab_data$adsl,
-  dataset_add = lab_data$adlb
+  adsl = adsl,
+  dataset_add = adlb
 ) |>
   mentry(
     subset = "SAFFL == 'Y'",
@@ -52,9 +53,9 @@ merged_data <- adsl_merge(
 merged_data |>
   process_edish_data(
     xvar = "both",
-    alt_paramcd = "L00030S",
-    ast_paramcd = "L00028S",
-    bili_paramcd = "L00021S"
+    alt_paramcd = "ALT",
+    ast_paramcd = "AST",
+    bili_paramcd = "BILI"
   )
 
 }

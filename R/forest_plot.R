@@ -42,7 +42,7 @@
 #'   yvar = "DPTVAL",
 #'   xminvar = "RISKCIL",
 #'   xmaxvar = "RISKCIU",
-#'   hovervar = "HOVER_RISK",
+#'   hovervar = "HOVER_TEXT",
 #'   series_var = "TRTPAIR",
 #'   xrefline = 1,
 #'   axis_opts = plot_axis_opts(
@@ -138,7 +138,7 @@ forest_plot_base <- function(datain,
 #'     shape = g_seriessym(ae_risk, NA, "TRTVAR"),
 #'     size = rep(1, 2)
 #'   ),
-#'   hovervar = "HOVER_PCT",
+#'   hovervar = "HOVER_TEXT",
 #'   xaxis_pos = "top"
 #' )
 #'
@@ -231,7 +231,7 @@ forest_plot_scatter <- function(datain,
 #'     shape = g_seriessym(ae_risk, NA, "TRTVAR"),
 #'     size = rep(1, 2)
 #'   ),
-#'   hovervar = "HOVER_PCT",
+#'   hovervar = "HOVER_TEXT",
 #'   xaxis_pos = "top",
 #'   legend_opts = list(pos = "bottom", dir = "horizontal"),
 #'   axis_opts = list(xsize = 8, xtsize = 6, xaxis_label = "Percentage")
@@ -242,7 +242,7 @@ forest_plot_scatter <- function(datain,
 #'   yvar = "DPTVAL",
 #'   xminvar = "RISKCIL",
 #'   xmaxvar = "RISKCIU",
-#'   hovervar = "HOVER_RISK",
+#'   hovervar = "HOVER_TEXT",
 #'   series_var = "TRTPAIR",
 #'   xrefline = 1,
 #'   axis_opts = plot_axis_opts(

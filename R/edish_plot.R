@@ -29,11 +29,12 @@
 #' @export
 #'
 #' @examples
-#' data("lab_data")
+#' data("adlb")
+#' data("adsl")
 #'
 #' merged_data <- adsl_merge(
-#'   adsl = lab_data$adsl,
-#'   dataset_add = lab_data$adlb
+#'   adsl = adsl,
+#'   dataset_add = adlb
 #' ) |>
 #'   mentry(
 #'     subset = "SAFFL == 'Y'",
@@ -44,9 +45,9 @@
 #' merged_data |>
 #'   process_edish_data(
 #'     xvar = "both",
-#'     alt_paramcd = "L00030S",
-#'     ast_paramcd = "L00028S",
-#'     bili_paramcd = "L00021S"
+#'     alt_paramcd = "ALT",
+#'     ast_paramcd = "AST",
+#'     bili_paramcd = "BILI"
 #'   )
 #'
 process_edish_data <- function(datain,
@@ -133,11 +134,12 @@ process_edish_data <- function(datain,
 #' @export
 #'
 #' @examples
-#' data("lab_data")
+#' data("adlb")
+#' data("adsl")
 #'
 #' merged_data <- adsl_merge(
-#'   adsl = lab_data$adsl,
-#'   dataset_add = lab_data$adlb
+#'   adsl = adsl,
+#'   dataset_add = adlb
 #' ) |>
 #'   mentry(
 #'     subset = "SAFFL == 'Y'",
@@ -148,9 +150,9 @@ process_edish_data <- function(datain,
 #' pt_data <- process_edish_data(
 #'   datain = merged_data,
 #'   xvar = "both",
-#'   alt_paramcd = "L00028S",
-#'   ast_paramcd = "L00030S",
-#'   bili_paramcd = "L00021S"
+#'   alt_paramcd = "ALT",
+#'   ast_paramcd = "AST",
+#'   bili_paramcd = "BILI"
 #' )
 #'
 #' series_opts <- plot_aes_opts(pt_data,

@@ -41,8 +41,6 @@ Combined list of X and Y axis options
 Plot Axes Options
 }
 \examples{
-library(tlfcarver)
-
 plot_axis_opts(
   xlinearopts = list(
     breaks = c(0.001, 0.01, 0.1, 1, 10, 100),

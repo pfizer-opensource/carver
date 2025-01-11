@@ -132,14 +132,14 @@ output |>
   tbl_display()
 # Example 2: ADAE table with max sev/ctc grade:
 ae_pre <- ae_pre_processor(
-  tornado_plot_data$adae,
+  adae,
   subset = "TRTEMFL == 'Y'",
   max_sevctc = "SEV",
-  sev_ctcvar = "ASEVN",
+  sev_ctcvar = "AESEVN",
   pt_total = "Y"
 )
 ae_entry_max <- adsl_merge(
-  tornado_plot_data$adsl,
+  adsl,
   adsl_subset = 'SAFFL == "Y"',
   ae_pre[["data"]]
 ) |>
@@ -150,7 +150,7 @@ ae_entry_max <- adsl_merge(
     trtsort = "TRTAN",
     trttotalyn = "N",
     add_grpmiss = "N",
-    subgrpvar = "ASEV",
+    subgrpvar = "AESEV",
     sgtotalyn = "N",
     pop_fil = "Overall Population"
   )
