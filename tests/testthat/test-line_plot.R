@@ -20,12 +20,13 @@ adsl_sum$gsum <- adsl_sum$gsum |>
 fig <- line_plot(
   datain = adsl_sum$gsum,
   axis_opts = plot_axis_opts(xaxis_label = "Race", yaxis_label = "Mean Age"),
-  legend_opts = list(
-    label = "Treatment", pos = "bottom",
-    dir = "horizontal"
-  ),
-  series_opts = list(
-    color = c("red", "gold", "cyan")
+  legend_opts = list(label = "Treatment", pos = "bottom",
+                     dir = "horizontal"),
+  series_opts = plot_aes_opts(
+    adsl_sum$gsum,
+    "TRTVAR",
+    series_color = "firebrick~forestgreen~dodgerblue",
+    series_shape = "triangle~square~circle"
   ),
   griddisplay = "Y"
 )
