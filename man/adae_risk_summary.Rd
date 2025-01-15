@@ -20,7 +20,7 @@ adae_risk_summary(
   sort_var = "Count",
   sum_row = "N",
   sum_row_label = "Participants with Any AE",
-  risklabels = tbl_risk_labels(),
+  risklabels = tbl_risk_labels(statistics),
   sigdec_cat = 1,
   pctsyn = "Y"
 )

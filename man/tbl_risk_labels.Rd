@@ -4,7 +4,10 @@
 \alias{tbl_risk_labels}
 \title{Labels for AE risk table}
 \usage{
-tbl_risk_labels()
+tbl_risk_labels(statistic)
+}
+\arguments{
+\item{statistic}{Required Statistic: Risk Ratio or Risk Difference}
 }
 \value{
 list of labels

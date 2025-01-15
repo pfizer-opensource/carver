@@ -46,46 +46,38 @@ plot - Line plot.
 Utility for Line Plot
 }
 \examples{
-data(adsl)
+data("adsl")
+adsl_entry <- mentry(
+  datain = adsl,
+  subset = "EFFFL=='Y'",
+  byvar = "RACE",
+  trtvar = "TRT01A",
+  trtsort = "TRT01AN",
+  pop_fil = NA
+)
 
-mentry_df <- adsl |>
-  mentry(
-    subset = NA_character_,
-    byvar = NA_character_,
-    trtvar = "TRT01A",
-    trtsort = "TRT01AN",
-    subgrpvar = NA_character_,
-    trttotalyn = "N",
-    add_grpmiss = "N",
-    pop_fil = "SAFFL"
+adsl_sum <- msumstat(
+  datain = adsl_entry,
+  dptvar = "AGE",
+  statvar = "mean"
+)
+adsl_sum$gsum <- adsl_sum$gsum |>
+  mutate(
+    XVAR = fct_reorder(.data[["BYVAR1"]], .data[["BYVAR1N"]]),
+    YVAR = as.numeric(.data[["mean"]])
   )
-plot_df <- mcatstat(
-  mentry_df,
-  dptvar = "RACE"
-) |>
-  dplyr::mutate(YVAR = PCT)
 line_plot(
-  datain = plot_df,
-  series_var = "TRTVAR",
-  series_labelvar = "TRTVAR",
+  datain = adsl_sum$gsum,
+  axis_opts = plot_axis_opts(xaxis_label = "Race", yaxis_label = "Mean Age"),
+  legend_opts = list(label = "Treatment", pos = "bottom",
+                     dir = "horizontal"),
   series_opts = plot_aes_opts(
-  plot_df, "TRTVAR", series_color = "firebrick~forestgreen~dodgerblue",
-  series_shape = "triangle~square~circle"),
-  axis_opts = plot_axis_opts(
-    ylinearopts = list(
-      limits = c(0, 100),
-      breaks = seq(0, 100, by = 10)
-    ),
-    xaxis_label = "Race",
-    yaxis_label = "Percent of Subjects"
+    plot_df,
+    "TRTVAR",
+    series_color = "firebrick~forestgreen~dodgerblue",
+    series_shape = "triangle~square~circle"
   ),
-  legend_opts = list(
-    label = "",
-    pos = "bottom",
-    dir = "horizontal"
-  ),
-  griddisplay = "N",
-  plot_title = "Line Plot of Subjects by Race"
+  griddisplay = "Y"
 )
 
 }

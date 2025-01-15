@@ -111,7 +111,7 @@ mod_toutput_server <- function(id, repName, filters, popfilter, process_btn) {
                 sort_var = filters()$sort_by
               )
             )
-            keepvars <- c("Risk Ratio (CI)", "P-value")
+            keepvars <- c(paste(filters()$statistics, "(CI)"), "P-value")
             rv$footnote <- paste0(
               rv$footnote, "\n", filters()$statistics, " is shown between ",
               filters()$treatment1, " and ", filters()$treatment2

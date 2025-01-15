@@ -80,7 +80,7 @@ adae_risk_summary <- function(datain,
                               sort_var = "Count",
                               sum_row = "N",
                               sum_row_label = "Participants with Any AE",
-                              risklabels = tbl_risk_labels(),
+                              risklabels = tbl_risk_labels(statistics),
                               sigdec_cat = 1,
                               pctsyn = "Y") {
   if (nrow(datain) < 1) {
@@ -180,13 +180,14 @@ adae_risk_summary <- function(datain,
 
 #' Labels for AE risk table
 #'
+#' @param statistic Required Statistic: Risk Ratio or Risk Difference
 #' @return list of labels
 #' @export
-tbl_risk_labels <- function() {
+tbl_risk_labels <- function(statistic) {
   list(
-    riskci = "Risk Ratio (CI)",
+    riskci = paste(statistic, "(CI)"),
     p = "P-value",
-    risk = "Risk Ratio",
+    risk = statistic,
     low = "Lower Limit",
     up = "Upper Limit",
     lowup = "(Lower-Upper)"
