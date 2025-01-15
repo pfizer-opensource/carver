@@ -40,7 +40,7 @@
 #'   datain = adae,
 #'   obs_residual = 0
 #' )
-#' 
+#'
 #' ae_entry <- mentry(
 #'   datain = ae_pre_process$data,
 #'   byvar = "AEBODSYS",
@@ -48,7 +48,7 @@
 #'   trtsort = "TRTAN",
 #'   pop_fil = "SAFFL"
 #' )
-#' 
+#'
 #' ae_risk <- risk_stat(
 #'   datain = ae_entry,
 #'   a_subset = ae_pre_process$a_subset,
@@ -159,7 +159,7 @@ forest_plot_base <- function(datain,
 #'   datain = adae,
 #'   obs_residual = 0
 #' )
-#' 
+#'
 #' ae_entry <- mentry(
 #'   datain = ae_pre_process$data,
 #'   byvar = "AEBODSYS",
@@ -167,7 +167,7 @@ forest_plot_base <- function(datain,
 #'   trtsort = "TRTAN",
 #'   pop_fil = "SAFFL"
 #' )
-#' 
+#'
 #' ae_risk <- risk_stat(
 #'   datain = ae_entry,
 #'   a_subset = ae_pre_process$a_subset,

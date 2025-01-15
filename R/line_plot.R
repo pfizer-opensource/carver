@@ -91,13 +91,17 @@ line_plot <- function(datain,
   if (length(dodge_width) > 0 && !is.na(dodge_width)) {
     plot <- plot +
       geom_line(aes(color = .data[[series_var]]), position = position_dodge(dodge_width)) +
-      geom_point(aes(color = .data[[series_var]], shape = .data[[series_var]],
-                     size = .data[[series_var]]), position = position_dodge(dodge_width))
+      geom_point(aes(
+        color = .data[[series_var]], shape = .data[[series_var]],
+        size = .data[[series_var]]
+      ), position = position_dodge(dodge_width))
   } else {
     plot <- plot +
       geom_line(aes(color = .data[[series_var]])) +
-      geom_point(aes(color = .data[[series_var]], shape = .data[[series_var]],
-                     size = .data[[series_var]]))
+      geom_point(aes(
+        color = .data[[series_var]], shape = .data[[series_var]],
+        size = .data[[series_var]]
+      ))
   }
   plot <- plot +
     labs(
