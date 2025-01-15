@@ -54,7 +54,34 @@ a ggplot scatterplot, fit for combining with forest plot.
 Scatter plot to be included within forest plot
 }
 \examples{
-data(ae_risk)
+data("adae")
+ae_pre_process <- ae_pre_processor(
+  datain = adae,
+  obs_residual = 0
+)
+
+ae_entry <- mentry(
+  datain = ae_pre_process$data,
+  byvar = "AEBODSYS",
+  trtvar = "TRTA",
+  trtsort = "TRTAN",
+  pop_fil = "SAFFL"
+)
+
+ae_risk <- risk_stat(
+  datain = ae_entry,
+  a_subset = ae_pre_process$a_subset,
+  summary_by = "Patients",
+  eventvar = "AEDECOD",
+  ctrlgrp = "Placebo",
+  trtgrp = "Xanomeline High Dose",
+  statistics = "Risk Ratio",
+  alpha = 0.05,
+  cutoff_where = "PCT > 2",
+  sort_opt = "Ascending",
+  sort_var = "Count",
+  hoveryn = "Y"
+)
 forest_plot_scatter(
   datain = ae_risk,
   xvar = "PCT",

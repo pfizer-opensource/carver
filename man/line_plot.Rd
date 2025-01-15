@@ -12,7 +12,8 @@ line_plot(
   axis_opts = plot_axis_opts(),
   legend_opts = list(label = "", pos = "bottom", dir = "horizontal"),
   griddisplay = "N",
-  plot_title = NULL
+  plot_title = NULL,
+  dodge_width = NULL
 )
 }
 \arguments{
@@ -35,6 +36,8 @@ should be a factor variable with levels corresponding to \code{series_var}, also
 \item{griddisplay}{Display Grid \code{(Y/N)}.}
 
 \item{plot_title}{Text to use as plot title, if required}
+
+\item{dodge_width}{Width to dodge points/lines by, IF required.}
 }
 \value{
 plot - Line plot.

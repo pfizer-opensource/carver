@@ -1,7 +1,6 @@
 ae_pre_process <- ae_pre_processor(
   datain = adae,
-  obs_residual = 0,
-  fmq_data = FMQ_Consolidated_List
+  obs_residual = 0
 )
 
 ae_entry <- mentry(

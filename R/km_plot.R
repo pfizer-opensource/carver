@@ -35,33 +35,6 @@
 #' @export
 #'
 #' @examples
-#' data("survival")
-#'
-#' km_df <- survival[["adsl"]] |>
-#'   surv_pre_processor(
-#'     dataset_analysis = survival[["adtte"]],
-#'     analysis_subset = "PARAMCD == 'PFS_P'"
-#'   )
-#'
-#' km_df |>
-#'   km_plot(
-#'     trt_colors = "#F8766D~#00BA38~#619CFF"
-#'   )
-#'
-#' ## with confidence interval and multiple `risk table` statistics
-#' km_df |>
-#'   km_plot(
-#'     disp_conf.int = "Y",
-#'     risktab_stats = "n.risk~n.censor",
-#'     risktab_height = 0.25,
-#'     trt_colors = "#F8766D~#00BA38~#619CFF",
-#'     axis_opts = plot_axis_opts(
-#'       xlinearopts = list(breaks = 3),
-#'       ylinearopts = list(breaks = 0.1),
-#'       xaxis_label = "Progression-Free Survival Time (Months)",
-#'       yaxis_label = "Probability of Progression Free Survival"
-#'     )
-#'   )
 #'
 #' ## with `{pharmaverseadam}` test data sets
 #' ## run `install.packages("pharmaverseadam")` prior running this example

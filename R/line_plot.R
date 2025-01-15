@@ -16,6 +16,7 @@
 #'
 #' @param datain Input dataset from process_line_plot_data() output.
 #' @inheritParams box_plot
+#' @param dodge_width Width to dodge points/lines by, IF required.
 #'
 #' @return plot - Line plot.
 #' @export
@@ -71,7 +72,8 @@ line_plot <- function(datain,
                         dir = "horizontal"
                       ),
                       griddisplay = "N",
-                      plot_title = NULL) {
+                      plot_title = NULL,
+                      dodge_width = NULL) {
   stopifnot(nrow(datain) != 0)
   stopifnot(
     "XVAR, YVAR, series_var and series_labelvar should exist in data" =
@@ -84,11 +86,20 @@ line_plot <- function(datain,
       x = .data[["XVAR"]],
       y = .data[["YVAR"]],
       group = .data[[series_var]]
-    )) +
-    geom_line(aes(color = .data[[series_var]])) +
-    geom_point(aes(color = .data[[series_var]]),
-      shape = 16
-    ) +
+    ))
+  dodge_width <- as.numeric(dodge_width)
+  if (length(dodge_width) > 0 && !is.na(dodge_width)) {
+    plot <- plot +
+      geom_line(aes(color = .data[[series_var]]), position = position_dodge(dodge_width)) +
+      geom_point(aes(color = .data[[series_var]], shape = .data[[series_var]],
+                     size = .data[[series_var]]), position = position_dodge(dodge_width))
+  } else {
+    plot <- plot +
+      geom_line(aes(color = .data[[series_var]])) +
+      geom_point(aes(color = .data[[series_var]], shape = .data[[series_var]],
+                     size = .data[[series_var]]))
+  }
+  plot <- plot +
     labs(
       title = plot_title,
       x = axis_opts$xaxis_label,
@@ -102,14 +113,25 @@ line_plot <- function(datain,
     ) +
     scale_x_discrete(
       breaks = axis_opts$Xbrks,
-      limits = axis_opts$Xlims
+      limits = axis_opts$Xlims,
+      labels = axis_opts$Xticks
     ) +
     theme_std(axis_opts, legend_opts, griddisplay) +
     scale_color_manual(
       name = legend_opts$label,
       values = series_opts$color,
       labels = series_labels
+    ) +
+    scale_shape_manual(
+      name = legend_opts$label,
+      values = series_opts$shape,
+      labels = series_labels
+    ) +
+    scale_size_manual(
+      name = legend_opts$label,
+      values = series_opts$size,
+      labels = series_labels
     )
   message("Line Plot Generated")
-  return(plot)
+  plot
 }

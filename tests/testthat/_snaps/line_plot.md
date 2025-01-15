@@ -31,4 +31,10 @@
       $colour
       [1] "TRTVAR"
       
+      $shape
+      [1] "TRTVAR"
+      
+      $size
+      [1] "TRTVAR"
+      
 

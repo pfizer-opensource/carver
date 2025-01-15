@@ -104,6 +104,12 @@ the criteria.
 }
 }
 \examples{
+data("adae")
+ae_pre_process <- ae_pre_processor(
+  datain = adae,
+  obs_residual = 0,
+  fmq_data = NA
+)
 ae_entry <- ae_pre_process[["data"]] |>
   mentry(
     subset = NA,
