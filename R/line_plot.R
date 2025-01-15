@@ -31,7 +31,7 @@
 #'   trtsort = "TRT01AN",
 #'   pop_fil = NA
 #' )
-#' 
+#'
 #' adsl_sum <- msumstat(
 #'   datain = adsl_entry,
 #'   dptvar = "AGE",
@@ -45,8 +45,10 @@
 #' line_plot(
 #'   datain = adsl_sum$gsum,
 #'   axis_opts = plot_axis_opts(xaxis_label = "Race", yaxis_label = "Mean Age"),
-#'   legend_opts = list(label = "Treatment", pos = "bottom",
-#'                      dir = "horizontal"),
+#'   legend_opts = list(
+#'     label = "Treatment", pos = "bottom",
+#'     dir = "horizontal"
+#'   ),
 #'   series_opts = plot_aes_opts(
 #'     plot_df,
 #'     "TRTVAR",
