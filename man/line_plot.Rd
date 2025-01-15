@@ -8,7 +8,7 @@ line_plot(
   datain,
   series_var = "TRTVAR",
   series_labelvar = series_var,
-  series_opts,
+  series_opts = plot_aes_opts(datain, "TRTVAR"),
   axis_opts = plot_axis_opts(),
   legend_opts = list(label = "", pos = "bottom", dir = "horizontal"),
   griddisplay = "N",
@@ -46,33 +46,38 @@ plot - Line plot.
 Utility for Line Plot
 }
 \examples{
-data("vx_line_data")
+data(adsl)
 
-lineplot_df <- process_line_plot_data(
-  dataset_adsl = vx_line_data$adsl,
-  dataset_analysis = vx_line_data$adva,
-  adsl_subset = "SAFFL == 'Y'",
-  analysis_subset = 'PARAMN==2 & TRTARN!=""& (AVISITN \%in\% c(1,3,4,5,6,7))',
-  trtvar = "TRTP",
-  trtsort = "TRTPN",
-  xvar = "AVISIT",
-  yvar = "AVAL"
-)
-
-plot <- line_plot(
-  datain = lineplot_df,
+mentry_df <- adsl |>
+  mentry(
+    subset = NA_character_,
+    byvar = NA_character_,
+    trtvar = "TRT01A",
+    trtsort = "TRT01AN",
+    subgrpvar = NA_character_,
+    trttotalyn = "N",
+    add_grpmiss = "N",
+    pop_fil = "SAFFL"
+  )
+plot_df <- mcatstat(
+  mentry_df,
+  dptvar = "RACE"
+) |>
+  dplyr::mutate(YVAR = PCT)
+line_plot(
+  datain = plot_df,
   series_var = "TRTVAR",
   series_labelvar = "TRTVAR",
-  series_opts = list(
-    color = g_seriescol(lineplot_df, NA, "TRTVAR")
-  ),
+  series_opts = plot_aes_opts(
+  plot_df, "TRTVAR", series_color = "firebrick~forestgreen~dodgerblue",
+  series_shape = "triangle~square~circle"),
   axis_opts = plot_axis_opts(
     ylinearopts = list(
-      breaks = c(100, 1000, 10000, 100000),
-      limits = c(100, 100000)
+      limits = c(0, 100),
+      breaks = seq(0, 100, by = 10)
     ),
-    xaxis_label = "Visit",
-    yaxis_label = "Geometric Mean Titer"
+    xaxis_label = "Race",
+    yaxis_label = "Percent of Subjects"
   ),
   legend_opts = list(
     label = "",
@@ -80,9 +85,7 @@ plot <- line_plot(
     dir = "horizontal"
   ),
   griddisplay = "N",
-  plot_title = "Line Plot"
+  plot_title = "Line Plot of Subjects by Race"
 )
-
-plot
 
 }

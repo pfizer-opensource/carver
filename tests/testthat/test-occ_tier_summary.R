@@ -1,6 +1,9 @@
 data("adae")
 data("adsl")
-data("ae_pre_process")
+ae_pre_process <- ae_pre_processor(
+  datain = adae,
+  fmq_data = NA
+)
 adae1 <- adae |>
   mutate(ASEVN = recode(.data[["AESEV"]], "MILD" = 1, "MODERATE" = 2, "SEVERE" = 3))
 ae_pre <- ae_pre_processor(
