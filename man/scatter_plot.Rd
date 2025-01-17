@@ -64,8 +64,10 @@ mentry_df <- adsl |>
 mentry_df |>
   scatter_plot(
     axis_opts = plot_axis_opts(
-      xlinearopts = list(breaks = sort(unique(mentry_df$XVAR)),
-                         labels = sort(unique(mentry_df$USUBJID))),
+      xlinearopts = list(
+        breaks = sort(unique(mentry_df$XVAR)),
+        labels = sort(unique(mentry_df$USUBJID))
+      ),
       xopts = list(angle = 15)
     ),
     series_var = "TRTVAR",

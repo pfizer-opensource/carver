@@ -1,4 +1,8 @@
-data("ae_pre_process")
+data("adae")
+ae_pre_process <- ae_pre_processor(
+  datain = adae,
+  ae_filter = "Any Event"
+)
 ae_entry <- mentry(
   datain = ae_pre_process$data,
   subset = NA,
@@ -12,19 +16,18 @@ ae_entry <- mentry(
   pop_fil = "SAFFL"
 )
 dsin1 <- ae_entry |>
-  filter(AEDECOD %in% c("NAUSEA", "SINUS BRADYCARDIA"))
+  filter(.data[["AEDECOD"]] %in% c("NAUSEA", "SINUS BRADYCARDIA"))
 
 denom <- dsin1 |>
-  filter(TRTVAR %in% c("Placebo", "Xanomeline High Dose")) |>
-  group_by(TRTVAR) |>
-  summarise(N = length(unique(USUBJID))) |>
+  filter(.data[["TRTVAR"]] %in% c("Placebo", "Xanomeline High Dose")) |>
+  group_by(.data[["TRTVAR"]]) |>
+  summarise(N = length(unique(.data[["USUBJID"]]))) |>
   ungroup()
 
 freq <- dsin1 |>
-  filter(TRTVAR %in% c("Placebo", "Xanomeline High Dose") &
-    eval(parse(text = ae_pre_process$a_subset))) |>
-  group_by(TRTVAR, AEBODSYS, AEDECOD) |>
-  summarise(n = length(unique(USUBJID))) |>
+  filter(.data[["TRTVAR"]] %in% c("Placebo", "Xanomeline High Dose")) |>
+  group_by(.data[["TRTVAR"]], .data[["AEBODSYS"]], .data[["AEDECOD"]]) |>
+  summarise(n = length(unique(.data[["USUBJID"]]))) |>
   ungroup()
 
 exp <- left_join(denom, freq, by = "TRTVAR")
@@ -42,13 +45,13 @@ test_that("Test Case 1: Check if the function gives expected statistic values", 
   ciu <- round(risk$measure[2, 3], 2)
 
   expected <- exp |>
-    filter(AEDECOD == "NAUSEA") |>
+    filter(.data[["AEDECOD"]] == "NAUSEA") |>
     mutate(
       RISK = risk_val,
       PVALUE = pval,
       RISKCIL = cil,
       RISKCIU = ciu,
-      PCT = (n * 100) / N
+      PCT = (.data[["n"]] * 100) / .data[["N"]]
     )
 
   risk_s <- risk_stat(
@@ -66,13 +69,14 @@ test_that("Test Case 1: Check if the function gives expected statistic values", 
   )
 
   actual <- risk_s |>
-    rename(AEBODSYS = BYVAR1, AEDECOD = DPTVAL, N = TOTAL_N, n = FREQ) |>
-    filter(AEDECOD == "NAUSEA") |>
+    rename(all_of(c("AEBODSYS" = "BYVAR1", "AEDECOD" = "DPTVAL", "N" = "TOTAL_N", "n" = "FREQ"))) |>
+    filter(.data[["AEDECOD"]] == "NAUSEA") |>
     mutate(
-      N = as.integer(N),
-      n = as.integer(n)
+      N = as.integer(.data[["N"]]),
+      n = as.integer(.data[["n"]])
     ) |>
-    select(TRTVAR, N, AEBODSYS, AEDECOD, n, RISK, PVALUE, RISKCIL, RISKCIU, PCT)
+    select(all_of(
+      c("TRTVAR", "N", "AEBODSYS", "AEDECOD", "n", "RISK", "PVALUE", "RISKCIL", "RISKCIU", "PCT")))
 
   expect_equal(actual$RISK, expected$RISK)
   expect_equal(actual$PVALUE, expected$PVALUE)
@@ -90,12 +94,12 @@ test_that("Test Case 2: Check if the function works as expected for risk differe
   cil <- round(risk$measure[2, 3], 4)
 
   expected <- exp |>
-    filter(AEDECOD == "NAUSEA") |>
+    filter(.data[["AEDECOD"]] == "NAUSEA") |>
     mutate(
       RISK = risk_val,
       PVALUE = pval
     ) |>
-    arrange(AEDECOD)
+    arrange(.data[["AEDECOD"]])
 
   risk_s <- risk_stat(
     datain = dsin1,
@@ -110,13 +114,13 @@ test_that("Test Case 2: Check if the function works as expected for risk differe
   )
 
   actual <- risk_s |>
-    rename(AEBODSYS = BYVAR1, AEDECOD = DPTVAL, N = TOTAL_N, n = FREQ) |>
-    filter(AEDECOD == "NAUSEA") |>
+    rename(all_of(c("AEBODSYS" = "BYVAR1", "AEDECOD" = "DPTVAL", "N" = "TOTAL_N", "n" = "FREQ"))) |>
+    filter(.data[["AEDECOD"]] == "NAUSEA") |>
     mutate(
-      N = as.integer(N),
-      n = as.integer(n)
+      N = as.integer(.data[["N"]]),
+      n = as.integer(.data[["n"]])
     ) |>
-    select(TRTVAR, N, AEBODSYS, AEDECOD, n, RISK, PVALUE)
+    select(all_of(c("TRTVAR", "N", "AEBODSYS", "AEDECOD", "n", "RISK", "PVALUE")))
 
   expected$RISK <- -1 * (expected$RISK)
   expect_equal(actual$RISK, expected$RISK)

@@ -1,4 +1,3 @@
-data("ae_risk")
 data("ae_pre_process")
 ae_entry <- mentry(
   datain = ae_pre_process$data,
@@ -57,7 +56,7 @@ forest_dat <- ae_risk_forest |>
 test_that("Test Case 1: Standard error checks", {
   expect_error(
     ae_forest_plot(
-      datain = ae_risk[0, ],
+      datain = ae_risk_forest[0, ],
       series_opts = list(
         color = g_seriescol(ae_risk, c("black", "royalblue2"), "TRTVAR"),
         shape = g_seriessym(ae_risk, NA, "TRTVAR"),
@@ -72,7 +71,7 @@ test_that("Test Case 1: Standard error checks", {
   )
   expect_error(
     ae_forest_plot(
-      datain = ae_risk,
+      datain = ae_risk_forest,
       series_opts = list(
         color = g_seriescol(ae_risk, c("black", "royalblue2"), "TRTVAR"),
         shape = g_seriessym(ae_risk, NA, "TRTVAR"),

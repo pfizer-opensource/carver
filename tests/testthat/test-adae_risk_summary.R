@@ -30,7 +30,7 @@ test_that("Test Case 1: adae_summary with standard inputs works", {
       cutoff_where = "PCT > 5",
       sort_opt = "Ascending",
       sort_var = "Count",
-      risklabels = tbl_risk_labels()
+      risklabels = tbl_risk_labels("Risk Difference")
     )
   expect_equal(unique(pull(ae_risk, "TRTPAIR")), "Placebo -vs- Xanomeline Low Dose")
   expect_snapshot(ae_risk)
@@ -49,12 +49,12 @@ test_that("Test Case 2: adae_summary with summary row", {
       lterm = "AEDECOD",
       ctrlgrp = "Placebo",
       trtgrp = "Xanomeline Low Dose",
-      statistics = "Risk Difference",
+      statistics = "Risk Ratio",
       alpha = 0.05,
       cutoff_where = "PCT > 5",
       sort_opt = "Alphabetical",
       sort_var = "Count",
-      risklabels = tbl_risk_labels(),
+      risklabels = tbl_risk_labels("Risk Ratio"),
       sum_row = "Y",
       sum_row_label = "Any AE"
     )
@@ -80,7 +80,6 @@ test_that("Test Case 3: Check empty and errors", {
       cutoff_where = "PCT > 5",
       sort_opt = "Alphabetical",
       sort_var = "Count",
-      risklabels = tbl_risk_labels(),
       sum_row = "Y",
       sum_row_label = "Any AE"
     )
@@ -98,7 +97,6 @@ test_that("Test Case 3: Check empty and errors", {
       cutoff_where = "PCT > 50",
       sort_opt = "Alphabetical",
       sort_var = "Count",
-      risklabels = tbl_risk_labels(),
       sum_row = "Y",
       sum_row_label = "Any AE"
     )
