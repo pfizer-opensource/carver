@@ -342,7 +342,7 @@ mod_generic_filters_ui <- function(id) {
           textInput(
             ns("statvar"),
             label = "Statistics",
-            value = "N~Range~Meansd~Median~q1q3"
+            value = "N~minmaxc~mean(sd)~Median~q1q3"
           )
         ),
         column(
@@ -350,7 +350,7 @@ mod_generic_filters_ui <- function(id) {
           textInput(
             ns("statlabel"),
             label = "Statistics Labels",
-            value = "N~Range~Mean (SD)~Median~(Q1, Q3)"
+            value = "N~(Min,Max)~Mean (SD)~Median~(Q1,Q3)"
           )
         )
       )
@@ -657,7 +657,7 @@ mod_generic_filters_server <-
           output$treatment1_label_UI <- renderUI({
             req(tolower(repName()) %in% c("tornado_plot", "ae_volcano_plot"))
             textInput(ns("treatment1_label"),
-              if (repName() == "tornado_plot") "Treatment Left Label" else "Label for Control Group",
+              if (repName() == "tornado_plot") "Treatment Left Label" else "Label for Control Group", # nolint
               value = if (repName() == "tornado_plot") input$treatment1 else "Control"
             )
           })
@@ -665,7 +665,7 @@ mod_generic_filters_server <-
           output$treatment2_label_UI <- renderUI({
             req(tolower(repName()) %in% c("tornado_plot", "ae_volcano_plot"))
             textInput(ns("treatment2_label"),
-              if (repName() == "tornado_plot") "Treatment Right Label" else "Label for Treatment Group",
+              if (repName() == "tornado_plot") "Treatment Right Label" else "Label for Treatment Group", # nolint
               value = if (repName() == "tornado_plot") input$treatment2 else "Treatment"
             )
           })

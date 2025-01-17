@@ -41,7 +41,7 @@ data_attrib <- function(datain) {
     ),
     c("VAR_NAMES", "VAR_LABEL")
   )
-  return(data_attr)
+  data_attr
 }
 
 ## Identify any variable names starting with given string. Useful for Byvar,subgrp identification ##

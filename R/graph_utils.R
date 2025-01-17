@@ -70,7 +70,7 @@ g_seriescol <- function(gdata,
   levs <- levels(unique(gdata[[SERIESVAR]]))
   vals <- levs[levs %in% unique(gdata[[SERIESVAR]])]
   seriescols <- setNames(col_list[seq_along(vals)], vals)
-  return(seriescols)
+  seriescols
 }
 
 #' Recode Shapes to Numbers
@@ -141,7 +141,7 @@ g_seriessym <- function(gdata,
   levs <- levels(unique(gdata[[SERIESVAR]]))
   vals <- levs[levs %in% unique(gdata[[SERIESVAR]])]
   ptshapes <- setNames(shapelist[seq_along(vals)], vals)
-  return(ptshapes)
+  ptshapes
 }
 
 
@@ -171,7 +171,7 @@ empty_plot <- function(message = "No data available for these values",
     layout(
       xaxis = list(visible = FALSE), yaxis = list(visible = FALSE)
     )
-  return(list(plot = g_plot, ptly = fig))
+  list(plot = g_plot, ptly = fig)
 }
 
 
@@ -238,35 +238,34 @@ def_axis_spec <- function(arg, vec, val) {
 #'
 plot_axis_opts <-
   function(
-    xlinearopts = list(
-      breaks = waiver(),
-      limits = NULL,
-      labels = waiver()
-    ),
-    ylinearopts = list(
-      breaks = waiver(),
-      limits = NULL,
-      labels = waiver()
-    ),
-    xaxis_scale = "identity",
-    yaxis_scale = "identity",
-    xaxis_label = "",
-    yaxis_label = "",
-    xopts = list(
-      labelsize = 12,
-      labelface = "plain",
-      ticksize = 8,
-      tickface = "plain",
-      angle = 0
-    ),
-    yopts = list(
-      labelsize = 12,
-      labelface = "plain",
-      ticksize = 8,
-      tickface = "plain",
-      angle = 0
-    )
-  ) {
+      xlinearopts = list(
+        breaks = waiver(),
+        limits = NULL,
+        labels = waiver()
+      ),
+      ylinearopts = list(
+        breaks = waiver(),
+        limits = NULL,
+        labels = waiver()
+      ),
+      xaxis_scale = "identity",
+      yaxis_scale = "identity",
+      xaxis_label = "",
+      yaxis_label = "",
+      xopts = list(
+        labelsize = 12,
+        labelface = "plain",
+        ticksize = 8,
+        tickface = "plain",
+        angle = 0
+      ),
+      yopts = list(
+        labelsize = 12,
+        labelface = "plain",
+        ticksize = 8,
+        tickface = "plain",
+        angle = 0
+      )) {
     stopifnot(is.list(xlinearopts))
     stopifnot(is.list(ylinearopts))
 
@@ -398,7 +397,7 @@ plot_aes_opts <- function(datain,
       out$contrast <- unname(g_seriescol(datain, series_contrast, "aesvar"))
     }
   }
-  return(out)
+  out
 }
 
 #' Return N count in plot legend (treatment)
@@ -451,7 +450,7 @@ plot_display_bign <- function(datain,
   } else {
     datain[["TRTTXT"]] <- datain[["TRTVAR"]]
   }
-  return(datain)
+  datain
 }
 
 #' Theme for ggplots with only X axis title/ticks
@@ -555,7 +554,7 @@ theme_std <- function(axis_opts = plot_axis_opts(),
       panel.grid.major.y = element_line(linewidth = 0.1, color = "grey")
     )
   }
-  return(t)
+  t
 }
 
 #' Calculate plot title N values
@@ -578,7 +577,7 @@ plot_title_nsubj <- function(datain, plot_data, by) {
   } else {
     plot_data <- bind_cols(plot_data, adsin_count)
   }
-  return(plot_data)
+  plot_data
 }
 
 #' Convert dataframe into ggplot object table

@@ -182,7 +182,8 @@ mod_goutput_server <- function(id, sourcedata, repName, filters, process_btn) {
             datain = forest_data,
             series_opts = plot_aes_opts(
               datain = forest_data,
-              series_color = c("black", "royalblue2", "goldenrod", "forestgreen", "magenta", "brown"),
+              series_color =
+                c("black", "royalblue2", "goldenrod", "forestgreen", "magenta", "brown"),
               series_size = rep(1, 5)
             ),
             trtpair_color = "#F8766D~#7CAE00~#00BFC4~#C77CFF",
@@ -562,7 +563,6 @@ mod_goutput_server <- function(id, sourcedata, repName, filters, process_btn) {
 
     output$figure_UI <- plotly::renderPlotly({
       req(rv$goutput)
-      # req(rv$goutput$ptly)
       rv$goutput
     })
 

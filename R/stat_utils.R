@@ -24,7 +24,7 @@
 fmtrd <- function(f, d = 2, ...) {
   function(x) {
     dc <- do.call(f, args = list(x, na.rm = TRUE, ...))
-    return(ifelse(is.na(dc), "-", round_f(dc, d)))
+    ifelse(is.na(dc), "-", round_f(dc, d))
   }
 }
 

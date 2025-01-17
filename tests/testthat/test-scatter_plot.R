@@ -15,7 +15,9 @@ mentry_df <- adlb |>
   ) |>
   group_by(.data[["USUBJID"]], .data[["TRTVAR"]], .data[["PARAMCD"]]) |>
   summarise(AVAL_N = max(.data[["AVAL"]])) |>
-  tidyr::pivot_wider(id_cols = c("USUBJID", "TRTVAR"), names_from = "PARAMCD", values_from = "AVAL_N") |>
+  tidyr::pivot_wider(
+    id_cols = c("USUBJID", "TRTVAR"), names_from = "PARAMCD", values_from = "AVAL_N"
+  ) |>
   mutate(XVAR = .data[["ALT"]], YVAR = .data[["BILI"]])
 fig <- mentry_df |>
   scatter_plot(
