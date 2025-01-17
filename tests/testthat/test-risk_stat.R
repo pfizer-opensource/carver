@@ -76,7 +76,8 @@ test_that("Test Case 1: Check if the function gives expected statistic values", 
       n = as.integer(.data[["n"]])
     ) |>
     select(all_of(
-      c("TRTVAR", "N", "AEBODSYS", "AEDECOD", "n", "RISK", "PVALUE", "RISKCIL", "RISKCIU", "PCT")))
+      c("TRTVAR", "N", "AEBODSYS", "AEDECOD", "n", "RISK", "PVALUE", "RISKCIL", "RISKCIU", "PCT")
+    ))
 
   expect_equal(actual$RISK, expected$RISK)
   expect_equal(actual$PVALUE, expected$PVALUE)
