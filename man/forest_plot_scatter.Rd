@@ -78,8 +78,6 @@ ae_risk <- risk_stat(
   statistics = "Risk Ratio",
   alpha = 0.05,
   cutoff_where = "PCT > 2",
-  sort_opt = "Ascending",
-  sort_var = "Count",
   hoveryn = "Y"
 )
 forest_plot_scatter(
