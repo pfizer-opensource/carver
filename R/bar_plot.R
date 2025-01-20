@@ -94,15 +94,15 @@ bar_plot <- function(datain,
   )
   # Remove empty rows
   datain <- datain |>
-    mutate(YVAR = as.numeric(YVAR))
+    mutate(YVAR = as.numeric(.data[["YVAR"]]))
 
   # Bar plot:
   # Legend Labels if based on other variable:
   series_labels <- series_leg_lab(datain, series_var, series_labelvar)
   g_plot <- datain |>
     ggplot(aes(
-      x = XVAR,
-      y = YVAR,
+      x = .data[["XVAR"]],
+      y = .data[["YVAR"]],
       fill = .data[[series_var]],
       group = .data[[series_var]]
     )) +

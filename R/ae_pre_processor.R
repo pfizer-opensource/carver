@@ -142,7 +142,7 @@ ae_pre_processor <- function(datain,
       mutate(
         MAX_SEVCTC = ifelse(.data[[sev_ctcvar]] == max(.data[[sev_ctcvar]], na.rm = TRUE), 1, 0)
       ) |>
-      filter(MAX_SEVCTC == 1) |>
+      filter(.data[["MAX_SEVCTC"]] == 1) |>
       group_by(across(any_of(c(rpt_byvar, trtvar, "USUBJID")))) |>
       mutate(
         ANY = ifelse(.data[[sev_ctcvar]] == max(.data[[sev_ctcvar]], na.rm = TRUE), 1, 0)

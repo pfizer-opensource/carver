@@ -103,10 +103,10 @@ process_edish_data <- function(datain,
         ifelse(xvar == "both", "Max of ALT/AST = ",
           paste("value of", toupper(xvar), "=")
         ),
-        round(XVAR, 3),
+        round(.data[["XVAR"]], 3),
         "\n",
         "Bilirubin = ",
-        round(bili, 3)
+        round(.data[["bili"]], 3)
       ),
       YVAR = .data[["bili"]]
     ) |>

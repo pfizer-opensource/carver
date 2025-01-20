@@ -170,12 +170,12 @@ box_plot <- function(datain,
   if ("outliers" %in% names(datain)) {
     stat_outliers <- datain |>
       tidyr::separate_rows(outliers, sep = "~") |>
-      mutate(outliers = as.numeric(outliers))
+      mutate(outliers = as.numeric(.data[["outliers"]]))
     g_plot <- g_plot +
       geom_point(
         data = stat_outliers,
         mapping = aes(
-          x = XVAR, y = outliers,
+          x = .data[["XVAR"]], y = .data[["outliers"]],
           group = .data[[series_var]]
         ),
         shape = 21,

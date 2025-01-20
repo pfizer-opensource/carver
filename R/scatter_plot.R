@@ -120,8 +120,8 @@ scatter_plot <-
     g <- ggplot(
       datain,
       aes(
-        x = XVAR,
-        y = YVAR,
+        x = .data[["XVAR"]],
+        y = .data[["YVAR"]],
         shape = .data[[series_var]],
         color = .data[[series_var]],
         size = .data[[series_var]]

@@ -133,7 +133,7 @@ risk_stat <-
             mutate(CUTFL = "Y")
           mcatin <- mcatin |>
             left_join(mcat_cut, by = id_vars) |>
-            filter(CUTFL == "Y")
+            filter(.data[["CUTFL"]] == "Y")
         }
         if (nrow(mcatin) < 1) {
           return(data.frame())

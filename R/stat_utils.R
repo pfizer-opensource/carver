@@ -78,7 +78,7 @@ parse_stats <- function(statvar, statdec) {
     if (statvar[s] %in% lookup$Stat) {
       st <- lookup |>
         filter(Stat == statvar[s]) |>
-        pull(base) |>
+        pull(.data[["base"]]) |>
         str_to_vec("/")
       d <- unlist(stringr::str_extract_all(statdec[s], "[0-9]+"))
       last <- d[length(d)]
@@ -198,9 +198,9 @@ derv_stats <- function(data, stats, lookup = stat_lookup()) {
     map(stats, \(s) {
       derv <- lookup |>
         filter(if_all(1) == s) |>
-        pull(derv)
+        pull(.data[["derv"]])
       data |>
-        mutate({{ s }} := glue::glue(derv)) |>
+        mutate({{ s }} := glue::glue(.data[["derv"]])) |>
         select(all_of(s))
     }) |>
       (\(.) bind_cols(data, .))()

@@ -202,8 +202,8 @@ set_cat_labels <- function(data,
     label_df <- bind_cols(vals, new_var = cats) |>
       select(-DPTVAR) |>
       right_join(data, by = "DPTVARN") |>
-      mutate(DPTVAR = new_var) |>
-      select(-new_var)
+      mutate(DPTVAR = .data[["new_var"]]) |>
+      select(-all_of("new_var"))
   }
   label_df
 }
