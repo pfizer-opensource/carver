@@ -22,12 +22,12 @@ merged dataset
 Merge adsl dataset with the analysis dataset
 }
 \examples{
-data(lab_data)
-
+data("adae")
+data("adsl")
 adsl_merge(
-  adsl = lab_data$adsl,
+  adsl = adsl,
   adsl_subset = "SAFFL=='Y'",
-  dataset_add = lab_data$adlb
+  dataset_add = adae
 )
 
 }
