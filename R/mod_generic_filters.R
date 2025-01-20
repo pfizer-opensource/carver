@@ -76,6 +76,18 @@ mod_generic_filters_ui <- function(id) {
             selected = "N",
             inline = TRUE
           )
+        ),
+        fluidRow(
+          column(
+            width = 4,
+            tagAppendAttributes(
+              actionButton(
+                inputId = ns("apply_gen_filt"),
+                label = "Apply"
+              ),
+              class = "sidebar-btn"
+            )
+          )
         )
       )
     ),
@@ -614,7 +626,7 @@ mod_generic_filters_server <-
       }) |>
         bindEvent(
           list(
-            repName(), input$overall_subset, input$trttotalyn, trt_var(),
+            repName(), input$apply_gen_filt, trt_var(),
             trt_sort(), popfilter(), input$ae_hlt, input$byvar, input$subgrp, input$subtotyn
           )
         )
@@ -838,7 +850,7 @@ mod_generic_filters_server <-
       }) |>
         bindEvent(list(
           repName(), rv$ment_out, input$dptvar, input$statvar, input$pctdisp_adsl,
-          input$totcat, input$misscat, input$a_subset
+          input$totcat, input$misscat, input$apply_gen_filt
         ))
 
       observe({
@@ -898,8 +910,8 @@ mod_generic_filters_server <-
         bindEvent(list(
           repName(), trt_var(), trt_sort(), popfilter(),
           input$ae_filter, input$ae_catvar, input$period, input$period_spec,
-          input$treatment1, input$treatment2, input$pctdisp, input$denom_subset,
-          input$trtbign, input$ae_hlt
+          input$treatment1, input$treatment2, input$pctdisp, input$apply_gen_filt,
+          input$ae_hlt
         ))
 
       observe({
@@ -939,7 +951,7 @@ mod_generic_filters_server <-
         print("Edish process ends")
       }) %>%
         bindEvent(list(
-          trt_var(), trt_sort(), popfilter(), input$a_subset, input$overall_subset
+          trt_var(), trt_sort(), popfilter(), input$apply_gen_filt
         ))
 
       filters <- reactive({
