@@ -403,10 +403,8 @@ mod_generic_filters_server <-
         req(repName())
         if (repName() == "eDISH_plot") {
           text <- "PARAMCD %in% c('ALT', 'AST', 'BILI')"
-          hide("box_3")
         } else {
           text <- "USUBJID != ''"
-          show("box_3")
         }
         updateTextInput(
           session,
