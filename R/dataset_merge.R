@@ -113,12 +113,12 @@ dataset_merge <- function(..., byvars, subset = NULL, type = "left") {
 #' @export
 #'
 #' @examples
-#' data(lab_data)
-#'
+#' data("adae")
+#' data("adsl")
 #' adsl_merge(
-#'   adsl = lab_data$adsl,
+#'   adsl = adsl,
 #'   adsl_subset = "SAFFL=='Y'",
-#'   dataset_add = lab_data$adlb
+#'   dataset_add = adae
 #' )
 #'
 adsl_merge <- function(adsl = NULL, adsl_subset = "", dataset_add = NULL, byvars = NULL) {

@@ -1,0 +1,160 @@
+---
+output:
+  pdf_document:
+    toc: no
+  html_document:
+    toc: no
+    toc_float: yes
+    toc_collapsed: no
+    highlight: kate
+    theme: spacelab
+    fig_caption: yes
+    df_print: paged
+params:
+  ADSL_DSIN: adsl
+  ADSL_SUBSET: "SAFFL == 'Y'"
+  A_DSIN: adae
+  A_SUBSET: "TRTEMFL == 'Y'"
+  S_TRTVAR: ARM
+  TRTSORT: !r NA_character_
+  TRT1: "Xanomeline High Dose"
+  TRT1_LABEL: Drug A
+  TRT2: "Xanomeline Low Dose"
+  TRT2_LABEL: Drug B
+  GROUP: AESEV
+  FMQ_DATA: !r NA_character_
+  AEOBSRESIDUAL: !r 30
+  DENOM_SUBSET: !r NA_character_
+  PCTDISP: TRT
+  SPLITBY: !r NA_character_
+  SPLITLAB: ""
+  BARCHART_OPTIONS: !r list(bar_width = 0.5)
+  D_MARKER_COLOR: blue~yellow~red
+  LEGENDOPTS: !r list(label = "Severity", pos = c(0.15, 0.15), dir = "vertical")
+  XAXIS_LABEL: Percentage of Subjects
+  XAXISLINEAROPTS: !r list(breaks = seq(-100, 100, 10), labels = (c(seq(100, 0, -10), seq(10, 100, 10))))
+  YAXIS_GRID: N
+  YAXIS_LABEL: Primary System Organ Class
+  YAXIS_VAR: AESOC
+  LEGEND_BIGN: N
+  TITLE: "Tornado Plot"
+  FOOTNOTE: ""
+header-includes:
+  - \usepackage{fancyhdr}
+  - \usepackage{lastpage}
+  - \pagestyle{fancy}
+  - \fancyhf{}
+  - \fancyhead[R]{Page \thepage\, of\, \pageref*{LastPage}}
+  - \renewcommand{\headrulewidth}{0pt}
+  - '`r paste0("\\fancyhead[L]{\\textbf{", params$TITLE, "}}")`'
+  - '`r paste0("\\fancyfoot[L]{", params$FOOTNOTE, "}")`'
+  - \setlength{\headsep}{10pt}
+  - \setlength{\headheight}{50pt}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
+library(carver)
+library(dplyr)
+library(ggplot2)
+library(purrr)
+library(rlang, include.only = "parse_expr")
+
+is_html <- knitr::opts_knit$get("rmarkdown.pandoc.to") == "html"
+title <-  gsub("\\\\", "<br>", params$TITLE)
+footer <- gsub("\\\\", "<br>", params$FOOTNOTE)
+```
+
+```{r tornado_data, message=FALSE, eval=TRUE}
+# Tornado Plot Preprocess
+plot_data <-
+  process_tornado_data(
+    dataset_adsl = eval(parse_expr(params$ADSL_DSIN)),
+    dataset_analysis = eval(parse_expr(params$A_DSIN)),
+    adsl_subset = params$ADSL_SUBSET,
+    analysis_subset = params$A_SUBSET,
+    obs_residual = params$AEOBSRESIDUAL,
+    fmq_data = params$FMQ_DATA,
+    ae_catvar = params$GROUP,
+    split_by = params$SPLITBY,
+    trtvar = params$S_TRTVAR,
+    trt_left = params$TRT1,
+    trt_right = params$TRT2,
+    trtsort = params$TRTSORT,
+    pctdisp = params$PCTDISP,
+    denom_subset = params$DENOM_SUBSET,
+    legendbign = params$LEGEND_BIGN,
+    yvar = params$YAXIS_VAR
+ )
+
+## Split Data by grouping variables `SPLITBY`
+data_list <- split_data_by_var(
+  datain = plot_data,
+  split_by_prefix = ifelse(
+    !is.na(params$SPLITBY) & params$SPLITBY != "",
+    "SUBGRPVAR", ""
+  )
+)
+
+```
+
+```{r,echo=FALSE, message=FALSE, eval=TRUE , warning=FALSE, results='hide'}
+series_opts <- g_seriescol(plot_data, params$D_MARKER_COLOR, "BYVAR1")
+
+# Create plot output
+plot_list <- map(
+  seq_along(data_list),
+  function(i) {
+    stopifnot(is.data.frame(data_list[[i]]))
+    stopifnot(nrow(data_list[[i]]) > 0)
+      tornado_plot(
+       datain = data_list[[i]],
+       trt_left_label = params$TRT1_LABEL,
+       trt_right_label = params$TRT2_LABEL,
+       bar_width = params$BARCHART_OPTIONS$bar_width,
+       axis_opts = plot_axis_opts(
+         xaxis_label = params$YAXIS_LABEL,
+         yaxis_label = params$XAXIS_LABEL,
+         ylinearopts = params$XAXISLINEAROPTS
+       ),
+       legend_opts = params$LEGENDOPTS,
+       series_opts = series_opts,
+       griddisplay = params$YAXIS_GRID
+     )
+  }
+)
+```
+ 
+<b>`r if (is_html) title`</b>
+
+```{r output, fig.align='right', fig.height=6, fig.width=9, warning=FALSE, results = "asis"}
+# Split section headers
+section_headers <-
+  split_section_headers(
+    datain = plot_data,
+    split_by_prefix = if_else(
+      params$SPLITBY == "" |
+        is.na(params$SPLITBY),
+      "", "SUBGRPVAR"
+    ),
+    split_lab = params$SPLITLAB
+  )
+
+
+## printing plot outputs
+walk(
+  seq_along(plot_list),
+  function(i) {
+    cat("#### ", section_headers[[i]], "\n\n")
+    print(plot_list[[i]])
+    cat("\n")
+    if (!is_html) {
+      cat("\n\n\n\\pagebreak\n")
+    } else {
+      cat("\n")
+    }
+  }
+)
+```
+
+`r if (is_html) footer`

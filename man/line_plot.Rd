@@ -62,8 +62,8 @@ adsl_sum <- msumstat(
   statvar = "mean"
 )
 adsl_sum$gsum <- adsl_sum$gsum |>
-  mutate(
-    XVAR = fct_reorder(.data[["BYVAR1"]], .data[["BYVAR1N"]]),
+  dplyr::mutate(
+    XVAR = forcats::fct_reorder(.data[["BYVAR1"]], .data[["BYVAR1N"]]),
     YVAR = as.numeric(.data[["mean"]])
   )
 line_plot(
@@ -74,7 +74,7 @@ line_plot(
     dir = "horizontal"
   ),
   series_opts = plot_aes_opts(
-    plot_df,
+    adsl_sum$gsum,
     "TRTVAR",
     series_color = "firebrick~forestgreen~dodgerblue",
     series_shape = "triangle~square~circle"
