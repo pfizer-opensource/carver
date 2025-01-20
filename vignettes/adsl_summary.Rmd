@@ -36,7 +36,7 @@ This article describes creating reports which can be classified as ADSL Summary 
 ## Read in Data {#readdata}
 
 ```{r message=FALSE, warning=FALSE}
-devtools::load_all()
+library(carver)
 library(dplyr)
 library(purrr) # nolint
 data(adsl)
