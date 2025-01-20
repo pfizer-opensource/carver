@@ -101,21 +101,21 @@ Below is an example of calling `process_tornado_data` function for preprocessing
 
 ```{r tornado_plot_data, message=FALSE, warning=FALSE}
 df <- process_tornado_data(
- dataset_adsl = adsl,
- dataset_analysis = adae,
- adsl_subset = "SAFFL == 'Y'",
- analysis_subset = "TRTEMFL == 'Y'",
- obs_residual = "30",
- fmq_data = NA,
- ae_catvar = "AESEV/AESEVN",
- trtvar = "ARM",
- trt_left = "Xanomeline High Dose",
- trt_right = "Xanomeline Low Dose",
- pctdisp = "TRT",
- denom_subset = NA_character_,
- legendbign = "N",
- yvar = "AESOC"
- )
+  dataset_adsl = adsl,
+  dataset_analysis = adae,
+  adsl_subset = "SAFFL == 'Y'",
+  analysis_subset = "TRTEMFL == 'Y'",
+  obs_residual = "30",
+  fmq_data = NA,
+  ae_catvar = "AESEV/AESEVN",
+  trtvar = "ARM",
+  trt_left = "Xanomeline High Dose",
+  trt_right = "Xanomeline Low Dose",
+  pctdisp = "TRT",
+  denom_subset = NA_character_,
+  legendbign = "N",
+  yvar = "AESOC"
+)
 ```
 
 The `process_tornado_data` returns `data.frame` which gets stored in `df` above. A pre-processed dataset which is the input for Oncology tornado plot.
