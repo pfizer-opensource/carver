@@ -200,7 +200,7 @@ derv_stats <- function(data, stats, lookup = stat_lookup()) {
         filter(if_all(1) == s) |>
         pull(.data[["derv"]])
       data |>
-        mutate({{ s }} := glue::glue(.data[["derv"]])) |>
+        mutate({{ s }} := glue::glue(derv)) |>
         select(all_of(s))
     }) |>
       (\(.) bind_cols(data, .))()

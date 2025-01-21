@@ -148,6 +148,8 @@ tornado_plot <- function(datain,
 #' @param subset Overall subset for data set. eg: "EFFFL == 'Y'"
 #' eg: `"SAFFL"`, `"EFFFL"` or `NA` for Overall Population.
 #' @param legendbign (`string`) Display BIGN in Legend (`Y/N`).
+#' #' @param pop_fil Population Filter for data set: Name of flag variable.
+#' eg: `"SAFFL"`, `"EFFFL"` or `NA` for Overall Population.
 #' @inheritParams ae_pre_processor
 #'
 #' @details
@@ -187,6 +189,8 @@ process_tornado_data <-
            adsl_subset = NA_character_,
            analysis_subset = NA_character_,
            obs_residual = NA_real_,
+           ae_filter = "Any Event",
+           pop_fil = NA_character_,
            fmq_data = NULL,
            split_by = NA_character_,
            ae_catvar,
@@ -209,6 +213,7 @@ process_tornado_data <-
     data_pre <- ae_pre_processor(
       datain = dataset_analysis,
       subset = analysis_subset,
+      ae_filter = ae_filter,
       obs_residual = obs_residual,
       fmq_data = fmq_data,
       max_sevctc = "SEV",
@@ -216,20 +221,26 @@ process_tornado_data <-
       hterm = character(0),
       lterm = yvar
     )
-    # Merge with adsl
-    adsl_merged <- adsl_merge(
-      adsl = dataset_adsl,
-      adsl_subset = adsl_subset,
-      dataset_add = data_pre$data
-    )
+    # Merge with adsl if exists
+    if (is.data.frame(dataset_adsl)) {
+      data_pro <- adsl_merge(
+        adsl = dataset_adsl,
+        adsl_subset = adsl_subset,
+        dataset_add = data_pre$data
+      )
+    } else {
+      data_pro <- data_pre$data
+    }
+
     # Data mentry processing
     mentry_out <- mentry(
-      adsl_merged,
+      data_pro,
       subset = subset,
       byvar = maxvar,
       subgrpvar = str_remove_all(split_by, " "),
       trtvar = trtvar,
-      trtsort = trtsort
+      trtsort = trtsort,
+      pop_fil = pop_fil
     )
     stopifnot(
       "Given Subsets not present in Analysis Data" =

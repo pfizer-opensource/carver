@@ -106,7 +106,7 @@ mod_toutput_server <- function(id, repName, filters, popfilter, process_btn) {
                 trtgrp = filters()$treatment2,
                 statistics = filters()$statistics,
                 alpha = filters()$alpha,
-                cutoff = filters()$cutoff,
+                cutoff_where = paste0("PCT > ", filters()$cutoff),
                 sort_opt = filters()$sort_opt,
                 sort_var = filters()$sort_by
               )
@@ -128,7 +128,7 @@ mod_toutput_server <- function(id, repName, filters, popfilter, process_btn) {
               hterm = filters()$ae_hlt,
               lterm = filters()$ae_llt,
               pctdisp = filters()$ui_pctdisp,
-              cutoff = filters()$cutoff,
+              cutoff_where = paste0("PCT > ", filters()$cutoff),
               apply_hrow_cutoff = "N",
               sort_opt = filters()$sort_opt,
               sort_var = filters()$sort_by

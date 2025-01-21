@@ -142,10 +142,6 @@ mod_generic_filters_ui <- function(id) {
         ),
         column(
           width = 3,
-          uiOutput(ns("ae_catvar_UI"))
-        ),
-        column(
-          width = 3,
           selectInput(
             ns("ae_llt"),
             "Event Term",
@@ -160,6 +156,10 @@ mod_generic_filters_ui <- function(id) {
             "Summary By",
             choices = c("Participants" = "Patients", "Events" = "Events")
           )
+        ),
+        column(
+          width = 3,
+          uiOutput(ns("ae_catvar_UI"))
         ),
         column(
           width = 3,
@@ -442,7 +442,8 @@ mod_generic_filters_server <-
         } else {
           hide("box_2")
         }
-        if (repName() %in% c("ae_forest_plot", "ae_volcano_plot", "adae_risk_summary")) {
+        if (repName() %in%
+            c("ae_forest_plot", "ae_volcano_plot", "adae_risk_summary", "tornado_plot")) {
           show("box_3")
         } else {
           hide("box_3")
@@ -482,11 +483,14 @@ mod_generic_filters_server <-
         }
 
         if (repName() == "tornado_plot") {
-          hide("ui_llt")
-          hide("ae_llt")
+          hide("ui_hlt")
+          hide("ae_hlt")
           hide("summary_by")
+          hide("cutoff")
+          hide("statistics")
+          hide("alpha")
         } else {
-          show("ui_hlt")
+          show("ui_llt")
           show("treatment1")
           show("treatment2")
           show("treatment1_label")
@@ -728,7 +732,7 @@ mod_generic_filters_server <-
           })
           updateSelectInput(
             session,
-            "ae_hlt",
+            "ae_llt",
             selected = c("Primary System Organ Class (AESOC)" = "AESOC")
           )
         }
@@ -866,12 +870,16 @@ mod_generic_filters_server <-
         req(input$treatment1)
         req(input$treatment2)
         req(input$trtbign)
-        req(input$ae_hlt)
+        req(input$ae_llt)
         if (tolower(repName()) %in% c("tornado_plot")) {
           print("AE Tornado plot pre-processing start")
 
           data <- sourcedata()[[domain()]]
-
+          if (!is.null(sourcedata()[["ADSL"]])) {
+            data_adsl <- sourcedata()[["ADSL"]]
+          } else {
+            data_adsl <- NULL
+          }
           ae_catvarN <- paste0(input$ae_catvar, "N")
           if (!(ae_catvarN %in% colnames(data))) {
             data <- data |>
@@ -882,7 +890,7 @@ mod_generic_filters_server <-
             mutate(SUBJID := .data[["USUBJID"]])
 
           rv$process_tornado_data <- process_tornado_data(
-            dataset_adsl = NULL,
+            dataset_adsl = data_adsl,
             dataset_analysis = data,
             adsl_subset = "",
             analysis_subset = input$a_subset,
@@ -901,7 +909,7 @@ mod_generic_filters_server <-
             pctdisp = "TRT",
             denom_subset = NA,
             legendbign = input$trtbign,
-            yvar = input$ae_hlt
+            yvar = input$ae_llt
           )
 
           print("AE Tornado plot pre-processing end")
@@ -964,7 +972,7 @@ mod_generic_filters_server <-
           req(input$statistics)
           req(input$alpha)
         }
-        if (repName() == "ae_volcano_plot") {
+        if (repName() %in% c("tornado_plot", "ae_volcano_plot")) {
           req(input$treatment1)
           req(input$treatment2)
           req(input$treatment1_label)

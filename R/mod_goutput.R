@@ -143,7 +143,7 @@ mod_goutput_server <- function(id, sourcedata, repName, filters, process_btn) {
           ),
           statistics = filters()$statistics,
           alpha = filters()$alpha,
-          cutoff = filters()$cutoff,
+          cutoff_where = paste0("PCT > ", filters()$cutoff),
           sort_opt = ifelse(tolower(repName()) == "ae_forest_plot", filters()$sort_opt,
             "Ascending"
           ),

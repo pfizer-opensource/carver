@@ -10,6 +10,8 @@ process_tornado_data(
   adsl_subset = NA_character_,
   analysis_subset = NA_character_,
   obs_residual = NA_real_,
+  ae_filter = "Any Event",
+  pop_fil = NA_character_,
   fmq_data = NULL,
   split_by = NA_character_,
   ae_catvar,
@@ -37,6 +39,11 @@ process_tornado_data(
 observation period. If passed as NA, overall study duration is considered for analysis.
 eg. if 5, only events occurring upto 5 days past the TRTEDT are considered.}
 
+\item{ae_filter}{Vector of adverse event types to be used as filter conditions.
+Permissible Values: "ANY", "ANY EVENT", "TREATMENT EMERGENT", "SERIOUS",
+"DRUG-RELATED", "RELATED", "MILD", "MODERATE", "SEVERE", "RECOVERED/RESOLVED",
+"RECOVERING/RESOLVING", "NOT RECOVERING/NOT RESOLVING", "FATAL", "GRADE N"}
+
 \item{fmq_data}{FMQ table dataframe, if passed, will be merged to adae date by PT.}
 
 \item{split_by}{(\code{string}) By variable for stratification.}
@@ -60,7 +67,9 @@ Possible values: "TRT","VAR","COL","SUBGRP","CAT","NONE","NO","DPTVAR"}
 \item{denom_subset}{Subset condition to be applied to data set for
 calculating denominator.}
 
-\item{legendbign}{(\code{string}) Display BIGN in Legend (\code{Y/N}).}
+\item{legendbign}{(\code{string}) Display BIGN in Legend (\code{Y/N}).
+#' @param pop_fil Population Filter for data set: Name of flag variable.
+eg: \code{"SAFFL"}, \code{"EFFFL"} or \code{NA} for Overall Population.}
 
 \item{yvar}{Categorical Analysis variable for Y axis}
 }
