@@ -4,8 +4,8 @@
       bar_out[[x]]
     Output
       Aesthetic mapping: 
-      * `x`     -> `XVAR`
-      * `y`     -> `YVAR`
+      * `x`     -> `.data[["XVAR"]]`
+      * `y`     -> `.data[["YVAR"]]`
       * `fill`  -> `.data[["TRTVAR"]]`
       * `group` -> `.data[["TRTVAR"]]`
 
