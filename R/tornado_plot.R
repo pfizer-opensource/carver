@@ -148,7 +148,7 @@ tornado_plot <- function(datain,
 #' @param subset Overall subset for data set. eg: "EFFFL == 'Y'"
 #' eg: `"SAFFL"`, `"EFFFL"` or `NA` for Overall Population.
 #' @param legendbign (`string`) Display BIGN in Legend (`Y/N`).
-#' #' @param pop_fil Population Filter for data set: Name of flag variable.
+#' @param pop_fil Population Filter for data set: Name of flag variable.
 #' eg: `"SAFFL"`, `"EFFFL"` or `NA` for Overall Population.
 #' @inheritParams ae_pre_processor
 #'

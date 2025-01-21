@@ -44,6 +44,9 @@ Permissible Values: "ANY", "ANY EVENT", "TREATMENT EMERGENT", "SERIOUS",
 "DRUG-RELATED", "RELATED", "MILD", "MODERATE", "SEVERE", "RECOVERED/RESOLVED",
 "RECOVERING/RESOLVING", "NOT RECOVERING/NOT RESOLVING", "FATAL", "GRADE N"}
 
+\item{pop_fil}{Population Filter for data set: Name of flag variable.
+eg: \code{"SAFFL"}, \code{"EFFFL"} or \code{NA} for Overall Population.}
+
 \item{fmq_data}{FMQ table dataframe, if passed, will be merged to adae date by PT.}
 
 \item{split_by}{(\code{string}) By variable for stratification.}
@@ -67,9 +70,7 @@ Possible values: "TRT","VAR","COL","SUBGRP","CAT","NONE","NO","DPTVAR"}
 \item{denom_subset}{Subset condition to be applied to data set for
 calculating denominator.}
 
-\item{legendbign}{(\code{string}) Display BIGN in Legend (\code{Y/N}).
-#' @param pop_fil Population Filter for data set: Name of flag variable.
-eg: \code{"SAFFL"}, \code{"EFFFL"} or \code{NA} for Overall Population.}
+\item{legendbign}{(\code{string}) Display BIGN in Legend (\code{Y/N}).}
 
 \item{yvar}{Categorical Analysis variable for Y axis}
 }

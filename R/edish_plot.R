@@ -84,8 +84,8 @@ process_edish_data <- function(datain,
     summarise(x = max(.data$maxv)) |>
     pivot_wider(
       id_cols = c(USUBJID, TRTVAR),
-      names_from = PARM,
-      values_from = x
+      names_from = "PARM",
+      values_from = "x"
     )
 
   if (xvar %in% c("alt", "ast")) {

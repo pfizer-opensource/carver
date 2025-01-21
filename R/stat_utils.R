@@ -73,7 +73,7 @@ parse_stats <- function(statvar, statdec) {
   if (all(is.na(statdec)) || all(statdec == "")) statdec <- rep(2, length(statvar))
   if (length(statdec) == 1) statdec <- rep(statdec, length(statvar))
   stopifnot(length(statvar) == length(statdec))
-  lookup <- stat_lookup() |> filter(derv != "")
+  lookup <- stat_lookup() |> filter(.data[["derv"]] != "")
   stats <- map(seq_along(statvar), \(s) {
     if (statvar[s] %in% lookup$Stat) {
       st <- lookup |>
@@ -190,7 +190,7 @@ whiskerup <- function(x, na.rm = TRUE) {
 #' @return Dataframe with mutated columns
 #' @noRd
 derv_stats <- function(data, stats, lookup = stat_lookup()) {
-  lookup <- lookup |> filter(derv != "")
+  lookup <- lookup |> filter(.data[["derv"]] != "")
   if (!any(stats %in% lookup[[1]])) {
     return(data)
   } else {
