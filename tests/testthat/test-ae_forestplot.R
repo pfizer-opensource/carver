@@ -58,8 +58,8 @@ test_that("Test Case 1: Standard error checks", {
     ae_forest_plot(
       datain = ae_risk_forest[0, ],
       series_opts = list(
-        color = g_seriescol(ae_risk, c("black", "royalblue2"), "TRTVAR"),
-        shape = g_seriessym(ae_risk, NA, "TRTVAR"),
+        color = g_seriescol(ae_risk_forest, c("black", "royalblue2"), "TRTVAR"),
+        shape = g_seriessym(ae_risk_forest, NA, "TRTVAR"),
         size = rep(1, 2)
       ),
       axis_opts = plot_axis_opts(
@@ -73,8 +73,8 @@ test_that("Test Case 1: Standard error checks", {
     ae_forest_plot(
       datain = ae_risk_forest,
       series_opts = list(
-        color = g_seriescol(ae_risk, c("black", "royalblue2"), "TRTVAR"),
-        shape = g_seriessym(ae_risk, NA, "TRTVAR"),
+        color = g_seriescol(ae_risk_forest, c("black", "royalblue2"), "TRTVAR"),
+        shape = g_seriessym(ae_risk_forest, NA, "TRTVAR"),
         size = rep(1, 2)
       ),
       rel_widths = c(0.38, 0.27),

@@ -100,7 +100,7 @@ interval_plot <- function(datain,
   # Use data with either Start or end dates only for scatter plot
   scatterdata <- ad_plot %>%
     filter(Status != "Complete" | !!sym(startvar) == !!sym(endvar)) %>%
-    tidyr::pivot_longer(c(startvar, endvar), names_to = "key", values_to = "Value") %>%
+    tidyr::pivot_longer(all_of(c(startvar, endvar)), names_to = "key", values_to = "Value") %>%
     filter(!is.na(Value)) %>%
     select(-key) %>%
     distinct(.keep_all = TRUE)
