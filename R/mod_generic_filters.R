@@ -443,7 +443,7 @@ mod_generic_filters_server <-
           hide("box_2")
         }
         if (repName() %in%
-            c("ae_forest_plot", "ae_volcano_plot", "adae_risk_summary", "tornado_plot")) {
+          c("ae_forest_plot", "ae_volcano_plot", "adae_risk_summary", "tornado_plot")) {
           show("box_3")
         } else {
           hide("box_3")
