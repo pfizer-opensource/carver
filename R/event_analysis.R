@@ -133,7 +133,7 @@ event_analysis_plot <-
       query_plot <- query_plot +
         geom_hline(yintercept = ref_line, linetype = "dashed") +
         ggtitle(query_title)
-      
+
       p <- cowplot::plot_grid(
         pt_plot,
         query_plot,
@@ -146,7 +146,7 @@ event_analysis_plot <-
         event_plotly(ref_line, pt_title)
       query_plot <- query_plot |>
         event_plotly(ref_line, query_title)
-      
+
       p <- subplot(
         pt_plot,
         query_plot,
@@ -225,7 +225,7 @@ process_event_analysis <-
     )
     ht_val <- get_event_scope(hterm, ht_val, ht_scope)
     lt_val <- get_event_scope(lterm, lt_val, lt_scope, ht_val)
-    
+
     ae_counts <- datain |>
       mcatstat(
         a_subset = a_subset,
@@ -233,7 +233,7 @@ process_event_analysis <-
         dptvar = lterm,
         pctdisp = "TRT"
       )
-    
+
     hl_summ <- ae_counts |>
       filter_events(hterm, ht_val, "BYVAR1") |>
       mutate(
@@ -248,9 +248,9 @@ process_event_analysis <-
         toupper(.data$DPTVAL), toupper(lt_val)
       ), 9999, rank(.data$PCT))) |>
       ungroup()
-    
+
     stopifnot("No data available for higher terms" = nrow(hl_summ) > 0)
-    
+
     ll_summ <- ae_counts |>
       filter_events(lterm, lt_val, "DPTVAL") |>
       mutate(
@@ -258,9 +258,9 @@ process_event_analysis <-
         Percent = paste(.data$CPCT, "%")
       ) |>
       arrange(.data$TRTVAR, .data$PCT_N)
-    
+
     stopifnot("No data available for preferred terms" = nrow(ll_summ) > 0)
-    
+
     list(hl_summ, ll_summ) |>
       set_names(c("query_df", "pt_df")) |>
       map(\(x) {
@@ -333,7 +333,7 @@ query_plot <-
         unique(df[["LVAL"]]),
         pt_color
       )
-    
+
     df |>
       mutate(across("DPTVAL", ~ toupper(.x))) |>
       ggplot(
@@ -435,7 +435,7 @@ get_yscales <- function(df) {
       .keep = "none"
     ) |>
     pull()
-  
+
   list(ymax = ymax, ybreak = ifelse(ymax > 40, 5, 2))
 }
 

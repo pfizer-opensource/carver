@@ -9,12 +9,12 @@ prep_ae <- adae |>
     fmq_data = FMQ_Consolidated_List
   )
 prep_entry <- prep_ae$data |>
-    mentry(
-      trtvar = "TRTA",
-      trtsort = "TRTAN",
-      trttotalyn = "N",
-      byvar = "FMQ_NAM"
-    )
+  mentry(
+    trtvar = "TRTA",
+    trtsort = "TRTAN",
+    trttotalyn = "N",
+    byvar = "FMQ_NAM"
+  )
 prep_event_analysis <- prep_entry |>
   process_event_analysis(
     a_subset = prep_ae$a_subset,
