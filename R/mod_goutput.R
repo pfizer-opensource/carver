@@ -119,17 +119,10 @@ mod_goutput_server <- function(id, sourcedata, repName, filters, process_btn) {
       req(filters()$alpha)
       req(filters()$cutoff)
       print("AE risk_stat process start")
-      if (filters()$a_subset == "") {
-        a_subset <- filters()$ae_pre$a_subset
-      } else {
-        a_subset <- paste(na.omit(
-          c(filters()$ae_pre$a_subset, filters()$a_subset)
-        ), collapse = " & ")
-      }
       withProgress(
         rv$outdata <- risk_stat(
           datain = filters()$ment_out,
-          a_subset = a_subset,
+          a_subset = filters()$ae_pre$a_subset,
           eventvar = ifelse(is.null(filters()$ae_llt), filters()$ae_hlt, filters()$ae_llt),
           summary_by = filters()$summary_by,
           ctrlgrp = ifelse(tolower(repName()) == "ae_volcano_plot",
@@ -463,18 +456,11 @@ mod_goutput_server <- function(id, sourcedata, repName, filters, process_btn) {
       }
       req(filters()$summary_by)
       print("AE event analysis process start")
-      if (filters()$a_subset == "") {
-        a_subset <- filters()$ae_pre$a_subset
-      } else {
-        a_subset <- paste(na.omit(
-          c(filters()$ae_pre$a_subset, filters()$a_subset)
-        ), collapse = " & ")
-      }
       withProgress(message = "Generating AE event analysis", value = 0, {
         rv$outdata <- try(
           process_event_analysis(
             datain = filters()$ment_out,
-            a_subset = a_subset,
+            a_subset = filters()$ae_pre$a_subset,
             summary_by = filters()$summary_by,
             hterm = filters()$ae_hlt,
             ht_val = input$hlt_val,
@@ -490,6 +476,7 @@ mod_goutput_server <- function(id, sourcedata, repName, filters, process_btn) {
             )
           )
         )
+        check_prep <<- rv$outdata
         rv$goutput <- try(
           event_analysis_plot(
             datain = rv$outdata,

@@ -69,13 +69,6 @@ mod_toutput_server <- function(id, repName, filters, popfilter, process_btn) {
         req(filters()$sort_opt)
         req(filters()$sort_by)
         print("ADAE table process start")
-        if (filters()$a_subset == "") {
-          a_subset <- filters()$ae_pre$a_subset
-        } else {
-          a_subset <- paste(na.omit(
-            c(filters()$ae_pre$a_subset, filters()$a_subset)
-          ), collapse = " & ")
-        }
         # Title and Footnote
         rv$title <- paste0(
           "Participants With ", filters()$ae_filter,
@@ -98,7 +91,7 @@ mod_toutput_server <- function(id, repName, filters, popfilter, process_btn) {
             rv$outdata <- try(
               adae_risk_summary(
                 filters()$ment_out,
-                a_subset = a_subset,
+                a_subset = filters()$ae_pre$a_subset,
                 summary_by = filters()$summary_by,
                 hterm = filters()$ae_hlt,
                 lterm = filters()$ae_llt,
@@ -123,7 +116,7 @@ mod_toutput_server <- function(id, repName, filters, popfilter, process_btn) {
           rv$outdata <- try(
             occ_tier_summary(
               filters()$ment_out,
-              a_subset = a_subset,
+              a_subset = filters()$ae_pre$a_subset,
               summary_by = filters()$summary_by,
               hterm = filters()$ae_hlt,
               lterm = filters()$ae_llt,

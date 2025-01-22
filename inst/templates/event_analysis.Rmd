@@ -1,79 +1,105 @@
 ---
-title: "event_analysis"
-output: rmarkdown::html_vignette
+output:
+  pdf_document:
+  html_document:
+    df_print: paged
+classoption: landscape, a4paper
 params:
-  Population_Filter: "Overall"
-  data_filter: ""
-  trtvar: "TRTA"
-  obs_period: "Overall Duration"
-  obs_residual: 28
-  pop: "SAFFL=='Y'"
-  query_var: "FMQ_NAM"
-  query_val: "Erythema"
-  query_scope: "Narrow"
-  pt_val: "Erythema"
-  ref_line: 2
-vignette: >
-  %\VignetteIndexEntry{event_analysis}
-  %\VignetteEngine{knitr::rmarkdown}
-  %\VignetteEncoding{UTF-8}
+  A_DSIN: adae
+  OVERALL_SUBSET: "!is.na(ASTDT)"
+  AE_FILTER: TREATMENT EMERGENT
+  A_SUBSET: "AOCCPFL == 'Y'"
+  AEOBSRESIDUAL: !r NA_real_
+  TRTVAR: TRTA
+  TRTSORT: TRTAN
+  FMQ_DATA: FMQ_Consolidated_List
+  SUMMARY_BY: Events
+  HT_VAR: "FMQ_NAM"
+  HT_VAL: "ABDOMINAL PAIN"
+  HT_SCOPE: "Narrow"
+  LT_VAR: "AEDECOD"
+  LT_VAL: "ABDOMINAL DISCOMFORT"
+  LT_SCOPE: "Narrow"
+  REFVAL: 2
+  TITLE: "Adverse Event Analysis of FMQ and PT"
+  FOOTNOTE: ""
+  INTERACTIVE: N
+header-includes:
+  - \usepackage{fancyhdr}
+  - \usepackage{lastpage}
+  - \pagestyle{fancy}
+  - \fancyhf{}
+  - \fancyhead[R]{Page \thepage\, of\, \pageref*{LastPage}}
+  - \renewcommand{\headrulewidth}{0pt}
+  - '`r paste0("\\fancyhead[L]{\\textbf{", params$TITLE, "}}")`'
+  - '`r paste0("\\fancyfoot[L]{", params$FOOTNOTE, "}")`'
+  - \setlength{\headsep}{10pt}
+  - \setlength{\headheight}{50pt}
 ---
 
 ```{r setup, include = FALSE}
 knitr::opts_chunk$set(
-  collapse = TRUE,
-  comment = "#>"
+  echo = FALSE, warning = FALSE, message = FALSE, fig.width = 10,
+  fig.height = 5, fig.align = "center"
+)
+## load libraries
+library(carver)
+library(rlang, include.only = "parse_expr")
+```
+
+
+```{r adae_prep}
+
+## Prepare AE data
+adae_prep <- eval(parse_expr(params$A_DSIN)) |>
+  ### Pre-process AE
+  ae_pre_processor(
+    fmq_data = eval(parse_expr(params$FMQ_DATA)),
+    ae_filter = params$AE_FILTER,
+    subset = params$A_SUBSET,
+    obs_residual = params$AEOBSRESIDUAL
+  )
+adae_entry <- mentry(
+  adae_prep$data,
+  subset = params$OVERALL_SUBSET,
+  trtvar = params$TRTVAR,
+  trtsort = params$TRTSORT,
+  trttotalyn = "N",
+  byvar = params$HT_VAR
+)
+
+prep_event_analysis <- adae_entry |>
+  process_event_analysis(
+    a_subset = adae_prep$a_subset,
+    summary_by = params$SUMMARY_BY,
+    hterm = params$HT_VAR,
+    ht_val = params$HT_VAL,
+    ht_scope = params$HT_SCOPE,
+    lterm = params$LT_VAR,
+    lt_val = params$LT_VAL,
+    lt_scope = params$LT_SCOPE
+  )
+
+plot_output <- event_analysis_plot(
+  datain = prep_event_analysis,
+  fig.align = "h",
+  disp.proportion = "4~6",
+  ref_line = params$REFVAL,
+  x_tickangle = 15,
+  pt_color = "royalblue3",
+  interactive = params$INTERACTIVE
 )
 ```
 
 
-```{r, include = FALSE}
-devtools::load_all()
-
-data(adsl, package = "carver")
-data(adae, package = "carver")
-data(FMQ_Consolidated_List, package = "carver")
-
-adsl_merge <- adsl_merge(
-  adsl = adsl,
-  pop = params$pop,
-  analysis_data = adae
-)
-
-
-data_in <- data_processing(
-  datain = adsl_merge,
-  Population_Filter = params$Population_Filter,
-  data_filter = params$data_filter,
-  trtvar = params$trtvar,
-  obs_period = params$obs_period,
-  obs_residual = params$obs_residual,
-  fmq_query_list = FMQ_Consolidated_List
-)
-
-
-goutput <- event_analysis(
-  data_in,
-  query_var = params$query_var,
-  query_val = params$query_val,
-  query_scope = params$query_scope,
-  pt_val = params$pt_val,
-  ref_line = params$ref_line
-)
-
-
-
-ft_out <- title_ftnote(
-  summary_by = "Events",
-  filters = NULL,
-  statistics = NULL,
-  report = "event analysis"
-)
+```{r, include=TRUE, echo=FALSE, results="asis"}
+plot_output
 ```
 
-
-```{r, include=TRUE, echo=FALSE, fig.height=5, fig.width=10, results="asis"}
-cat(gsub(pattern = "\n", replacement = "  \n", x = ft_out[1]), "\n")
-goutput$ptly
-cat(gsub(pattern = "\n", replacement = "  \n", x = ft_out[2]), "\n")
+```{css styling}
+h4 {
+    font-size: 14px;
+    font-weight: bold;
+    color: #666666 !important;
+}
 ```

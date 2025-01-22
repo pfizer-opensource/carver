@@ -474,11 +474,16 @@ mod_generic_filters_server <-
 
         if (repName() == "Event Analysis") {
           show("ref_line")
-          hide("summary_by")
+          #hide("summary_by")
           hide("cutoff")
+          updateSelectInput(
+            session,
+            "summary_by",
+            choices = c("Events" = "Events", "Participants" = "Patients")
+          )
         } else {
           hide("ref_line")
-          show("summary_by")
+          #show("summary_by")
           show("cutoff")
         }
 
@@ -537,6 +542,7 @@ mod_generic_filters_server <-
         req(repName())
         req(repType())
         req(input$ae_filter)
+        req(input$a_subset)
         if (tolower(domain()) == "adae") {
           print("AE preprocessing start")
           ### calling Pre Processing AE data
@@ -547,7 +553,8 @@ mod_generic_filters_server <-
                 app_sys("extdata"), "/FMQ_Consolidated_List.csv"
               )),
               ae_filter = input$ae_filter,
-              obs_residual = ifelse(input$period == "Other", input$period_spec, NA)
+              obs_residual = ifelse(input$period == "Other", input$period_spec, NA),
+              subset = input$a_subset
             ),
             message = "Executing pre processing for AE...",
             min = 0,

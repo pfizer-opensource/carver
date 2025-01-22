@@ -3,88 +3,73 @@
     Code
       print(tibble::as_tibble(x), n = Inf, width = Inf)
     Output
-      # A tibble: 12 x 19
-         BYVAR1                                 TRTVAR                  DPTVAR 
-         <chr>                                  <fct>                   <chr>  
-       1 Abdominal Pain/Narrow                  "Placebo"               AEDECOD
-       2 Abdominal Pain/Narrow~~Dyspepsia/Broad "Placebo"               AEDECOD
-       3 Abdominal Pain/Narrow                  "Placebo"               AEDECOD
-       4 Abdominal Pain/Narrow                  "Xanomeline Low\nDose"  AEDECOD
-       5 Abdominal Pain/Narrow~~Dyspepsia/Broad "Xanomeline Low\nDose"  AEDECOD
-       6 Abdominal Pain/Narrow                  "Xanomeline Low\nDose"  AEDECOD
-       7 Abdominal Pain/Narrow                  "Xanomeline High\nDose" AEDECOD
-       8 Abdominal Pain/Narrow                  "Xanomeline High\nDose" AEDECOD
-       9 Abdominal Pain/Narrow~~Dyspepsia/Broad "Xanomeline High\nDose" AEDECOD
-      10 Abdominal Pain/Narrow                  "Total"                 AEDECOD
-      11 Abdominal Pain/Narrow                  "Total"                 AEDECOD
-      12 Abdominal Pain/Narrow~~Dyspepsia/Broad "Total"                 AEDECOD
-         DPTVAL               CVALUE     DENOMN  FREQ DPTVALN BYVAR1N   PCT CPCT   
-         <chr>                <chr>       <int> <int>   <dbl>   <dbl> <dbl> <chr>  
-       1 ABDOMINAL PAIN       1 ( 0.70%)    142     1       2       1 0.704 " 0.70"
-       2 ABDOMINAL DISCOMFORT 0             142     0       1       2 0     " 0.00"
-       3 STOMACH DISCOMFORT   0             142     0     130       1 0     " 0.00"
-       4 ABDOMINAL PAIN       3 ( 1.45%)    207     3       2       1 1.45  " 1.45"
-       5 ABDOMINAL DISCOMFORT 0             207     0       1       2 0     " 0.00"
-       6 STOMACH DISCOMFORT   0             207     0     130       1 0     " 0.00"
-       7 ABDOMINAL PAIN       1 ( 0.45%)    222     1       2       1 0.450 " 0.45"
-       8 STOMACH DISCOMFORT   1 ( 0.45%)    222     1     130       1 0.450 " 0.45"
-       9 ABDOMINAL DISCOMFORT 1 ( 0.45%)    222     1       1       2 0.450 " 0.45"
-      10 ABDOMINAL PAIN       5 ( 0.88%)    571     5       2       1 0.876 " 0.88"
-      11 STOMACH DISCOMFORT   1 ( 0.18%)    571     1     130       1 0.175 " 0.18"
-      12 ABDOMINAL DISCOMFORT 1 ( 0.18%)    571     1       1       2 0.175 " 0.18"
-         XVAR                 DPTVARN CN    HTERM   HVAL          
-         <chr>                  <dbl> <chr> <chr>   <chr>         
-       1 ABDOMINAL PAIN             1 C     FMQ_NAM ABDOMINAL PAIN
-       2 ABDOMINAL DISCOMFORT       1 C     FMQ_NAM ABDOMINAL PAIN
-       3 STOMACH DISCOMFORT         1 C     FMQ_NAM ABDOMINAL PAIN
-       4 ABDOMINAL PAIN             1 C     FMQ_NAM ABDOMINAL PAIN
-       5 ABDOMINAL DISCOMFORT       1 C     FMQ_NAM ABDOMINAL PAIN
-       6 STOMACH DISCOMFORT         1 C     FMQ_NAM ABDOMINAL PAIN
-       7 ABDOMINAL PAIN             1 C     FMQ_NAM ABDOMINAL PAIN
-       8 STOMACH DISCOMFORT         1 C     FMQ_NAM ABDOMINAL PAIN
-       9 ABDOMINAL DISCOMFORT       1 C     FMQ_NAM ABDOMINAL PAIN
-      10 ABDOMINAL PAIN             1 C     FMQ_NAM ABDOMINAL PAIN
-      11 STOMACH DISCOMFORT         1 C     FMQ_NAM ABDOMINAL PAIN
-      12 ABDOMINAL DISCOMFORT       1 C     FMQ_NAM ABDOMINAL PAIN
-         LVAL                 Percent                                  DECODh
-         <chr>                <chr>                                     <dbl>
-       1 ABDOMINAL DISCOMFORT " 0.70 \n Low Term:ABDOMINAL PAIN"          3  
-       2 ABDOMINAL DISCOMFORT " 0.00 \n Low Term:ABDOMINAL DISCOMFORT" 9999  
-       3 ABDOMINAL DISCOMFORT " 0.00 \n Low Term:STOMACH DISCOMFORT"      1.5
-       4 ABDOMINAL DISCOMFORT " 1.45 \n Low Term:ABDOMINAL PAIN"          3  
-       5 ABDOMINAL DISCOMFORT " 0.00 \n Low Term:ABDOMINAL DISCOMFORT" 9999  
-       6 ABDOMINAL DISCOMFORT " 0.00 \n Low Term:STOMACH DISCOMFORT"      1.5
-       7 ABDOMINAL DISCOMFORT " 0.45 \n Low Term:ABDOMINAL PAIN"          2  
-       8 ABDOMINAL DISCOMFORT " 0.45 \n Low Term:STOMACH DISCOMFORT"      2  
-       9 ABDOMINAL DISCOMFORT " 0.45 \n Low Term:ABDOMINAL DISCOMFORT" 9999  
-      10 ABDOMINAL DISCOMFORT " 0.88 \n Low Term:ABDOMINAL PAIN"          3  
-      11 ABDOMINAL DISCOMFORT " 0.18 \n Low Term:STOMACH DISCOMFORT"      1.5
-      12 ABDOMINAL DISCOMFORT " 0.18 \n Low Term:ABDOMINAL DISCOMFORT" 9999  
+      # A tibble: 9 x 20
+        BYVAR1                                 TRTVAR                  DPTVAR 
+        <chr>                                  <fct>                   <chr>  
+      1 Abdominal Pain/Narrow                  "Placebo"               AEDECOD
+      2 Abdominal Pain/Narrow~~Dyspepsia/Broad "Placebo"               AEDECOD
+      3 Abdominal Pain/Narrow                  "Placebo"               AEDECOD
+      4 Abdominal Pain/Narrow                  "Xanomeline Low\nDose"  AEDECOD
+      5 Abdominal Pain/Narrow~~Dyspepsia/Broad "Xanomeline Low\nDose"  AEDECOD
+      6 Abdominal Pain/Narrow                  "Xanomeline Low\nDose"  AEDECOD
+      7 Abdominal Pain/Narrow                  "Xanomeline High\nDose" AEDECOD
+      8 Abdominal Pain/Narrow                  "Xanomeline High\nDose" AEDECOD
+      9 Abdominal Pain/Narrow~~Dyspepsia/Broad "Xanomeline High\nDose" AEDECOD
+        DPTVAL               CVALUE     DENOMN  FREQ DPTVALN BYVAR1N   PCT CPCT   
+        <chr>                <chr>       <int> <int>   <dbl>   <dbl> <dbl> <chr>  
+      1 ABDOMINAL PAIN       1 ( 0.70%)    142     1       2       1 0.704 " 0.70"
+      2 ABDOMINAL DISCOMFORT 0             142     0       1       2 0     " 0.00"
+      3 STOMACH DISCOMFORT   0             142     0     130       1 0     " 0.00"
+      4 ABDOMINAL PAIN       3 ( 1.45%)    207     3       2       1 1.45  " 1.45"
+      5 ABDOMINAL DISCOMFORT 0             207     0       1       2 0     " 0.00"
+      6 STOMACH DISCOMFORT   0             207     0     130       1 0     " 0.00"
+      7 ABDOMINAL PAIN       1 ( 0.45%)    222     1       2       1 0.450 " 0.45"
+      8 STOMACH DISCOMFORT   1 ( 0.45%)    222     1     130       1 0.450 " 0.45"
+      9 ABDOMINAL DISCOMFORT 1 ( 0.45%)    222     1       1       2 0.450 " 0.45"
+        XVAR                 DPTVARN CN    HTERM   HVAL           LVAL                
+        <chr>                  <dbl> <chr> <chr>   <chr>          <chr>               
+      1 ABDOMINAL PAIN             1 C     FMQ_NAM ABDOMINAL PAIN ABDOMINAL DISCOMFORT
+      2 ABDOMINAL DISCOMFORT       1 C     FMQ_NAM ABDOMINAL PAIN ABDOMINAL DISCOMFORT
+      3 STOMACH DISCOMFORT         1 C     FMQ_NAM ABDOMINAL PAIN ABDOMINAL DISCOMFORT
+      4 ABDOMINAL PAIN             1 C     FMQ_NAM ABDOMINAL PAIN ABDOMINAL DISCOMFORT
+      5 ABDOMINAL DISCOMFORT       1 C     FMQ_NAM ABDOMINAL PAIN ABDOMINAL DISCOMFORT
+      6 STOMACH DISCOMFORT         1 C     FMQ_NAM ABDOMINAL PAIN ABDOMINAL DISCOMFORT
+      7 ABDOMINAL PAIN             1 C     FMQ_NAM ABDOMINAL PAIN ABDOMINAL DISCOMFORT
+      8 STOMACH DISCOMFORT         1 C     FMQ_NAM ABDOMINAL PAIN ABDOMINAL DISCOMFORT
+      9 ABDOMINAL DISCOMFORT       1 C     FMQ_NAM ABDOMINAL PAIN ABDOMINAL DISCOMFORT
+        Percent                                     PCT_N DECODh
+        <chr>                                       <dbl>  <dbl>
+      1 " 0.70 % \n Low Term: ABDOMINAL PAIN"       0.704    3  
+      2 " 0.00 % \n Low Term: ABDOMINAL DISCOMFORT" 0     9999  
+      3 " 0.00 % \n Low Term: STOMACH DISCOMFORT"   0        1.5
+      4 " 1.45 % \n Low Term: ABDOMINAL PAIN"       1.45     3  
+      5 " 0.00 % \n Low Term: ABDOMINAL DISCOMFORT" 0     9999  
+      6 " 0.00 % \n Low Term: STOMACH DISCOMFORT"   0        1.5
+      7 " 0.45 % \n Low Term: ABDOMINAL PAIN"       0.450    2  
+      8 " 0.45 % \n Low Term: STOMACH DISCOMFORT"   0.450    2  
+      9 " 0.45 % \n Low Term: ABDOMINAL DISCOMFORT" 0.450 9999  
 
 ---
 
     Code
       print(tibble::as_tibble(x), n = Inf, width = Inf)
     Output
-      # A tibble: 4 x 15
+      # A tibble: 3 x 16
         BYVAR1                                 TRTVAR                  DPTVAR 
         <chr>                                  <fct>                   <chr>  
       1 Abdominal Pain/Narrow~~Dyspepsia/Broad "Placebo"               AEDECOD
       2 Abdominal Pain/Narrow~~Dyspepsia/Broad "Xanomeline Low\nDose"  AEDECOD
       3 Abdominal Pain/Narrow~~Dyspepsia/Broad "Xanomeline High\nDose" AEDECOD
-      4 Abdominal Pain/Narrow~~Dyspepsia/Broad "Total"                 AEDECOD
         DPTVAL               CVALUE     DENOMN  FREQ DPTVALN BYVAR1N   PCT CPCT   
         <chr>                <chr>       <int> <int>   <dbl>   <dbl> <dbl> <chr>  
       1 ABDOMINAL DISCOMFORT 0             142     0       1       2 0     " 0.00"
       2 ABDOMINAL DISCOMFORT 0             207     0       1       2 0     " 0.00"
       3 ABDOMINAL DISCOMFORT 1 ( 0.45%)    222     1       1       2 0.450 " 0.45"
-      4 ABDOMINAL DISCOMFORT 1 ( 0.18%)    571     1       1       2 0.175 " 0.18"
-        XVAR                 DPTVARN CN    Percent
-        <chr>                  <dbl> <chr> <chr>  
-      1 ABDOMINAL DISCOMFORT       1 C     " 0.00"
-      2 ABDOMINAL DISCOMFORT       1 C     " 0.00"
-      3 ABDOMINAL DISCOMFORT       1 C     " 0.45"
-      4 ABDOMINAL DISCOMFORT       1 C     " 0.18"
+        XVAR                 DPTVARN CN    PCT_N Percent  
+        <chr>                  <dbl> <chr> <dbl> <chr>    
+      1 ABDOMINAL DISCOMFORT       1 C     0     " 0.00 %"
+      2 ABDOMINAL DISCOMFORT       1 C     0     " 0.00 %"
+      3 ABDOMINAL DISCOMFORT       1 C     0.450 " 0.45 %"
 
 # Test Case 2: event_analysis_plot works with expected inputs
 
@@ -96,31 +81,31 @@
       [1] "v"
       
       [[1]]$width
-      [1] 0.4 0.4 0.4 0.4
+      [1] 0.4 0.4 0.4
       attr(,"class")
       [1] "mapped_discrete" "numeric"        
       attr(,"apiSrc")
       [1] TRUE
       
       [[1]]$base
-      [1] 0 0 0 0
+      [1] 0 0 0
       attr(,"apiSrc")
       [1] TRUE
       
       [[1]]$x
-      [1] 1 2 3 4
+      [1] 1 2 3
       attr(,"class")
       [1] "mapped_discrete" "numeric"        
       attr(,"apiSrc")
       [1] TRUE
       
       [[1]]$y
-      [1] 0.0000000 0.0000000 0.4504505 0.1751313
+      [1] 0.0000000 0.0000000 0.4504505
       attr(,"apiSrc")
       [1] TRUE
       
       [[1]]$text
-      [1] " 0.00" " 0.00" " 0.45" " 0.18"
+      [1] " 0.00 %" " 0.00 %" " 0.45 %"
       attr(,"apiSrc")
       [1] TRUE
       
@@ -167,34 +152,33 @@
       [1] "v"
       
       [[2]]$width
-      [1] 0.4 0.4 0.4 0.4
+      [1] 0.4 0.4 0.4
       attr(,"class")
       [1] "mapped_discrete" "numeric"        
       attr(,"apiSrc")
       [1] TRUE
       
       [[2]]$base
-      [1] 0 0 0 0
+      [1] 0 0 0
       attr(,"apiSrc")
       [1] TRUE
       
       [[2]]$x
-      [1] 1 2 3 4
+      [1] 1 2 3
       attr(,"class")
       [1] "mapped_discrete" "numeric"        
       attr(,"apiSrc")
       [1] TRUE
       
       [[2]]$y
-      [1] 0.0000000 0.0000000 0.4504505 0.1751313
+      [1] 0.0000000 0.0000000 0.4504505
       attr(,"apiSrc")
       [1] TRUE
       
       [[2]]$text
-      [1] " 0.00 <br /> Low Term:ABDOMINAL DISCOMFORT"
-      [2] " 0.00 <br /> Low Term:ABDOMINAL DISCOMFORT"
-      [3] " 0.45 <br /> Low Term:ABDOMINAL DISCOMFORT"
-      [4] " 0.18 <br /> Low Term:ABDOMINAL DISCOMFORT"
+      [1] " 0.00 % <br /> Low Term: ABDOMINAL DISCOMFORT"
+      [2] " 0.00 % <br /> Low Term: ABDOMINAL DISCOMFORT"
+      [3] " 0.45 % <br /> Low Term: ABDOMINAL DISCOMFORT"
       attr(,"apiSrc")
       [1] TRUE
       
@@ -244,34 +228,33 @@
       [1] "v"
       
       [[3]]$width
-      [1] 0.4 0.4 0.4 0.4
+      [1] 0.4 0.4 0.4
       attr(,"class")
       [1] "mapped_discrete" "numeric"        
       attr(,"apiSrc")
       [1] TRUE
       
       [[3]]$base
-      [1] 0.0000000 0.0000000 0.4504505 0.1751313
+      [1] 0.0000000 0.0000000 0.4504505
       attr(,"apiSrc")
       [1] TRUE
       
       [[3]]$x
-      [1] 1 2 3 4
+      [1] 1 2 3
       attr(,"class")
       [1] "mapped_discrete" "numeric"        
       attr(,"apiSrc")
       [1] TRUE
       
       [[3]]$y
-      [1] 0.7042254 1.4492754 0.4504505 0.8756567
+      [1] 0.7042254 1.4492754 0.4504505
       attr(,"apiSrc")
       [1] TRUE
       
       [[3]]$text
-      [1] " 0.70 <br /> Low Term:ABDOMINAL PAIN"
-      [2] " 1.45 <br /> Low Term:ABDOMINAL PAIN"
-      [3] " 0.45 <br /> Low Term:ABDOMINAL PAIN"
-      [4] " 0.88 <br /> Low Term:ABDOMINAL PAIN"
+      [1] " 0.70 % <br /> Low Term: ABDOMINAL PAIN"
+      [2] " 1.45 % <br /> Low Term: ABDOMINAL PAIN"
+      [3] " 0.45 % <br /> Low Term: ABDOMINAL PAIN"
       attr(,"apiSrc")
       [1] TRUE
       
@@ -321,34 +304,33 @@
       [1] "v"
       
       [[4]]$width
-      [1] 0.4 0.4 0.4 0.4
+      [1] 0.4 0.4 0.4
       attr(,"class")
       [1] "mapped_discrete" "numeric"        
       attr(,"apiSrc")
       [1] TRUE
       
       [[4]]$base
-      [1] 0.7042254 1.4492754 0.9009009 1.0507881
+      [1] 0.7042254 1.4492754 0.9009009
       attr(,"apiSrc")
       [1] TRUE
       
       [[4]]$x
-      [1] 1 2 3 4
+      [1] 1 2 3
       attr(,"class")
       [1] "mapped_discrete" "numeric"        
       attr(,"apiSrc")
       [1] TRUE
       
       [[4]]$y
-      [1] 0.0000000 0.0000000 0.4504505 0.1751313
+      [1] 0.0000000 0.0000000 0.4504505
       attr(,"apiSrc")
       [1] TRUE
       
       [[4]]$text
-      [1] " 0.00 <br /> Low Term:STOMACH DISCOMFORT"
-      [2] " 0.00 <br /> Low Term:STOMACH DISCOMFORT"
-      [3] " 0.45 <br /> Low Term:STOMACH DISCOMFORT"
-      [4] " 0.18 <br /> Low Term:STOMACH DISCOMFORT"
+      [1] " 0.00 % <br /> Low Term: STOMACH DISCOMFORT"
+      [2] " 0.00 % <br /> Low Term: STOMACH DISCOMFORT"
+      [3] " 0.45 % <br /> Low Term: STOMACH DISCOMFORT"
       attr(,"apiSrc")
       [1] TRUE
       

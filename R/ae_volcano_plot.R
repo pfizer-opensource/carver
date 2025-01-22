@@ -208,6 +208,40 @@ ae_volcano_plot <- function(datain,
 #' @export
 #'
 #' @examples
+#' data("adae")
+#'
+#' ae_pre <- ae_pre_processor(
+#'   datain = adae,
+#'   obs_residual = 0,
+#'   fmq_data = NA
+#' )
+#'
+#' ae_entry <- mentry(
+#'   datain = ae_pre$data,
+#'   subset = NA,
+#'   byvar = "AEBODSYS",
+#'   trtvar = "TRTA",
+#'   trtsort = "TRTAN",
+#'   subgrpvar = NA,
+#'   trttotalyn = "N",
+#'   add_grpmiss = "N",
+#'   sgtotalyn = "N",
+#'   pop_fil = "SAFFL"
+#' )
+#'
+#' ae_risk <- risk_stat(
+#'   datain = ae_entry,
+#'   a_subset = ae_pre$a_subset,
+#'   summary_by = "Patients",
+#'   eventvar = "AEDECOD",
+#'   ctrlgrp = "Placebo",
+#'   trtgrp = "Xanomeline High Dose",
+#'   statistics = "Risk Ratio",
+#'   alpha = 0.05,
+#'   cutoff_where = "FREQ >5",
+#'   sort_opt = "Ascending",
+#'   sort_var = "Count"
+#' )
 #' ae_volcano_opts(ae_risk,
 #'   pvalue_trans = "-log10"
 #' )

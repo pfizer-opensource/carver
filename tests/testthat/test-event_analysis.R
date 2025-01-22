@@ -8,17 +8,16 @@ prep_ae <- adae |>
     obs_residual = 0,
     fmq_data = FMQ_Consolidated_List
   )
-prep_merge <- adsl_merge(
-  adsl,
-  adsl_subset = NA,
-  dataset_add = prep_ae$data
-)
-prep_event_analysis <- prep_merge |>
+prep_entry <- prep_ae$data |>
+    mentry(
+      trtvar = "TRTA",
+      trtsort = "TRTAN",
+      trttotalyn = "N",
+      byvar = "FMQ_NAM"
+    )
+prep_event_analysis <- prep_entry |>
   process_event_analysis(
     a_subset = prep_ae$a_subset,
-    trtvar = "TRTA",
-    trtsort = "TRTAN",
-    trttotalyn = "Y",
     summary_by = "Events",
     hterm = "FMQ_NAM",
     ht_val = "ABDOMINAL PAIN",
