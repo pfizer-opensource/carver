@@ -8,3 +8,4 @@
 ^R/surv_utils\.R$
 ^R/km_plot\.R$
 ^LICENSE\.md$
+^.github$
