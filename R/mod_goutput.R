@@ -476,7 +476,6 @@ mod_goutput_server <- function(id, sourcedata, repName, filters, process_btn) {
             )
           )
         )
-        check_prep <<- rv$outdata
         rv$goutput <- try(
           event_analysis_plot(
             datain = rv$outdata,
