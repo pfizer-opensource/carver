@@ -474,7 +474,6 @@ mod_generic_filters_server <-
 
         if (repName() == "Event Analysis") {
           show("ref_line")
-          # hide("summary_by")
           hide("cutoff")
           updateSelectInput(
             session,
@@ -483,7 +482,6 @@ mod_generic_filters_server <-
           )
         } else {
           hide("ref_line")
-          # show("summary_by")
           show("cutoff")
         }
 
