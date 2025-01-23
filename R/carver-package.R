@@ -27,7 +27,7 @@
 #'             is_missing new_formula parse_expr parse_exprs set_names sym
 #'             syms type_of warn eval_tidy is_expression
 #' @importFrom stats na.omit p.adjust qnorm reorder setNames median IQR quantile qt sd
-#' @importFrom purrr map map2 pmap map_chr map_dbl keep discard modify modify_at
+#' @importFrom purrr map map2 pmap map_chr map_dbl keep modify modify_at
 #' modify_if reduce set_names every none compact every flatten pluck list_modify
 #' @importFrom tidyr drop_na pivot_wider replace_na unite pivot_longer
 #' @importFrom glue glue
