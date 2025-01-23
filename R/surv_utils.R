@@ -102,7 +102,7 @@ pairwise_surv_stats <- function(datain) {
     trt_pair <- levels(pair_data[["TRTVAR"]])[trt_index] # nolint
     # tidy coxph fit
     summ <-
-      coxph(Surv(timevar, cnsrvar) ~ TRTVAR, data = pair_data) |>
+      survival::coxph(survival::Surv(timevar, cnsrvar) ~ TRTVAR, data = pair_data) |>
       broom::tidy(conf.int = TRUE, exponentiate = TRUE) |>
       filter(row_number() == 1)
     # extract coxph statistics

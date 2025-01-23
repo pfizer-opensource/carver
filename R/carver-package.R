@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-#' @import shiny ggplot2 dplyr scales shinyWidgets flextable htmltools tools ggsurvfit stringr
+#' @import shiny ggplot2 dplyr scales shinyWidgets flextable htmltools tools stringr
 #' @importFrom DT addRow colReorder datatable formatDate saveWidget
 #'             formatPercentage formatRound formatStyle selectCells
 #'             selectColumns selectPage selectRows showCols styleEqual
@@ -30,7 +30,6 @@
 #' @importFrom purrr map map2 pmap map_chr map_dbl keep discard modify modify_at
 #' modify_if reduce set_names every none compact every flatten pluck list_modify
 #' @importFrom tidyr drop_na pivot_wider replace_na unite pivot_longer
-#' @importFrom survival coxph Surv cox.zph survfit
 #' @importFrom glue glue
 #' @importFrom plotly ggplotly subplot add_annotations layout
 "_PACKAGE"
