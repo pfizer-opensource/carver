@@ -102,7 +102,9 @@ ae_volcano_plot <- function(datain,
                             pvalue_sig = 0.05,
                             interactive = "N") {
   ### Construction of volcano plot
-  datain <- datain |> filter(!.data[["RISK"]] %in% c(NA, Inf))
+  datain <- datain |>
+    filter(!.data[["RISK"]] %in% c(NA, Inf)) |>
+    mutate(key = dplyr::row_number())
   # Check if getstats data is empty:
   stopifnot("Risk data is empty" = nrow(datain) != 0)
   stopifnot(
@@ -116,7 +118,8 @@ ae_volcano_plot <- function(datain,
         x = .data[["RISK"]],
         y = .data[["PVALUE"]],
         text = .data[["HOVER_TEXT"]],
-        fill = .data[["BYVAR1"]]
+        fill = .data[["BYVAR1"]],
+        key = .data[["key"]]
       )
     ) + # color code by SOC
     geom_point(aes(size = .data[["CTRL_N"]]), pch = 21, alpha = 0.5)

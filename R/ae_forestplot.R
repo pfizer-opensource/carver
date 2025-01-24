@@ -136,7 +136,8 @@ ae_forest_plot <-
     datain <- datain |>
       group_by(across(all_of(c("DPTVAL", "TRTPAIR")))) |>
       filter(!any(.data[["FREQ"]] == 0)) |>
-      ungroup()
+      ungroup() |>
+      mutate(key = dplyr::row_number())
     # Check risk data exists:
     stopifnot("Input ae_forest_plot data is empty" = nrow(datain) != 0)
     # If axis position not added, default it:
@@ -280,7 +281,8 @@ ae_forest_hlt_sig <- function(plotin,
       aes(
         x = .data[["PCT"]],
         y = .data[["DPTVAL"]],
-        fill = .data[["EFFECT"]]
+        fill = .data[["EFFECT"]],
+        key = .data[["key"]]
       ),
       inherit.aes = FALSE,
       shape = 23,

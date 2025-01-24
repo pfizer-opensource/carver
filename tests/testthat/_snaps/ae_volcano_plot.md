@@ -8,6 +8,7 @@
       * `y`    -> `.data[["PVALUE"]]`
       * `text` -> `.data[["HOVER_TEXT"]]`
       * `fill` -> `.data[["BYVAR1"]]`
+      * `key`  -> `.data[["key"]]`
 
 ---
 
@@ -25,6 +26,9 @@
       
       $fill
       [1] "BYVAR1"
+      
+      $key
+      [1] "key"
       
       $size
       [1] "CTRL_N"

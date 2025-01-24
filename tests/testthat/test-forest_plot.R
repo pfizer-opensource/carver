@@ -30,7 +30,8 @@ ae_risk <- risk_stat(
   sort_opt = "Ascending",
   sort_var = "Count",
   hoveryn = "Y"
-)
+) |>
+  mutate(key = row_number())
 fp <- forest_plot_base(
   ae_risk,
   xvar = "RISK",

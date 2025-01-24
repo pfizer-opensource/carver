@@ -11,6 +11,7 @@
       * `text`   -> `.data[["HOVER_RISK"]]`
       * `group`  -> `.data[["TRTPAIR"]]`
       * `colour` -> `.data[["TRTPAIR"]]`
+      * `key`    -> `.data[["key"]]`
 
 ---
 
@@ -159,6 +160,7 @@
       * `shape`  -> `.data[["TRTVAR"]]`
       * `size`   -> `.data[["TRTVAR"]]`
       * `text`   -> `.data[["HOVER_PCT"]]`
+      * `key`    -> `.data[["key"]]`
 
 ---
 

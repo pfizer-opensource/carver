@@ -148,9 +148,6 @@ mod_goutput_server <- function(id, sourcedata, repName, filters, process_btn) {
         max = 1,
         value = 1
       )
-      rv$outdata <- rv$outdata |>
-        filter(!is.nan(.data[["RISK"]]), !is.infinite(.data[["RISK"]])) |>
-        mutate(key = dplyr::row_number())
       print("AE risk_stat process end")
       rv$output_trigger <- rv$output_trigger + 1
     }) %>%
@@ -498,7 +495,7 @@ mod_goutput_server <- function(id, sourcedata, repName, filters, process_btn) {
         if (event$curveNumber == 0 && event$x > 0) {
           test <- NULL
         } else {
-          test <- rv$goutput$rpt_data
+          test <- rv$outdata$query_df
           trt_level_diff <- length(levels(test$TRTVAR)) - length(unique(test$TRTVAR))
           test <- test %>%
             mutate(point_n = as.numeric(as.factor(TRTVAR)) - trt_level_diff)
@@ -511,14 +508,16 @@ mod_goutput_server <- function(id, sourcedata, repName, filters, process_btn) {
 
       req(test)
 
-      display <- filters()$ment_out %>%
+      display <- filters()$ment_out |>
+        mutate(TRTVAR = as.character(TRTVAR)) |>
         select(any_of(c(
           "USUBJID", "TRTVAR", "BYVAR1", filters()$ae_llt, "AESER", "AEOUT", "AESEV",
           "AESTDT", "ASTTM", "AEENDT", "TRTSTDT", "TRTEDT", "TRTEMFL"
         )))
-      plot_table <- select(test, "BYVAR1", "DPTVAL", "TRTVAR") %>%
-        rename(!!filters()$ae_llt := "DPTVAL") %>%
-        inner_join(display) %>%
+      plot_table <- select(test, "BYVAR1", "DPTVAL", "TRTVAR") |>
+        mutate(TRTVAR = gsub("\n", " ", as.character(TRTVAR))) |>
+        rename(!!filters()$ae_llt := "DPTVAL") |>
+        inner_join(display) |>
         relocate(c("USUBJID", "TRTVAR"))
 
       ## displaying the listing table
