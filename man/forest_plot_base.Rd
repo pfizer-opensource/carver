@@ -82,7 +82,8 @@ ae_risk <- risk_stat(
   alpha = 0.05,
   cutoff_where = "PCT > 2",
   hoveryn = "Y"
-)
+) |>
+dplyr::mutate(key = dplyr::row_number())
 forest_plot_base(
   ae_risk,
   xvar = "RISK",

@@ -60,7 +60,8 @@
 #'   alpha = 0.05,
 #'   cutoff_where = "PCT > 2",
 #'   hoveryn = "Y"
-#' )
+#' ) |>
+#' dplyr::mutate(key = dplyr::row_number())
 #' forest_plot_base(
 #'   ae_risk,
 #'   xvar = "RISK",
@@ -178,7 +179,8 @@ forest_plot_base <- function(datain,
 #'   alpha = 0.05,
 #'   cutoff_where = "PCT > 2",
 #'   hoveryn = "Y"
-#' )
+#' ) |>
+#' dplyr::mutate(key = dplyr::row_number())
 #' forest_plot_scatter(
 #'   datain = ae_risk,
 #'   xvar = "PCT",
@@ -297,7 +299,8 @@ forest_plot_scatter <- function(datain,
 #'   alpha = 0.05,
 #'   cutoff_where = "PCT > 2",
 #'   hoveryn = "Y"
-#' )
+#' ) |>
+#' dplyr::mutate(key = dplyr::row_number())
 #' splot <- forest_plot_scatter(
 #'   datain = ae_risk,
 #'   xvar = "PCT",
