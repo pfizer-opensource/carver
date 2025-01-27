@@ -57,6 +57,11 @@ save_file <- function(save_object,
     }
     ## check if the format is not interactive
     if (tolower(file_format) != "interactive") {
+      if (tolower(report_name) == "ae_forest_plot") {
+        ht <- max(15, ((length(unique(save_object$outdata$DPTVAL))) * 0.12) + 2)
+      } else {
+        ht <- 15
+      }
       tryCatch(
         {
           ## get title info
@@ -96,7 +101,7 @@ save_file <- function(save_object,
             ggsave(
               file,
               plot = combine_out,
-              height = ifelse(report_name == "Forest", max(15, ((save_object$n) * 0.12) + 2), 15),
+              height = ht,
               width = 15,
               device = "pdf",
               dpi = 300,
@@ -114,7 +119,7 @@ save_file <- function(save_object,
             ggsave(
               tempfile,
               plot = combine_out,
-              height = ifelse(report_name == "Forest", max(15, ((save_object$n) * 0.12) + 2), 15),
+              height = ht,
               width = 15,
               device = "png",
               dpi = 100,
@@ -165,12 +170,9 @@ save_file <- function(save_object,
       }
       ## generate plotly output in html interactive format and download
     } else {
-      if (! "ptly" %in% names(save_object)) {
-        stop("plotly not available, please check")
-      }
       tryCatch(
         {
-          saveWidget(save_object$ptly,
+          saveWidget(save_object$plot,
                      file = file,
                      selfcontained = TRUE)
           message("generating figure output in interactive HTML format passes")

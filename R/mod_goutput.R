@@ -191,6 +191,14 @@ mod_goutput_server <- function(id, sourcedata, repName, filters, process_btn) {
         )[[1]]
       })
       print("AE Forest Plot process end")
+      rv$title <- "Forest plot for Risk Ratio of Treatment Emergent Adverse Events"
+      rv$footnote <- paste0(
+        "n is the number of Participants \n",
+        "Classifications of adverse events are based on the Medical Dictionary",
+        " for Regulatory Activities. (MedDRA v21.1) \n",
+        "Dashed Vertical line represents risk value reference line \n",
+        "The number of participants reporting at least 1 occurrence of the event specified."
+      )
     }) %>%
       bindEvent(rv$output_trigger)
 
@@ -235,13 +243,25 @@ mod_goutput_server <- function(id, sourcedata, repName, filters, process_btn) {
         )
       })
       print("AE Volcano Plot process end")
+      rv$title <- paste(
+        "Volcano plot for", filters()$statistics,
+        "of", filters()$ae_filter, "Adverse Events"
+      )
+      rv$footnote <- paste0(
+        "N is the total number of", filters()$summary_by,
+        " \n Classifications of adverse events are based on the Medical Dictionary for Regulatory",
+        "Activities. (MedDRA v21.1) \n Dashed Horizontal line represents incidence percentage",
+        "reference line. \n Totals for the No. of Participants/Events at a higher level",
+        "are not necessarily the sum of those at the lower",
+        "levels since a participant may report two or more."
+      )
     }) %>%
       bindEvent(rv$output_trigger)
 
     observe({
       req(tolower(repName()) %in% c("tornado_plot"))
       req(filters()$process_tornado_data)
-
+      adae_df <- sourcedata()[["adae"]]
       print("AE Tornado Plot process start")
       withProgress(message = "Generating Tornado Plot", value = 0, {
         rv$goutput <- try(tornado_plot(
@@ -250,7 +270,7 @@ mod_goutput_server <- function(id, sourcedata, repName, filters, process_btn) {
           trt_right_label = filters()$treatment2_label,
           bar_width = 0.5,
           axis_opts = plot_axis_opts(
-            xaxis_label = "Primary System Organ Class",
+            xaxis_label = attributes(adae_df[[filters()$ae_llt]])[["label"]],
             yaxis_label = "% of Subjects",
             ylinearopts = list(
               breaks = seq(-100, 100, 10),
@@ -258,13 +278,15 @@ mod_goutput_server <- function(id, sourcedata, repName, filters, process_btn) {
             )
           ),
           legend_opts = list(
-            label = "Severity",
+            label = attributes(adae_df[[filters()$ae_catvar]])[["label"]],
             pos = c(0.15, 0.15),
             dir = "vertical"
           ),
           series_opts = g_seriescol(filters()$process_tornado_data, "blue~yellow~red", "BYVAR1"),
           griddisplay = "N"
         ))
+        rv$title <- "Tornado Plot for Adverse Events"
+        rv$footnote <- ""
       })
       print("AE Tornado Plot process end")
     }) %>%
@@ -309,6 +331,8 @@ mod_goutput_server <- function(id, sourcedata, repName, filters, process_btn) {
           interactive = "N"
         )
       })
+      rv$title <- "eDISH Plot of Laboratory Data"
+      rv$footnote <- ""
     }) %>%
       bindEvent(process_btn())
 
@@ -552,15 +576,17 @@ mod_goutput_server <- function(id, sourcedata, repName, filters, process_btn) {
     })
 
     output$g_title_UI <- renderText({
-      req(rv$goutput$ptly)
-      rpt_title <- str_replace_all(rv$goutput$title, "\n", "<br>")
+      req(rv$goutput)
+      req(rv$title)
+      rpt_title <- str_replace_all(rv$title, "\n", "<br>")
       return(HTML(rpt_title))
     })
 
     ## footnote for Plot
     output$g_footnote_UI <- renderText({
-      req(rv$goutput$ptly)
-      rpt_ftnote <- str_replace_all(rv$goutput$footnote, "\n", "<br>")
+      req(rv$goutput)
+      req(rv$footnote)
+      rpt_ftnote <- str_replace_all(rv$footnote, "\n", "<br>")
       return(HTML(rpt_ftnote))
     })
 
@@ -591,6 +617,11 @@ mod_goutput_server <- function(id, sourcedata, repName, filters, process_btn) {
       plot_data = plot_data
     )
 
-    reactive(rv$goutput)
+    reactive(list(
+      outdata = rv$outdata,
+      plot = rv$goutput,
+      title = rv$title,
+      footnote = rv$footnote
+    ))
   })
 }

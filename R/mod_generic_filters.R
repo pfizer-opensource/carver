@@ -1019,6 +1019,7 @@ mod_generic_filters_server <-
           ref_line = input$ref_line,
           dptlabel = input$dptlabel,
           statlabel = input$statlabel,
+          ae_catvar = input$ae_catvar,
           bylabel = input$bylabel,
           subbign = input$subbign
         )

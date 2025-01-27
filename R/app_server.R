@@ -42,7 +42,7 @@ app_server <- function(input, output, session) {
   observe({
     req(rep_inputs$repType())
     if (rep_inputs$repType() == "Figure") {
-      choices <- c("html", "pdf", "docx", "pptx", "interactive")
+      choices <- c("interactive")
     } else {
       choices <- c("html", "pdf", "docx")
     }
