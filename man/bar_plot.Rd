@@ -72,7 +72,8 @@ adsl_entry <- mentry(
 adsl_sum <- msumstat(
   datain = adsl_entry,
   dptvar = "AGE",
-  statvar = "mean"
+  statvar = "mean",
+  figyn = "Y"
 )[["gsum"]] |>
   plot_display_bign(adsl_entry) |>
   dplyr::mutate(

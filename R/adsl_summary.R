@@ -18,16 +18,13 @@
 #' @param vars Names of `adsl` variables to display (Add `"-S"` to numeric variables),
 #' tilde-separated
 #' @param stat_vars Statistics to display in table for numeric vars, tilde-separated.
-#' @param pctdisp Denominator to calculate percentages by.
-#' Values: `"TRT", "VAR", "COL", "SUBGRP", "SGRPN", "CAT", "NONE", "NO", "DPTVAR"`.
-#' @param total_catyn To return a 'Total' row for categorical analysis in `vars`. Values: `"Y"/"N"`
-#' @param total_catlabel Label for total category row. eg- "All"/"Total"
-#' @param miss_catyn To include empty/blank values as `miss_catlabel` in categories of
-#' `dptvar` variable or not. Values: `"Y"/"N"`
-#' @param miss_catlabel Label for missing values
 #' @param a_subset Analysis Subset condition; tilde-separated for each variable in `vars`.
 #' @param denom_subset Subset condition to be applied to dataset for calculating denominator,
 #' tilde-separated for categorical variables within `vars`.
+#' @param sigdec_stat Number of base decimal places to retain in output of summary statistic.
+#' Applies to mean, min, max, sd etc
+#' @param sigdec_cat Number of decimal places for % displayed in output
+#' @inheritParams mcatstat
 #'
 #' @details
 #' \itemize{
@@ -36,7 +33,7 @@
 #' eg. for `"AGEGR1/AGEGR1N~AGE-S~SEX/SEXN~BMIBL-S"`, `AGEGR1` and `SEX` will be analysed by
 #' category and `AGE` and `BMIBL` as summary statistics.
 #' \item Argument `stat_vars` should contain names of statistic to apply to all summary analysis
-#' variables.
+#' variables. `sigdec` applies only to statistical analysis of numeric variables (-S)
 #' \item Arguments `pctdisp`, `total_catyn`, `miss_catyn`, `miss_catlabel` apply to all variables
 #' under categorical analyses.
 #' \item `a_subset` should tilde-separated subset conditions, corresponding to each variable in
@@ -76,8 +73,25 @@
 #' adsl_sum |>
 #'   display_bign_head(mentry_data = mentry_df) |>
 #'   tbl_processor(
+#'     statlabel = "N~Range~Meansd~Median~Q1Q3",
+#'     dptlabel = "Age Group~_NONE_~Sex~Race",
+#'     addrowvar = "DPTVAR"
+#'   ) |>
+#'   tbl_display() |>
+#'   flextable::autofit()
+#'
+#' # Same variable with 2 unique subset conditions
+#' adsl_sum <- mentry_df |>
+#'   adsl_summary(
+#'     vars = "AGEGR1~AGE-S~SEX~SEX~RACE",
+#'     a_subset = "AGE<65~AGE>80~SEX=='F'~SEX=='M'~NA"
+#'   )
+#'
+#' adsl_sum |>
+#'   display_bign_head(mentry_data = mentry_df) |>
+#'   tbl_processor(
 #'     statlabel = "N~Range~Meansd~Median~IQR",
-#'     dptlabel = "Age Group~NONE~Sex~Race",
+#'     dptlabel = "Age Group~_NONE_~Sex1~Sex2~Race",
 #'     addrowvar = "DPTVAR"
 #'   ) |>
 #'   tbl_display() |>
@@ -159,13 +173,13 @@
 #' adsl_vs |>
 #'   adsl_summary(
 #'     vars = "SEX~AGE-S~AGEGR1~RACE~ETHNIC~HEIGHT-S~WEIGHT-S~BMI-S",
-#'     stat_vars = "medianrange~meansd"
+#'     stat_vars = "median(minmax)~mean(sd)"
 #'   ) |>
 #'   display_bign_head(adsl_vs) |>
 #'   tbl_processor(
 #'     dptlabel = "Sex, n(%)~Age (Years)~Age Category (Years), n(%)~Race, n(%)~Ethnicity,
 #'     n(%)~Height (cm)~Weight (kg)~BMI (kg/m2)",
-#'     statlabel = "Median (Range)~Mean (SD)",
+#'     statlabel = "Median (Min, Max)~Mean (SD)",
 #'     addrowvars = "DPTVAR"
 #'   ) |>
 #'   tbl_display() |>
@@ -174,63 +188,77 @@
 #'
 adsl_summary <- function(datain,
                          vars,
-                         stat_vars = "N~Range~Meansd~Median~IQR",
+                         stat_vars = "n~minmaxc~mean(sd)~median~q1q3",
                          pctdisp = "TRT",
                          total_catyn = "N",
                          total_catlabel = "Total",
                          miss_catyn = "N",
                          miss_catlabel = "Missing",
+                         pctsyn = "Y",
+                         sigdec_stat = 2,
+                         sigdec_cat = 2,
                          a_subset = NA_character_,
-                         denom_subset = NA_character_) {
-  stopifnot(nrow(datain) > 0)
+                         denom_subset = NA_character_,
+                         sparseyn = "N",
+                         sparsebyvalyn = "N") {
+  if (nrow(datain) == 0) {
+    return(datain)
+  }
   vars <- split_var_types(toupper(str_to_vec(vars)))
   stat_vars <- str_to_vec(stat_vars)
   # mapping `a_subset` to all variables, `denom_subset` to only categorical variables
   map_df <- map_var_subsets(
-    list(vars[["all_vars"]], vars[["cat_vars"]]),
+    vars[["all_vars"]],
     list(a_subset, denom_subset)
   )
+  cat_df <- map_df |>
+    filter(!.data$vars %in% .env$vars[["num_vars"]])
+  num_df <- map_df |>
+    filter(.data$vars %in% .env$vars[["num_vars"]])
   # analysis for categorical variables
-  datacat <- map(vars[["cat_vars"]], \(x) {
-    if (!str_to_vec(x, "/")[1] %in% names(datain)) {
-      cat_df <- data.frame()
+  datacat <- map(seq_along(cat_df$vars), \(x) {
+    if (!str_to_vec(cat_df$vars[x], "/")[1] %in% names(datain)) {
+      cat_sums <- data.frame()
     } else {
-      vars_df <- map_df |>
-        filter(.data$vars == x)
-      cat_df <- mcatstat(
+      cat_sums <- mcatstat(
         datain = datain,
-        a_subset = vars_df[["subset1"]],
-        denom_subset = vars_df[["subset2"]],
-        dptvar = x,
+        a_subset = cat_df[["subset1"]][x],
+        denom_subset = cat_df[["subset2"]][x],
+        dptvar = cat_df[["vars"]][x],
         uniqid = "USUBJID",
         pctdisp = pctdisp,
         total_catyn = total_catyn,
         miss_catyn = miss_catyn,
         miss_catlabel = miss_catlabel,
-        dptvarn = which(vars[["all_vars"]] == x)
+        dptvarn = cat_df[["ord"]][x],
+        sigdec = sigdec_cat,
+        pctsyn = pctsyn,
+        sparseyn = sparseyn,
+        sparsebyvalyn = sparsebyvalyn,
+        return_zero = "Y"
       )
     }
-    cat_df
+    cat_sums
   }) |>
     bind_rows() |>
-    select(-any_of(c("XVAR", "FREQ", "PCT")))
+    select(-any_of(c("XVAR", "FREQ", "PCT", "CPCT")))
   # analysis for numeric variables
   if (length(vars[["num_vars"]]) > 0) {
     datasums <-
       map(
-        vars[["num_vars"]],
+        seq_along(num_df$vars),
         \(x) {
-          if (!x %in% names(datain)) {
+          if (!num_df[["vars"]][x] %in% names(datain)) {
             df <- data.frame()
           } else {
-            vars_df <- map_df |>
-              filter(.data$vars == x)
             df <- msumstat(
               datain = datain,
-              a_subset = vars_df[["subset1"]],
-              dptvar = x,
+              a_subset = num_df[["subset1"]][x],
+              dptvar = num_df[["vars"]][x],
               statvar = stat_vars,
-              dptvarn = which(vars[["all_vars"]] == x)
+              dptvarn = num_df[["ord"]][x],
+              sigdec = sigdec_stat,
+              sparsebyvalyn = sparsebyvalyn
             )[["tsum"]]
           }
           df
@@ -255,7 +283,7 @@ split_var_types <- function(vars) {
 
   list(
     num_vars = str_replace_all(num_vars, "-S", ""),
-    cat_vars = setdiff(vars, num_vars),
+    cat_vars = vars[!vars %in% num_vars],
     all_vars = str_replace_all(vars, "-S", "")
   )
 }
@@ -269,10 +297,9 @@ split_var_types <- function(vars) {
 #' @noRd
 #'
 map_var_subsets <- function(varlist, subsetlist) {
-  map(seq_along(varlist), \(i) {
-    vars <- varlist[[i]]
-    var_len <- length(vars)
-    subset <- str_replace_all(str_to_vec(subsetlist[[i]]), "NA", NA_character_)
+  sub <- map(seq_along(subsetlist), \(i) {
+    var_len <- length(varlist)
+    subset <- dplyr::na_if(str_to_vec(subsetlist[[i]]), "NA")
     # repeat subset for all variables if only one subset is given
     if (length(subset) == 1) {
       subset <- rep(subset, var_len)
@@ -281,7 +308,8 @@ map_var_subsets <- function(varlist, subsetlist) {
       "Number of subsets should be 1 or equal to number of corresponding variables" =
         var_len == length(subset)
     )
-    bind_cols(vars = vars, !!paste0("subset", i) := subset)
-  }) |>
-    reduce(left_join, by = "vars")
+    bind_cols(!!paste0("subset", i) := subset) |>
+      mutate(ord = row_number())
+  })
+  bind_cols(vars = varlist, reduce(sub, left_join, by = "ord"))
 }

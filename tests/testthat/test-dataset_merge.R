@@ -4,7 +4,7 @@ df1 <- iris |>
 
 df2 <- iris |>
   dplyr::select(Species, dplyr::ends_with("Width"))
-
+options(warn = 1)
 test_that("dataset_merge works", {
   expected <- dplyr::left_join(df1, df2, by = "Species")
   actual <- dataset_merge(df1, df2, byvars = "Species")
@@ -50,5 +50,24 @@ test_that("dataset_merge returns expected errors", {
       subset = list(NA_character_, NA_character_)
     ),
     "All subsets cannot be `NA`, use `subset = NULL` instead"
+  )
+  expect_error(
+    dataset_merge(
+      df1,
+      df2,
+      byvars = "Species",
+      subset = NULL,
+      type = "outer"
+    ),
+    "Type should be one of left, right, inner, full"
+  )
+  expect_warning(
+    dataset_merge(
+      df1,
+      df2,
+      byvars = "Species",
+      subset = list("Species != 'versicolor'", NA_character_),
+      type = "full"
+    )
   )
 })

@@ -9,7 +9,15 @@ ae_pre_processor(
   fmq_data = NULL,
   date_vars = c("ASTDT", "AENDT", "TRTSDT", "TRTEDT"),
   ae_filter = "Any Event",
-  obs_residual = NA_real_
+  subset = NA,
+  obs_residual = NA_real_,
+  max_sevctc = NA_character_,
+  sev_ctcvar = "ASEVN",
+  hterm = "AEBODSYS",
+  lterm = "AEDECOD",
+  rpt_byvar = character(0),
+  trtvar = "TRTA",
+  pt_total = "N"
 )
 }
 \arguments{
@@ -24,9 +32,26 @@ Permissible Values: "ANY", "ANY EVENT", "TREATMENT EMERGENT", "SERIOUS",
 "DRUG-RELATED", "RELATED", "MILD", "MODERATE", "SEVERE", "RECOVERED/RESOLVED",
 "RECOVERING/RESOLVING", "NOT RECOVERING/NOT RESOLVING", "FATAL", "GRADE N"}
 
+\item{subset}{Analysis subset condition to be applied to \code{ADAE} dataset prior to ADSL join;
+will be appended to \code{ae_filter}}
+
 \item{obs_residual}{If not NA, use this argument to pass a period (numeric) to extend the
 observation period. If passed as NA, overall study duration is considered for analysis.
 eg. if 5, only events occurring upto 5 days past the TRTEDT are considered.}
+
+\item{max_sevctc}{If needed to filter maximum severity/ctc grade rows. Values: NA/"SEV"/"CTC"}
+
+\item{sev_ctcvar}{Variable to determine max severity. eg: ASEVN, ATOXGRN}
+
+\item{hterm}{High Level Event Term (req for max Sev tables only)}
+
+\item{lterm}{Low Level Event Term (req for max Sev tables only)}
+
+\item{rpt_byvar}{Page/report by variable if any, to identify max sev/ctc}
+
+\item{trtvar}{Treatment Variable}
+
+\item{pt_total}{Required to calculate total of preferred terms? Y/N}
 }
 \value{
 : a list containing 2 objects

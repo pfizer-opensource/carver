@@ -119,17 +119,10 @@ mod_goutput_server <- function(id, sourcedata, repName, filters, process_btn) {
       req(filters()$alpha)
       req(filters()$cutoff)
       print("AE risk_stat process start")
-      if (filters()$a_subset == "") {
-        a_subset <- filters()$ae_pre$a_subset
-      } else {
-        a_subset <- paste(na.omit(
-          c(filters()$ae_pre$a_subset, filters()$a_subset)
-        ), collapse = " & ")
-      }
       withProgress(
         rv$outdata <- risk_stat(
           datain = filters()$ment_out,
-          a_subset = a_subset,
+          a_subset = filters()$ae_pre$a_subset,
           eventvar = ifelse(is.null(filters()$ae_llt), filters()$ae_hlt, filters()$ae_llt),
           summary_by = filters()$summary_by,
           ctrlgrp = ifelse(tolower(repName()) == "ae_volcano_plot",
@@ -143,7 +136,7 @@ mod_goutput_server <- function(id, sourcedata, repName, filters, process_btn) {
           ),
           statistics = filters()$statistics,
           alpha = filters()$alpha,
-          cutoff = filters()$cutoff,
+          cutoff_where = paste0("PCT > ", filters()$cutoff),
           sort_opt = ifelse(tolower(repName()) == "ae_forest_plot", filters()$sort_opt,
             "Ascending"
           ),
@@ -155,9 +148,6 @@ mod_goutput_server <- function(id, sourcedata, repName, filters, process_btn) {
         max = 1,
         value = 1
       )
-      rv$outdata <- rv$outdata |>
-        filter(!is.nan(.data[["RISK"]]), !is.infinite(.data[["RISK"]])) |>
-        mutate(key = dplyr::row_number())
       print("AE risk_stat process end")
       rv$output_trigger <- rv$output_trigger + 1
     }) %>%
@@ -182,7 +172,8 @@ mod_goutput_server <- function(id, sourcedata, repName, filters, process_btn) {
             datain = forest_data,
             series_opts = plot_aes_opts(
               datain = forest_data,
-              series_color = c("black", "royalblue2", "goldenrod", "forestgreen", "magenta", "brown"),
+              series_color =
+                c("black", "royalblue2", "goldenrod", "forestgreen", "magenta", "brown"),
               series_size = rep(1, 5)
             ),
             trtpair_color = "#F8766D~#7CAE00~#00BFC4~#C77CFF",
@@ -200,6 +191,14 @@ mod_goutput_server <- function(id, sourcedata, repName, filters, process_btn) {
         )[[1]]
       })
       print("AE Forest Plot process end")
+      rv$title <- "Forest plot for Risk Ratio of Treatment Emergent Adverse Events"
+      rv$footnote <- paste0(
+        "n is the number of Participants \n",
+        "Classifications of adverse events are based on the Medical Dictionary",
+        " for Regulatory Activities. (MedDRA v21.1) \n",
+        "Dashed Vertical line represents risk value reference line \n",
+        "The number of participants reporting at least 1 occurrence of the event specified."
+      )
     }) %>%
       bindEvent(rv$output_trigger)
 
@@ -244,13 +243,25 @@ mod_goutput_server <- function(id, sourcedata, repName, filters, process_btn) {
         )
       })
       print("AE Volcano Plot process end")
+      rv$title <- paste(
+        "Volcano plot for", filters()$statistics,
+        "of", filters()$ae_filter, "Adverse Events"
+      )
+      rv$footnote <- paste0(
+        "N is the total number of", filters()$summary_by,
+        " \n Classifications of adverse events are based on the Medical Dictionary for Regulatory",
+        "Activities. (MedDRA v21.1) \n Dashed Horizontal line represents incidence percentage",
+        "reference line. \n Totals for the No. of Participants/Events at a higher level",
+        "are not necessarily the sum of those at the lower",
+        "levels since a participant may report two or more."
+      )
     }) %>%
       bindEvent(rv$output_trigger)
 
     observe({
       req(tolower(repName()) %in% c("tornado_plot"))
       req(filters()$process_tornado_data)
-
+      adae_df <- sourcedata()[["adae"]]
       print("AE Tornado Plot process start")
       withProgress(message = "Generating Tornado Plot", value = 0, {
         rv$goutput <- try(tornado_plot(
@@ -259,7 +270,7 @@ mod_goutput_server <- function(id, sourcedata, repName, filters, process_btn) {
           trt_right_label = filters()$treatment2_label,
           bar_width = 0.5,
           axis_opts = plot_axis_opts(
-            xaxis_label = "Primary System Organ Class",
+            xaxis_label = attributes(adae_df[[filters()$ae_llt]])[["label"]],
             yaxis_label = "% of Subjects",
             ylinearopts = list(
               breaks = seq(-100, 100, 10),
@@ -267,13 +278,15 @@ mod_goutput_server <- function(id, sourcedata, repName, filters, process_btn) {
             )
           ),
           legend_opts = list(
-            label = "Severity",
+            label = attributes(adae_df[[filters()$ae_catvar]])[["label"]],
             pos = c(0.15, 0.15),
             dir = "vertical"
           ),
           series_opts = g_seriescol(filters()$process_tornado_data, "blue~yellow~red", "BYVAR1"),
           griddisplay = "N"
         ))
+        rv$title <- "Tornado Plot for Adverse Events"
+        rv$footnote <- ""
       })
       print("AE Tornado Plot process end")
     }) %>%
@@ -318,6 +331,8 @@ mod_goutput_server <- function(id, sourcedata, repName, filters, process_btn) {
           interactive = "N"
         )
       })
+      rv$title <- "eDISH Plot of Laboratory Data"
+      rv$footnote <- ""
     }) %>%
       bindEvent(process_btn())
 
@@ -462,18 +477,11 @@ mod_goutput_server <- function(id, sourcedata, repName, filters, process_btn) {
       }
       req(filters()$summary_by)
       print("AE event analysis process start")
-      if (filters()$a_subset == "") {
-        a_subset <- filters()$ae_pre$a_subset
-      } else {
-        a_subset <- paste(na.omit(
-          c(filters()$ae_pre$a_subset, filters()$a_subset)
-        ), collapse = " & ")
-      }
       withProgress(message = "Generating AE event analysis", value = 0, {
         rv$outdata <- try(
           process_event_analysis(
             datain = filters()$ment_out,
-            a_subset = a_subset,
+            a_subset = filters()$ae_pre$a_subset,
             summary_by = filters()$summary_by,
             hterm = filters()$ae_hlt,
             ht_val = input$hlt_val,
@@ -511,7 +519,7 @@ mod_goutput_server <- function(id, sourcedata, repName, filters, process_btn) {
         if (event$curveNumber == 0 && event$x > 0) {
           test <- NULL
         } else {
-          test <- rv$goutput$rpt_data
+          test <- rv$outdata$query_df
           trt_level_diff <- length(levels(test$TRTVAR)) - length(unique(test$TRTVAR))
           test <- test %>%
             mutate(point_n = as.numeric(as.factor(TRTVAR)) - trt_level_diff)
@@ -524,14 +532,16 @@ mod_goutput_server <- function(id, sourcedata, repName, filters, process_btn) {
 
       req(test)
 
-      display <- filters()$ment_out %>%
+      display <- filters()$ment_out |>
+        mutate(TRTVAR = as.character(TRTVAR)) |>
         select(any_of(c(
           "USUBJID", "TRTVAR", "BYVAR1", filters()$ae_llt, "AESER", "AEOUT", "AESEV",
           "AESTDT", "ASTTM", "AEENDT", "TRTSTDT", "TRTEDT", "TRTEMFL"
         )))
-      plot_table <- select(test, "BYVAR1", "DPTVAL", "TRTVAR") %>%
-        rename(!!filters()$ae_llt := "DPTVAL") %>%
-        inner_join(display) %>%
+      plot_table <- select(test, "BYVAR1", "DPTVAL", "TRTVAR") |>
+        mutate(TRTVAR = gsub("\n", " ", as.character(TRTVAR))) |>
+        rename(!!filters()$ae_llt := "DPTVAL") |>
+        inner_join(display) |>
         relocate(c("USUBJID", "TRTVAR"))
 
       ## displaying the listing table
@@ -562,20 +572,21 @@ mod_goutput_server <- function(id, sourcedata, repName, filters, process_btn) {
 
     output$figure_UI <- plotly::renderPlotly({
       req(rv$goutput)
-      # req(rv$goutput$ptly)
       rv$goutput
     })
 
     output$g_title_UI <- renderText({
-      req(rv$goutput$ptly)
-      rpt_title <- str_replace_all(rv$goutput$title, "\n", "<br>")
+      req(rv$goutput)
+      req(rv$title)
+      rpt_title <- str_replace_all(rv$title, "\n", "<br>")
       return(HTML(rpt_title))
     })
 
     ## footnote for Plot
     output$g_footnote_UI <- renderText({
-      req(rv$goutput$ptly)
-      rpt_ftnote <- str_replace_all(rv$goutput$footnote, "\n", "<br>")
+      req(rv$goutput)
+      req(rv$footnote)
+      rpt_ftnote <- str_replace_all(rv$footnote, "\n", "<br>")
       return(HTML(rpt_ftnote))
     })
 
@@ -606,6 +617,11 @@ mod_goutput_server <- function(id, sourcedata, repName, filters, process_btn) {
       plot_data = plot_data
     )
 
-    reactive(rv$goutput)
+    reactive(list(
+      outdata = rv$outdata,
+      plot = rv$goutput,
+      title = rv$title,
+      footnote = rv$footnote
+    ))
   })
 }

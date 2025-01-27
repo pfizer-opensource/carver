@@ -90,7 +90,7 @@
 #'   trtgrp = "Xanomeline High Dose",
 #'   statistics = "Risk Ratio",
 #'   alpha = 0.05,
-#'   cutoff = 5,
+#'   cutoff_where = "FREQ >5",
 #'   sort_opt = "Ascending",
 #'   sort_var = "Count"
 #' ) |>
@@ -134,7 +134,10 @@ ae_forest_plot <-
            interactive = "N") {
     # Common processing for all plots:
     datain <- datain |>
-      filter(!is.nan(.data[["RISK"]]), !is.infinite(.data[["RISK"]]))
+      group_by(across(all_of(c("DPTVAL", "TRTPAIR")))) |>
+      filter(!any(.data[["FREQ"]] == 0)) |>
+      ungroup() |>
+      mutate(key = dplyr::row_number())
     # Check risk data exists:
     stopifnot("Input ae_forest_plot data is empty" = nrow(datain) != 0)
     # If axis position not added, default it:

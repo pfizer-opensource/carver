@@ -31,8 +31,9 @@ ad_sum <- ad_entry |>
   group_by(across(all_of("TRTVAR"))) |>
   mutate(
     DPTVAL = as.character(.data[["SEX"]]), DENOMN = sum(.data[["FREQ"]]),
-    PCT = round_f(100 * .data[["FREQ"]] / .data[["DENOMN"]], 2),
-    CVALUE = paste0(.data[["FREQ"]], " (", .data[["PCT"]], "%)"), CN = "C",
+    PCT = 100 * .data[["FREQ"]] / .data[["DENOMN"]],
+    CPCT = round_f(.data[["PCT"]], 2),
+    CVALUE = paste0(.data[["FREQ"]], " (", .data[["CPCT"]], "%)"), CN = "C",
     DPTVARN = 1, XVAR = .data[["DPTVAL"]],
     DPTVAR = "SEX", DPTVALN = as.numeric(factor(.data[["SEX"]]))
   ) |>
@@ -62,13 +63,14 @@ test_that("Case 1:mcatstat output with standard inputs and filters", {
 })
 
 test_that("Case 2: Empty input", {
-  expect_error(
+  expect_equal(
     mcatstat(
       datain = ad_entry |> filter(USUBJID == "A"),
       dptvar = "SEX",
       pctdisp = "TRT"
     ),
-    "No data for mcatstat"
+    ad_entry |> filter(USUBJID == "A"),
+    ignore_attr = TRUE
   )
   expect_error(
     mcatstat(
@@ -100,8 +102,8 @@ test_that("Case 3: Unique ID and sign variation", {
 
   # All groups and order except actual count values should be equal
   expect_equal(
-    m_subj |> select(-all_of(c("DENOMN", "FREQ", "PCT", "CVALUE"))),
-    m_na |> select(-all_of(c("DENOMN", "FREQ", "PCT", "CVALUE")))
+    m_subj |> select(-all_of(c("DENOMN", "FREQ", "PCT", "CVALUE", "CPCT"))),
+    m_na |> select(-all_of(c("DENOMN", "FREQ", "PCT", "CVALUE", "CPCT")))
   )
 
   # Counts are different
@@ -137,7 +139,7 @@ test_that("Case 4: Percentage denominator variation and denomyn", {
 
   # No percentage columns:
   expect_false(any(c("PCT", "DENOMN") %in% names(m_none)))
-  expect_equal(m_none$FREQ, m_none$CVALUE)
+  expect_equal(as.character(m_none$FREQ), m_none$CVALUE)
 
   # Variable total as denominator
   m_var <- mcatstat(
@@ -201,12 +203,44 @@ test_that("Case 6: Filters check", {
     distinct(USUBJID) |>
     nrow()
   expect_equal(unique(m_denom$DENOMN), denomvalue)
-  m_num1 <- mcatstat(
+})
+
+test_that("Case 7: Sparse check", {
+  m_num <- mcatstat(
     datain = ad_entry,
-    a_subset = "SEX == 'X'",
+    a_subset = "SEX == 'F'",
     uniqid = "USUBJID",
     dptvar = "SEX",
-    pctdisp = "TRT"
+    pctdisp = "TRT",
+    sparseyn = "Y"
   )
-  expect_equal(nrow(m_num1), 0)
+  expect_equal(unique(m_num$DPTVAL), c("F", "M"))
+  m_by <- mcatstat(
+    datain = ae_entry,
+    a_subset = "AEBODSYS != 'CARDIAC DISORDERS'",
+    uniqid = "USUBJID",
+    dptvar = "SEX",
+    pctdisp = "TRT",
+    sparsebyvalyn = "Y"
+  )
+  expect_true("CARDIAC DISORDERS" %in% m_by$BYVAR1)
+  freq <- m_by |>
+    filter(BYVAR1 == "CARDIAC DISORDERS") |>
+    pull(.data[["FREQ"]]) |>
+    unique()
+  expect_equal(freq, 0)
+})
+
+test_that("Analysis Subset and return zero", {
+  m_num <- mcatstat(
+    datain = ad_entry,
+    a_subset = "SEX == 'XC'",
+    uniqid = "USUBJID",
+    dptvar = "SEX",
+    pctdisp = "TRT",
+    return_zero = "Y"
+  )
+  expect_s3_class(m_num, "data.frame")
+  expect_true(nrow(m_num) > 0)
+  expect_equal(unique(m_num$FREQ), 0)
 })

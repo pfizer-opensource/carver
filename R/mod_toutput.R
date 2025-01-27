@@ -69,13 +69,6 @@ mod_toutput_server <- function(id, repName, filters, popfilter, process_btn) {
         req(filters()$sort_opt)
         req(filters()$sort_by)
         print("ADAE table process start")
-        if (filters()$a_subset == "") {
-          a_subset <- filters()$ae_pre$a_subset
-        } else {
-          a_subset <- paste(na.omit(
-            c(filters()$ae_pre$a_subset, filters()$a_subset)
-          ), collapse = " & ")
-        }
         # Title and Footnote
         rv$title <- paste0(
           "Participants With ", filters()$ae_filter,
@@ -98,7 +91,7 @@ mod_toutput_server <- function(id, repName, filters, popfilter, process_btn) {
             rv$outdata <- try(
               adae_risk_summary(
                 filters()$ment_out,
-                a_subset = a_subset,
+                a_subset = filters()$ae_pre$a_subset,
                 summary_by = filters()$summary_by,
                 hterm = filters()$ae_hlt,
                 lterm = filters()$ae_llt,
@@ -106,12 +99,12 @@ mod_toutput_server <- function(id, repName, filters, popfilter, process_btn) {
                 trtgrp = filters()$treatment2,
                 statistics = filters()$statistics,
                 alpha = filters()$alpha,
-                cutoff = filters()$cutoff,
+                cutoff_where = paste0("PCT > ", filters()$cutoff),
                 sort_opt = filters()$sort_opt,
                 sort_var = filters()$sort_by
               )
             )
-            keepvars <- c("Risk Ratio (CI)", "P-value")
+            keepvars <- c(paste(filters()$statistics, "(CI)"), "P-value")
             rv$footnote <- paste0(
               rv$footnote, "\n", filters()$statistics, " is shown between ",
               filters()$treatment1, " and ", filters()$treatment2
@@ -123,12 +116,12 @@ mod_toutput_server <- function(id, repName, filters, popfilter, process_btn) {
           rv$outdata <- try(
             occ_tier_summary(
               filters()$ment_out,
-              a_subset = a_subset,
+              a_subset = filters()$ae_pre$a_subset,
               summary_by = filters()$summary_by,
               hterm = filters()$ae_hlt,
               lterm = filters()$ae_llt,
               pctdisp = filters()$ui_pctdisp,
-              cutoff = filters()$cutoff,
+              cutoff_where = paste0("PCT > ", filters()$cutoff),
               apply_hrow_cutoff = "N",
               sort_opt = filters()$sort_opt,
               sort_var = filters()$sort_by

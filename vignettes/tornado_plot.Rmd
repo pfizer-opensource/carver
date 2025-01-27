@@ -1,5 +1,5 @@
 ---
-title: "Adverse Events Tornado Plot for Oncology Studies"
+title: "Adverse Events Tornado Plot"
 output: 
    rmarkdown::html_vignette:
      highlight: haddock
@@ -43,17 +43,20 @@ This article describes creating the <b>Adverse Events Tornado Plot for Oncology 
 To start, load required libraries and the in-built example `adae` and `adsl` dataset.
 
 ```{r data}
-library(tlfcarver)
+library(carver)
 library(dplyr)
 library(rlang)
 library(ggplot2)
 
-data(tornado_plot_data)
+data("adae")
+data("adsl")
 ```
 
 ## Process Data with Subsets and Variables {#processdata}
 
-Before creating Oncology specific `tornado plot`, it's essential to use the `process_tornado_data()`. This function helps prepare the data for visualization, making it a crucial step. With this function, users can customize many parts of the plot to match their specific data and analysis needs. This function block consists mainly `adsl_merge()`, `ae_pre_processor()` and `mentry()` functions to combine ADSL variables, perform adverse-event specific pre-processing and filter records/set grouping variables. It also filters out the maximum severity based on the given inputs. Below, we'll explain the parameters used in `process_waterfall_data`:-
+Before creating Adverse Events `tornado plot`, it's essential to use the `process_tornado_data()`. This function helps prepare the data for visualization, making it a crucial step. With this function, users can customize many parts of the plot to match their specific data and analysis needs.  
+While it is recommended that this be used for Oncology data, it can also work with non-Therapeutic Area specific ADaM datasets, which is shown in this example.  
+This function block consists mainly `adsl_merge()`, `ae_pre_processor()` and `mentry()` functions to combine ADSL variables, perform adverse-event specific pre-processing and filter records/set grouping variables. It also filters out the maximum severity based on the given inputs. Below, we'll explain the parameters used in `process_tornado_data`:-
 
 - `dataset_adsl`: This parameter is used to pass the variable containing `ADSL` dataset.
  
@@ -75,8 +78,6 @@ Before creating Oncology specific `tornado plot`, it's essential to use the `pro
  
 - `trtsort`: This parameter is used for sorting the treatment variable.
 
-- `ae_filter`: This parameter is condition to filter data set by vector of adverse event types. Valid values: "ANY", "ANY EVENT", "TREATMENT EMERGENT", "SERIOUS", "DRUG-RELATED", "RELATED", "MILD", "MODERATE", "SEVERE", "RECOVERED/RESOLVED", "RECOVERING/RESOLVING", "NOT RECOVERING/NOT RESOLVING", "FATAL", "GRADE N".
-
 - `obs_residual`: This parameter is used to pass a period (numeric) to extend the observation period. If passed as NA, overall study duration is considered for analysis.
 eg. if 5, only events occurring upto 5 days past the TRTEDT are considered..
 
@@ -87,8 +88,6 @@ eg. if 5, only events occurring upto 5 days past the TRTEDT are considered..
 - `denom_subset`: This parameter is a condition which is used to subset data set for calculating denominator. Default value is `NA`.
 
 - `pctdisp`: This parameter is a method that is used to calculate denominator (for %). Valid values: `"TRT"`, `"VAR"`, `"COL"`, `"SUBGRP"`, `"CAT"`, `"NONE"`, `"NO"`, `"DPTVAR"`, `"BYVARxyN"`.
-
-- `pop_fil`: This parameter filters the data set by population. eg: `"SAFFL"`
  
 - `legendbign`: This parameter determines whether `N` should be displayed in the legend. The default value is `Y` which suggests that by default, `N` is displayed in legend. Default value is `N`.
 
@@ -96,31 +95,27 @@ eg. if 5, only events occurring upto 5 days past the TRTEDT are considered..
 
 NOTE: Default/Example values are provided to give users a starting point. However, these values can be modified as necessary to better suit the specific data and visualization objectives.
 
-The first step for creating `tornado_plot` for Oncology is to read the required datasets into the environment. In this example, `ADSL` and `ADAE` are used.
+The first step for creating `tornado_plot` for Adverse Events is to read the required datasets into the environment. In this example, `ADSL` and `ADAE` are used.
  
-Below is an example of calling `process_tornado_data` function for preprocessing the data for oncology tornado plot.
+Below is an example of calling `process_tornado_data` function for preprocessing the data for tornado plot.
 
 ```{r tornado_plot_data, message=FALSE, warning=FALSE}
-df <-
-  process_tornado_data(
-    dataset_adsl = tornado_plot_data[["adsl"]],
-    dataset_analysis = tornado_plot_data[["adae"]],
-    adsl_subset = "SAFFL == 'Y'",
-    analysis_subset = NA_character_,
-    ae_filter = "Treatment emergent",
-    obs_residual = "30",
-    fmq_data = NA,
-    ae_catvar = "AESEV",
-    trtvar = "ARMCD",
-    trt_left = "A",
-    trt_right = "A",
-    trtsort = NA_character_,
-    pop_fil = "Overall Population",
-    pctdisp = "TRT",
-    denom_subset = NA_character_,
-    legendbign = "N",
-    yvar = "AESOC"
-  )
+df <- process_tornado_data(
+  dataset_adsl = adsl,
+  dataset_analysis = adae,
+  adsl_subset = "SAFFL == 'Y'",
+  analysis_subset = "TRTEMFL == 'Y'",
+  obs_residual = "30",
+  fmq_data = NA,
+  ae_catvar = "AESEV/AESEVN",
+  trtvar = "ARM",
+  trt_left = "Xanomeline High Dose",
+  trt_right = "Xanomeline Low Dose",
+  pctdisp = "TRT",
+  denom_subset = NA_character_,
+  legendbign = "N",
+  yvar = "AESOC"
+)
 ```
 
 The `process_tornado_data` returns `data.frame` which gets stored in `df` above. A pre-processed dataset which is the input for Oncology tornado plot.
@@ -171,7 +166,7 @@ plot <- tornado_plot(
   ),
   legend_opts = list(
     label = "Severity",
-    pos = c(0.15, 0.15),
+    pos = c(0.2, 0.15),
     dir = "vertical"
   ),
   series_opts = series_opts,

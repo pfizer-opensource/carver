@@ -40,7 +40,6 @@ ggplot object
 Convert dataframe into ggplot object table
 }
 \examples{
-library(carver)
 MPG <- ggplot2::mpg
 MPG[["cyl"]] <- as.character(MPG[["cyl"]])
 tbl_to_plot(

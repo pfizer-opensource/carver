@@ -11,64 +11,67 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+#
 #' Merge Datasets
 #'
 #' @param ... Datasets to be merged.
 #' @param byvars By variables required to perform merge.
 #' @param subset Dataset specific subset conditions as `list`, default is `NULL`.
 #' Has to be specified in the same order of datasets to be merged
+#' @param type Type of join to perform. Values: "left", "right", "inner", "full", "semi", "anti"
 #'
 #' @return A `data.frame`
 #' @export
 #'
 #' @examples
 #' dataset_merge(
-#'   lab_data$adsl,
-#'   lab_data$adlb,
+#'   adsl,
+#'   adlb,
 #'   byvars = "STUDYID~USUBJID~SUBJID",
-#'   subset = list("SEX=='F'", "PARAMCD == 'L00021S'")
+#'   subset = list("SEX=='F'", "PARAMCD == 'ALT'")
 #' )
 #'
 #' dataset_merge(
-#'   lab_data$adsl,
-#'   lab_data$adlb,
+#'   adsl,
+#'   adlb,
 #'   byvars = "STUDYID~USUBJID~SUBJID",
 #'   subset = list("SEX=='F'", NA_character_)
 #' )
 #'
 #' dataset_merge(
-#'   lab_data$adsl,
-#'   lab_data$adlb,
+#'   adsl,
+#'   adlb,
 #'   byvars = "STUDYID~USUBJID~SUBJID",
-#'   subset = list(NA_character_, "PARAMCD == 'L00021S'")
+#'   subset = list(NA_character_, "PARAMCD == 'ALT'")
 #' )
 #'
 #' dataset_merge(
-#'   lab_data$adsl,
-#'   lab_data$adlb,
+#'   adsl,
+#'   adlb,
 #'   byvars = "STUDYID~USUBJID~SUBJID",
-#'   subset = list("USUBJID == 'XYZ1 1003 10031009'", NA_character_)
-#' )
-#'
-#' dataset_merge(
-#'   waterfall_plot_data$adrs,
-#'   waterfall_plot_data$adtr,
-#'   byvars = "STUDYID~USUBJID~TRT01P",
-#'   subset = list("PARAMCD == 'BOR_C'", NA_character_)
+#'   subset = list("USUBJID == '01-701-1015'", NA_character_)
 #' )
 #'
 #' ## more than 2 datasets
 #'
 #' dataset_merge(
-#'   dplyr::filter(lab_data$adsl, USUBJID == "XYZ1 1003 10031009"),
-#'   lab_data$adsl,
-#'   lab_data$adlb,
+#'   dplyr::filter(adsl, USUBJID == "01-701-1015"),
+#'   adsl,
+#'   adlb,
 #'   byvars = "STUDYID~USUBJID~SUBJID"
 #' )
 #'
-dataset_merge <- function(..., byvars, subset = NULL) {
-  dfs <- list2(...)
+dataset_merge <- function(..., byvars, subset = NULL, type = "left") {
+  dfs <- rlang::list2(...)
   stopifnot("At least two datasets required for merging" = length(dfs) >= 2)
+  stopifnot(
+    "Type should be one of left, right, inner, full" =
+      type %in% c("left", "right", "inner", "full")
+  )
+
+  if (type == "full") {
+    warning("For full join, subsets will not work as expected. Consider using adsl_merge() instead")
+  }
   byvars <- str_to_vec(byvars)
   if (!every(dfs, \(x) all(byvars %in% names(x)))) stop("`byvars` not present")
 
@@ -95,7 +98,8 @@ dataset_merge <- function(..., byvars, subset = NULL) {
     }
     out
   })
-  reduce(df_list, left_join, byvars)
+  type <- paste0(type, "_join")
+  reduce(df_list, get(type), byvars)
 }
 
 #' Merge adsl dataset with the analysis dataset
@@ -103,32 +107,33 @@ dataset_merge <- function(..., byvars, subset = NULL) {
 #' @param adsl adsl dataset
 #' @param adsl_subset population variable subset condition
 #' @param dataset_add analysis dataset
+#' @param byvars Variables to merge the datasets by
 #'
 #' @return merged dataset
 #' @export
 #'
 #' @examples
-#' data(lab_data)
-#'
+#' data("adae")
+#' data("adsl")
 #' adsl_merge(
-#'   adsl = lab_data$adsl,
+#'   adsl = adsl,
 #'   adsl_subset = "SAFFL=='Y'",
-#'   dataset_add = lab_data$adlb
+#'   dataset_add = adae
 #' )
 #'
-adsl_merge <- function(adsl = NULL, adsl_subset = "", dataset_add = NULL) {
-  stopifnot(length(adsl) > 0)
-  stopifnot(nrow(adsl) > 0)
-  stopifnot(length(dataset_add) > 0)
-
-  if (adsl_subset != "" && !is.na(adsl_subset)) {
-    adsl <- adsl |>
-      filter(!!!parse_exprs(adsl_subset))
+adsl_merge <- function(adsl = NULL, adsl_subset = "", dataset_add = NULL, byvars = NULL) {
+  stopifnot("Pass an ADSL dataset" = length(adsl) > 0)
+  stopifnot("Pass an Analysis Dataset" = length(dataset_add) > 0)
+  if (nrow(adsl) == 0 || nrow(dataset_add) == 0) {
+    return(data.frame())
+  }
+  if (is.null(byvars)) {
+    byvars <- intersect(colnames(adsl), colnames(dataset_add))
   }
 
-  byvars <- grep("STUDYID|USUBJID|SUBJID", names(dataset_add), value = TRUE)
-
-  adsl |>
-    select(all_of(c(byvars, setdiff(names(adsl), names(dataset_add))))) |>
-    left_join(dataset_add, by = byvars)
+  outdata <- full_join(adsl, dataset_add, by = byvars)
+  if (adsl_subset != "" && !is.na(adsl_subset)) {
+    outdata <- filter(outdata, !!!parse_exprs(adsl_subset))
+  }
+  outdata
 }

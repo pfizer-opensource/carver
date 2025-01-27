@@ -1,0 +1,119 @@
+---
+output:
+  pdf_document:
+    toc: no
+    dev: cairo_pdf
+    latex_engine: xelatex
+  html_document:
+    toc: no
+    toc_float: yes
+    toc_collapsed: no
+    highlight: kate
+    theme: spacelab
+    fig_caption: yes
+    df_print: paged
+classoption: landscape, a4paper
+geometry: margin=1in
+params:
+  ADSL_DSIN: adsl
+  POPULATION_FILTER: SAFFL
+  OVERALL_SUBSET: !r NA_character_
+  A_SUBSET: !r NA_character_
+  DENOM_SUBSET: !r NA_character_
+  TRTVAR: TRT01A
+  TRTSORT: TRT01AN
+  BYVAR: !r NA_character_
+  BYLABEL: !r NA
+  SUBGRPVAR: SEX
+  TRTBIGN: yes
+  SUBBIGN: no
+  GRPVARMISS: no
+  TRTTOT: yes
+  SUBGRPTOT: yes
+  PCTDISP: TRT
+  VARS: "AGEGR1/AGEGR1N~AGE-S~SEX/SEXN~RACE/RACEN~ETHNIC"
+  VARLABELS: Age (Years), n (%)~NONE~Gender, n (%)~Race, n (%)~Ethnicity, n (%)
+  STATVARS: "n~mean(sd)~median(minmax)~q1q3"
+  STATLABELS: n~Mean (SD)~Median (range)~(Q1,Q3)
+  TOTALCATYN: no
+  MISSCATYN: no
+  MISSCATLABEL: Missing
+  TITLE: "Demographic Characteristics - Safety population"
+  FOOTNOTE: "The denominator to calculate percentages is N, the Number of Participants
+    in the full analysis set, within each treatment group \\\\ *n is the Number of
+    Participants with non-missing Age"
+  head_height: 30pt
+header-includes:
+  - \usepackage{fancyhdr}
+  - \usepackage{lastpage}
+  - \pagestyle{fancy}
+  - \fancyhf{}
+  - \renewcommand{\headrulewidth}{0pt}
+  - '`r paste0("\\fancyhead[L]{\\textbf{", params$TITLE, "}}")`'
+  - '`r paste0("\\fancyfoot[L]{", params$FOOTNOTE, "}")`'
+  - \setlength{\headsep}{10pt}
+  - \setlength{\headheight}{40pt}
+  - \fancyhead[R]{Page \thepage\, of\, \pageref*{LastPage}}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, ft.keepnext = FALSE, message = FALSE, warning = FALSE)
+## load libraries
+library(carver)
+library(dplyr, include.only = c("if_else"))
+library(stringr, include.only = c("str_glue", "str_replace_all", "str_which"))
+library(rlang, include.only = c("parse_expr"))
+library(flextable, include.only = c("width", "autofit", "height"))
+is_html <- knitr::opts_knit$get("rmarkdown.pandoc.to") == "html"
+```
+
+```{r adsl_mentry}
+adsl_mentry <- eval(parse_expr(params$ADSL_DSIN)) |>
+  mentry(
+    subset = params$OVERALL_SUBSET,
+    byvar = params$BYVAR,
+    trtvar = params$TRTVAR,
+    trtsort = params$TRTSORT,
+    subgrpvar = params$SUBGRPVAR,
+    trttotalyn = params$TRTTOT,
+    add_grpmiss = params$GRPVARMISS,
+    sgtotalyn = params$SUBGRPTOT,
+    pop_fil = params$POPULATION_FILTER
+  )
+```
+
+```{r adsl_summary,  results='asis', ft.align="left"}
+if (is_html) {
+  cat("###", gsub(" \\\\ ", "  \n", params$TITLE, fixed = TRUE), "  \n")
+}
+adsl_mentry |>
+  adsl_summary(
+    vars = params$VARS,
+    stat_vars = params$STATVARS,
+    pctdisp = params$PCTDISP,
+    total_catyn = params$TOTALCATYN,
+    miss_catyn = params$MISSCATYN,
+    miss_catlabel = params$MISSCATLABEL,
+    a_subset = params$A_SUBSET,
+    denom_subset = params$DENOM_SUBSET
+  ) |>
+  display_bign_head(
+    mentry_data = adsl_mentry,
+    trtbignyn = params$TRTBIGN,
+    subbignyn = params$SUBBIGN
+  ) |>
+  tbl_processor(
+    dptlabel = params$VARLABELS,
+    statlabel = params$STATLABELS,
+    addrowvars = "DPTVAR"
+  ) |>
+  tbl_display(
+    bylabel = params$BYLABEL
+  ) |>
+  flextable::autofit() |>
+  {\(x) width(x, width = dim(x)$widths * 8 / sum(dim(x)$widths))}() # nolint
+if (is_html) {
+  cat(gsub(" \\\\ ", "  \n", params$FOOTNOTE, fixed = TRUE))
+}
+```
+

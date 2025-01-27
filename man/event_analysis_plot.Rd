@@ -46,7 +46,8 @@ prep_ae <- adae |>
   ae_pre_processor(
     ae_filter = "ANY",
     obs_residual = 0,
-    fmq_data = FMQ_Consolidated_List
+    fmq_data = FMQ_Consolidated_List,
+    subset = "AOCCPFL == 'Y'"
   )
 
 ## prepare data for plot
@@ -60,7 +61,7 @@ prep_entry <- prep_ae[["data"]] |>
 ## prepare data for plot
 prep_event_analysis <- prep_entry |>
   process_event_analysis(
-    a_subset = glue::glue("AOCCPFL == 'Y' & {prep_ae$a_subset}"),
+    a_subset = prep_ae$a_subset,
     summary_by = "Events",
     hterm = "FMQ_NAM",
     ht_val = "ABDOMINAL PAIN",

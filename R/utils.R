@@ -44,7 +44,6 @@ data_attrib <- function(datain) {
   data_attr
 }
 
-
 ## Identify any variable names starting with given string. Useful for Byvar,subgrp identification ##
 #' Find column names with starting pattern
 #'
@@ -110,103 +109,6 @@ round_f <- function(x, digits = 2) {
   format(round(x, digits), nsmall = digits)
 }
 
-#' Update functions to round values
-#'
-#' @param f List of names of summary statistics.
-#' @param d Numeric values
-#' @param ...
-#'
-#' @return Rounded numeric values
-#' @noRd
-#'
-fmtrd <- function(f, d = 2, ...) {
-  function(x) {
-    dc <- do.call(f, args = list(x, na.rm = TRUE, ...))
-    ifelse(is.na(dc), "-", round_f(dc, d))
-  }
-}
-
-#' Create summary stats function for use within `msumstat()`
-#'
-#' @param sigdec Number of significant decimal places (base)
-#'
-#' @return a named list containing function definition for all defined summary
-#' statistics - mean, min, max, median, iqr, var, sum, sd, q25, q75, p1, p5,
-#' p10, p90, p95, p99 (where last digits represent % of quantile), meansd,
-#' range, q1q3, medianrange (concatenation of indicated names), whiskerlow,
-#' whiskerup, outliers in the Tukey method for box statistics
-#' @export
-summary_functions <- function(sigdec = 2) {
-  # Basic functions for summary
-  base_fns <- c("mean", "min", "max", "median", "IQR", "var", "sum", "sd")
-  d <- c(rep(sigdec, 7), sigdec + 1)
-  fns_list <- map(seq_along(base_fns), function(f) {
-    fmtrd(f = base_fns[[f]], d = d[[f]])
-  }) |> set_names(tolower(base_fns))
-  # Quantiles for data:
-  q_fns <- c("q25", "q75", "p1", "p10", "p5", "p90", "p95", "p99")
-  q_pct <- as.numeric(gsub("\\D", "", q_fns)) / 100
-  q_list <- seq_along(q_fns) |>
-    map(function(f) fmtrd(f = "quantile", d = sigdec, q_pct[[f]])) |>
-    set_names(q_fns)
-  # Combined list
-  fns_list <- append(fns_list, q_list)
-  # Concatenated and Compound functions
-  fns_list <- append(
-    fns_list,
-    list(
-      meansd =
-        function(x) paste0(fns_list[["mean"]](x), " (", fns_list[["sd"]](x), ")"),
-      range = function(x) {
-        paste0(
-          "(", fns_list[["min"]](x), ", ",
-          fns_list[["max"]](x), ")"
-        )
-      },
-      q1q3 = function(x) {
-        paste0(
-          "(", fns_list[["q25"]](x), ", ",
-          fns_list[["q75"]](x), ")"
-        )
-      },
-      medianrange =
-        function(x) paste(fns_list[["median"]](x), fns_list[["range"]](x)),
-      whiskerlow = function(x) {
-        fns_list[["min"]](
-          x[(x >= (quantile(x, 0.25, na.rm = TRUE) - 1.5 * IQR(x, na.rm = TRUE))) &
-            (x <= quantile(x, 0.25, na.rm = TRUE))])
-      },
-      whiskerup = function(x) {
-        fns_list[["max"]](
-          x[(x <= (quantile(x, 0.75, na.rm = TRUE) + 1.5 * IQR(x, na.rm = TRUE))) &
-            (x >= quantile(x, 0.75, na.rm = TRUE))])
-      },
-      outliers = function(x) {
-        x <- x[!is.na(x)]
-        paste(unique(x[x < as.numeric(fns_list[["whiskerlow"]](x)) |
-          x > as.numeric(fns_list[["whiskerup"]](x))]), collapse = "~")
-      },
-      geom_lowci = function(x) {
-        ci <- 0.95
-        x <- log(x)
-        margin_error <- qt(ci + (1 - ci) / 2, df = length(x) - 1) * sd(x) / sqrt(length(x))
-        paste(exp(mean(x, na.rm = TRUE) - margin_error))
-      },
-      geom_upci = function(x) {
-        ci <- 0.95
-        x <- log(x)
-        margin_error <- qt(ci + (1 - ci) / 2, df = length(x) - 1) * sd(x) / sqrt(length(x))
-        paste(exp(mean(x, na.rm = TRUE) + margin_error))
-      },
-      geommean = function(x) {
-        x <- log(x)
-        paste(exp(mean(x, na.rm = TRUE)))
-      },
-      n = function(x) paste(n())
-    )
-  )
-  return(fns_list)
-}
 
 #' Convert string to vector
 #'
@@ -280,7 +182,7 @@ split_data_by_var <- function(datain,
 split_section_headers <- function(datain,
                                   split_by = "",
                                   split_by_prefix = "",
-                                  split_lab = "",
+                                  split_lab = " ",
                                   sep = "~") {
   stopifnot(is.data.frame(datain))
   if (split_by == "" && split_by_prefix == "") {
@@ -411,15 +313,13 @@ dataset_vignette <- function(df = NULL, disp_vars = NULL, subset = NA_character_
 #' @return Data frame with `Big N`.
 #' @noRd
 add_bigN <- function(data, dsin, grpvar, modvar, subjid = "USUBJID") {
+  newvar <- paste0(modvar, "_BIGN")
   data <- dsin |>
     group_by(!!!syms(grpvar)) |>
     distinct(!!!syms(subjid)) |>
     summarise(BIGN = n()) |>
     (\(.) left_join(data, ., by = grpvar))() |>
-    mutate(across(any_of(modvar),
-      ~ paste0(.x, " (N=", .data[["BIGN"]], ")"),
-      .names = "{.col}_BIGN"
-    )) |>
+    mutate(!!newvar := paste0(.data[[modvar]], " (N=", .data[["BIGN"]], ")")) |>
     select(-all_of("BIGN"))
   if (length(modvar) == 1 && is.factor(data[[modvar]])) {
     newvar <- paste0(modvar, "_BIGN")
@@ -454,8 +354,7 @@ add_bigN <- function(data, dsin, grpvar, modvar, subjid = "USUBJID") {
 #' msumstat(
 #'   adsl_entry,
 #'   dptvar = "AGE",
-#'   statvar = "meansd",
-#'   sigdec = 2,
+#'   statvar = "mean",
 #'   dptvarn = 2
 #' )$tsum |>
 #'   display_bign_head(adsl_entry)
@@ -509,6 +408,101 @@ display_bign_head <- function(datain,
       select(-all_of("CVALUE"))
   }
   return(datain)
+}
+
+#' Sparse empty categories/treatments with 0
+#'
+#' @param datain Input data to be sparsed for missing categories/treatments/by vars
+#' @param data_sparse Initial data to sparse with
+#' @param sparseyn Sparse categories within by groups. (Y/N)
+#' @param sparsebyvalyn Sparse by groups in data - takes precedence over `sparseyn` (Y/N)
+#' @param BYVAR By Variables in data
+#' @param BYVARN By Variables N equivalent
+#' @param SUBGRP Subgroup Variables in data
+#' @param SUBGRPN Subgroup Variables N equivalent
+#' @param fillvar Variables to fill with `fill_with`
+#' @param fill_with Value to fill empty `fillvar` with
+#'
+#' @return dataframe sparsed with values for empty categories
+#'
+#' @examples
+#' data(adsl)
+#' library(dplyr)
+#' adsl_entry <- mentry(adsl,
+#'   byvar = "SEX",
+#'   trtvar = "TRT01A",
+#'   trtsort = "TRT01AN",
+#'   subset = "SAFFL == 'Y'"
+#' )
+#' count <- adsl_entry |>
+#'   filter(SEX == "F") |>
+#'   group_by(BYVAR1, TRTVAR) |>
+#'   summarise(FREQ = length(unique(USUBJID)))
+#' sparse_vals(count,
+#'   data_sparse = adsl_entry,
+#'   sparseyn = "N",
+#'   sparsebyvalyn = "Y",
+#'   "BYVAR1",
+#'   character(0),
+#'   "BYVAR1N",
+#'   character(0)
+#' )
+#'
+#' @noRd
+sparse_vals <- function(datain,
+                        data_sparse,
+                        sparseyn = "Y",
+                        sparsebyvalyn = "N",
+                        BYVAR,
+                        SUBGRP,
+                        BYVARN,
+                        SUBGRPN,
+                        fillvar = "FREQ",
+                        fill_with = 0) {
+  # Exit if neither are Y
+  if (!(sparseyn == "Y" || sparsebyvalyn == "Y")) {
+    return(datain)
+  }
+  TRTVAR <- var_start(datain, "TRTVAR")
+  if (sparsebyvalyn == "Y") {
+    byn <- c(BYVAR, SUBGRP)
+    if ("DPTVAL" %in% names(datain)) {
+      df_exp <- data_sparse |>
+        tidyr::expand(!!!rlang::syms(c(BYVAR, TRTVAR, SUBGRP)), tidyr::nesting(DPTVAL, DPTVALN))
+      dptn <- "DPTVALN"
+    } else {
+      if (!any(c(SUBGRP, "TRTVAR") %in% names(datain))) {
+        return(datain)
+      }
+      # Processing if msumstat output/without DPTVAL column
+      df_exp <- data_sparse |>
+        tidyr::expand(!!!rlang::syms(c(BYVAR, TRTVAR, SUBGRP)))
+      dptn <- character()
+    }
+  } else if (sparseyn == "Y") {
+    # Sparse only category columns
+    byn <- SUBGRP
+    dptn <- "DPTVALN"
+    df_exp <- data_sparse |>
+      tidyr::expand(!!!rlang::syms(c(TRTVAR, SUBGRP)), tidyr::nesting(DPTVAL, DPTVALN)) |>
+      left_join(distinct(data_sparse, across(any_of(starts_with(c("DPTVAL", "BYVAR"))))),
+        by = c("DPTVAL", "DPTVALN")
+      )
+  }
+  data_sparse <- ungroup(data_sparse)
+  if (length(byn) > 0) {
+    for (b in byn) {
+      df_exp <- df_exp |>
+        left_join(distinct(data_sparse, across(all_of(starts_with(b)))), by = b)
+    }
+  }
+  df_exp <- distinct(df_exp)
+  datain |>
+    select(-any_of(c(SUBGRPN, BYVARN, dptn))) |>
+    (\(.) full_join(., df_exp, by = intersect(names(.), names(df_exp))))() |>
+    mutate(across(any_of(fillvar), ~ replace_na(.x, fill_with))) |>
+    ungroup() |>
+    distinct()
 }
 
 #' Report Metadata

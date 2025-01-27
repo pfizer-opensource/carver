@@ -9,8 +9,9 @@ process_tornado_data(
   dataset_analysis,
   adsl_subset = NA_character_,
   analysis_subset = NA_character_,
-  ae_filter = "Any Event",
   obs_residual = NA_real_,
+  ae_filter = "Any Event",
+  pop_fil = NA_character_,
   fmq_data = NULL,
   split_by = NA_character_,
   ae_catvar,
@@ -18,11 +19,11 @@ process_tornado_data(
   trt_left,
   trt_right,
   trtsort = NA_character_,
-  pop_fil = "Overall Population",
+  subset = NA_character_,
   pctdisp = "TRT",
   denom_subset = NA_character_,
   legendbign = "N",
-  yvar
+  yvar = "AESOC"
 )
 }
 \arguments{
@@ -32,22 +33,25 @@ process_tornado_data(
 
 \item{adsl_subset}{(\code{string}) Subset condition to be applied on \code{dataset_adsl}.}
 
-\item{analysis_subset}{Subset conditions for overall data.}
+\item{analysis_subset}{Subset conditions for \code{dataset_analysis}}
+
+\item{obs_residual}{If not NA, use this argument to pass a period (numeric) to extend the
+observation period. If passed as NA, overall study duration is considered for analysis.
+eg. if 5, only events occurring upto 5 days past the TRTEDT are considered.}
 
 \item{ae_filter}{Vector of adverse event types to be used as filter conditions.
 Permissible Values: "ANY", "ANY EVENT", "TREATMENT EMERGENT", "SERIOUS",
 "DRUG-RELATED", "RELATED", "MILD", "MODERATE", "SEVERE", "RECOVERED/RESOLVED",
 "RECOVERING/RESOLVING", "NOT RECOVERING/NOT RESOLVING", "FATAL", "GRADE N"}
 
-\item{obs_residual}{If not NA, use this argument to pass a period (numeric) to extend the
-observation period. If passed as NA, overall study duration is considered for analysis.
-eg. if 5, only events occurring upto 5 days past the TRTEDT are considered.}
+\item{pop_fil}{Population Filter for data set: Name of flag variable.
+eg: \code{"SAFFL"}, \code{"EFFFL"} or \code{NA} for Overall Population.}
 
 \item{fmq_data}{FMQ table dataframe, if passed, will be merged to adae date by PT.}
 
 \item{split_by}{(\code{string}) By variable for stratification.}
 
-\item{ae_catvar}{Categorical variable for severity analysis.}
+\item{ae_catvar}{Categorical variable for severity analysis and order variable. eg; "ASEV/ASEVN"}
 
 \item{trtvar}{(\code{string}) Treatment Variable to be created for analysis.}
 
@@ -57,7 +61,7 @@ eg. if 5, only events occurring upto 5 days past the TRTEDT are considered.}
 
 \item{trtsort}{(\code{string}) Variable to sort treatment variable by.}
 
-\item{pop_fil}{Population Filter for data set: Name of flag variable.
+\item{subset}{Overall subset for data set. eg: "EFFFL == 'Y'"
 eg: \code{"SAFFL"}, \code{"EFFFL"} or \code{NA} for Overall Population.}
 
 \item{pctdisp}{Method to calculate denominator (for \%) by
@@ -79,7 +83,8 @@ Pre-process data for tornado plot
 \details{
 \itemize{
 \item ae_catvar grouping variable for severity like AESEV(MILD, MODERATE,
-SEVERE). It must also have it's numeric variable in the dataset.
+SEVERE). It must be passed "/" separated with its numeric variable.
+eg: ASEV/ASEVN; ATOXGR/ATOXGRN
 \item yvar(dptvar) Adverse Event category, derived term from AE.
 Possible Values: AEBODSYS, AEDECOD, AEHLT, AEHLGT.
 }
@@ -88,18 +93,16 @@ Possible Values: AEBODSYS, AEDECOD, AEHLT, AEHLGT.
 data(tornado_plot_data)
 
 process_tornado_data(
-  dataset_adsl = tornado_plot_data[["adsl"]],
-  dataset_analysis = tornado_plot_data[["adae"]],
+  dataset_adsl = adsl,
+  dataset_analysis = adae,
   adsl_subset = "SAFFL == 'Y'",
-  analysis_subset = NA_character_,
-  ae_filter = "Treatment emergent",
+  analysis_subset = "TRTEMFL == 'Y'",
   obs_residual = "30",
   fmq_data = NA,
-  ae_catvar = "AESEV",
-  trtvar = "ARMCD",
-  trt_left = "A",
-  trt_right = "A",
-  pop_fil = "Overall Population",
+  ae_catvar = "AESEV/AESEVN",
+  trtvar = "ARM",
+  trt_left = "Xanomeline High Dose",
+  trt_right = "Xanomeline Low Dose",
   pctdisp = "TRT",
   denom_subset = NA_character_,
   legendbign = "N",

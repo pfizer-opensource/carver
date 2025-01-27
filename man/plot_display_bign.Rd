@@ -32,7 +32,7 @@ adsl_entry <- adsl |>
 msumstat(
   adsl_entry,
   dptvar = "AGE",
-  statvar = "meansd"
+  statvar = "mean"
 )$gsum |>
   plot_display_bign(adsl_entry)
 }

@@ -9,8 +9,10 @@ msumstat(
   a_subset = NA_character_,
   dptvar = NULL,
   statvar = "",
-  sigdec = 1,
-  dptvarn = 1
+  sigdec = "",
+  dptvarn = 1,
+  sparsebyvalyn = "N",
+  figyn = "N"
 )
 }
 \arguments{
@@ -23,10 +25,14 @@ msumstat(
 \item{statvar}{\code{Tilde} (\code{~})-separated list of statistics to be computed. eg: \code{"mean~median"}}
 
 \item{sigdec}{Number of base decimal places to retain in output
-Applies to mean, min, max etc and \code{+ 1} for sd}
+Applies to mean, min, max, sd etc}
 
 \item{dptvarn}{Number to assign as \code{'DPTVARN'}, used for block sorting when
 multiple blocks are created to be combined.}
+
+\item{sparsebyvalyn}{Sparse missing categories within by groups. \code{"Y"/"N"}}
+
+\item{figyn}{Determine if output is for figure or not \code{"Y"/"N"}}
 }
 \value{
 a list containing 2 elements
@@ -42,10 +48,9 @@ Summary statistics for numeric data variable
 Current available statistics (values for \code{statvar}) :
 n (count per group), mean, median, sd (standard deviation), min, max,
 iqr (interquartile range), var (variance), sum, range ("min, max")
-meansd ("mean (sd)"), medianrange ("median (range)"),
-q25/q1 (25 \% quantile), q75/q3 (75 \% quantile) , p10 (10\% quantile), p5, p1,
-p90, p95, p99, q1q3 ("q25, q75"), whiskerlow, whiskerup (box lower/upper
-whiskers), outliers (boxplot outliers, tilde-separated output),
+mean(sd), median(minmax), q25/q1 (25 \% quantile), q75/q3 (75 \% quantile) , p10 (10\% quantile),
+p5, p1, p90, p95, p99, q1q3 ("q25, q75"), whiskerlow, whiskerup (box lower/upper
+whiskers), outliers (boxplot outliers, tilde-separated output), geometric mean/sd/CI
 box = median~q25~q75~whiskerlow~whiskerup~outliers (Tukey's method)
 }
 \examples{
@@ -63,9 +68,10 @@ adsl_entry <- mentry(
 adsl_sum <- adsl_entry |>
   msumstat(
     dptvar = "AGE",
-    a_subset = "BYVAR1 == 'M'",
-    statvar = "mean",
-    sigdec = 2
+    a_subset = "SEX == 'F'",
+    statvar = "mean(sd)~median(minmaxc)~q3",
+    sigdec = "3(2)~2(0)~1",
+    sparsebyvalyn = "N"
   )
 
 adsl_sum$tsum

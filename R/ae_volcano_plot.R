@@ -66,7 +66,7 @@
 #'   trtgrp = "Xanomeline High Dose",
 #'   statistics = "Risk Ratio",
 #'   alpha = 0.05,
-#'   cutoff = 5,
+#'   cutoff_where = "FREQ >5",
 #'   sort_opt = "Ascending",
 #'   sort_var = "Count"
 #' )
@@ -102,7 +102,9 @@ ae_volcano_plot <- function(datain,
                             pvalue_sig = 0.05,
                             interactive = "N") {
   ### Construction of volcano plot
-  datain <- datain |> filter(!.data[["RISK"]] %in% c(NA, Inf))
+  datain <- datain |>
+    filter(!.data[["RISK"]] %in% c(NA, Inf)) |>
+    mutate(key = dplyr::row_number())
   # Check if getstats data is empty:
   stopifnot("Risk data is empty" = nrow(datain) != 0)
   stopifnot(
@@ -209,6 +211,40 @@ ae_volcano_plot <- function(datain,
 #' @export
 #'
 #' @examples
+#' data("adae")
+#'
+#' ae_pre <- ae_pre_processor(
+#'   datain = adae,
+#'   obs_residual = 0,
+#'   fmq_data = NA
+#' )
+#'
+#' ae_entry <- mentry(
+#'   datain = ae_pre$data,
+#'   subset = NA,
+#'   byvar = "AEBODSYS",
+#'   trtvar = "TRTA",
+#'   trtsort = "TRTAN",
+#'   subgrpvar = NA,
+#'   trttotalyn = "N",
+#'   add_grpmiss = "N",
+#'   sgtotalyn = "N",
+#'   pop_fil = "SAFFL"
+#' )
+#'
+#' ae_risk <- risk_stat(
+#'   datain = ae_entry,
+#'   a_subset = ae_pre$a_subset,
+#'   summary_by = "Patients",
+#'   eventvar = "AEDECOD",
+#'   ctrlgrp = "Placebo",
+#'   trtgrp = "Xanomeline High Dose",
+#'   statistics = "Risk Ratio",
+#'   alpha = 0.05,
+#'   cutoff_where = "FREQ >5",
+#'   sort_opt = "Ascending",
+#'   sort_var = "Count"
+#' )
 #' ae_volcano_opts(ae_risk,
 #'   pvalue_trans = "-log10"
 #' )

@@ -57,6 +57,11 @@ save_file <- function(save_object,
     }
     ## check if the format is not interactive
     if (tolower(file_format) != "interactive") {
+      if (tolower(report_name) == "ae_forest_plot") {
+        ht <- max(15, ((length(unique(save_object$outdata$DPTVAL))) * 0.12) + 2)
+      } else {
+        ht <- 15
+      }
       tryCatch(
         {
           ## get title info
@@ -96,7 +101,7 @@ save_file <- function(save_object,
             ggsave(
               file,
               plot = combine_out,
-              height = ifelse(report_name == "Forest", max(15, ((save_object$n) * 0.12) + 2), 15),
+              height = ht,
               width = 15,
               device = "pdf",
               dpi = 300,
@@ -114,7 +119,7 @@ save_file <- function(save_object,
             ggsave(
               tempfile,
               plot = combine_out,
-              height = ifelse(report_name == "Forest", max(15, ((save_object$n) * 0.12) + 2), 15),
+              height = ht,
               width = 15,
               device = "png",
               dpi = 100,
@@ -142,10 +147,10 @@ save_file <- function(save_object,
         } else if (file_format == "pptx") {
           tryCatch(
             {
-              read_pptx() %>%
-                add_slide() %>%
-                ph_with(external_img(tempfile),
-                        ph_location_fullsize(left = 0, top = 0)) %>%
+              officer::read_pptx() %>%
+                officer::add_slide() %>%
+                officer::ph_with(officer::external_img(tempfile),
+                                 officer::ph_location_fullsize(left = 0, top = 0)) %>%
                 print(target = file)
               message("generating figure output in PPTX format passed")
             }
@@ -154,8 +159,8 @@ save_file <- function(save_object,
         }else if (file_format == "docx") {
           tryCatch(
             {
-              read_docx() %>%
-                body_add_img(src = external_img(tempfile),
+              officer::read_docx() %>%
+                officer::body_add_img(src = officer::external_img(tempfile),
                              width = 5, height = 8) %>%
                 print(target = file)
               message("generating figure output in DOCX format passed")
@@ -165,12 +170,9 @@ save_file <- function(save_object,
       }
       ## generate plotly output in html interactive format and download
     } else {
-      if (! "ptly" %in% names(save_object)) {
-        stop("plotly not available, please check")
-      }
       tryCatch(
         {
-          saveWidget(save_object$ptly,
+          saveWidget(save_object$plot,
                      file = file,
                      selfcontained = TRUE)
           message("generating figure output in interactive HTML format passes")

@@ -47,78 +47,7 @@ test_that("Case 2: With or without 'N'", {
   expect_equal(agen_start, c("AGEGR1N"))
 })
 
-
-#############################################################################
-# summary_functions
-
-test_that("Test 1: Summary functions return all functions", {
-  ui_sigDec <- 2
-  list_stats <- summary_functions(ui_sigDec)
-  # Test
-  expect_named(list_stats, c(
-    "mean", "min", "max", "median", "iqr", "var", "sum", "sd", "q25",
-    "q75", "p1", "p10", "p5", "p90", "p95", "p99", "meansd", "range",
-    "q1q3", "medianrange", "whiskerlow", "whiskerup", "outliers",
-    "geom_lowci", "geom_upci", "geommean", "n"
-  ))
-})
-
-test_that("Test 2: Summary function returns expected values", {
-  list_stats <- summary_functions(2)[c("meansd", "q1q3", "n", "outliers", "range")]
-  actstats <- iris |>
-    group_by(Species) |>
-    summarise_at(.vars = "Sepal.Width", .funs = list_stats)
-  fn_outlier <- function(x) {
-    x <- x[!is.na(x)]
-    paste(unique(x[x < min(
-      x[(x >= (quantile(x, 0.25) - 1.5 * IQR(x))) & (x <= quantile(x, 0.25))]
-    ) |
-      x > max(
-        x[(x <= (quantile(x, 0.75) + 1.5 * IQR(x))) & (x >= quantile(x, 0.75))]
-      )]), collapse = "~")
-  }
-  expstats <- iris |>
-    group_by(Species) |>
-    summarise(
-      meansd = paste0(
-        round_f(mean(.data[["Sepal.Width"]]), 2),
-        " (", round_f(sd(.data[["Sepal.Width"]]), 3), ")"
-      ),
-      q1q3 = paste0(
-        "(", round_f(quantile(.data[["Sepal.Width"]], 0.25), 2), ", ",
-        round_f(quantile(.data[["Sepal.Width"]], 0.75), 2), ")"
-      ),
-      n = as.character(n()),
-      outliers = fn_outlier(.data[["Sepal.Width"]]),
-      range = paste0(
-        "(", round_f(min(.data[["Sepal.Width"]]), 2), ", ",
-        round_f(max(.data[["Sepal.Width"]]), 2), ")"
-      )
-    )
-  expect_equal(actstats, expstats)
-})
-
-test_that("Test 3: Summary function returns expected values", {
-  set.seed(123)
-  test_data <- rnorm(100, mean = 10, sd = 2)
-  expected_geom_lowci <- exp(mean(log(test_data), na.rm = TRUE) -
-    qt(0.975, df = length(test_data) - 1) *
-      sd(log(test_data)) / sqrt(length(test_data)))
-  expected_geom_upci <- exp(mean(log(test_data), na.rm = TRUE) +
-    qt(0.975, df = length(test_data) - 1) *
-      sd(log(test_data)) / sqrt(length(test_data)))
-  expected_geommean <- exp(mean(log(test_data), na.rm = TRUE))
-
-  expect_equal(summary_functions()$geom_lowci(test_data), paste(expected_geom_lowci))
-  expect_equal(summary_functions()$geom_upci(test_data), paste(expected_geom_upci))
-  expect_equal(summary_functions()$geommean(test_data), paste(expected_geommean))
-})
-
-#############################################################################
-
 # Function: split_section_headers
-
-
 # Test Data
 
 adsl_entry <- mentry(
@@ -241,19 +170,6 @@ test_that("Test 2: Check for exceptions", {
 test_that("Test round_f() works", {
   expect_equal(round_f(13.4, 2), "13.40")
   expect_equal(round_f(12.243, 1), "12.2")
-})
-# Function: fmtrd
-test_that("Test fmtrd function for calculation and precision", {
-  # 1: Applying fmtrd function with mean
-  # Test Data
-  sample_data <- c(10.23, 20, NA, 40, 50, 75.567)
-  mean_1 <- round_f(mean(sample_data, na.rm = TRUE), 2)
-  max_1 <- round_f(max(sample_data, na.rm = TRUE), 2)
-  expect_equal(fmtrd("mean")(sample_data), mean_1)
-  expect_equal(fmtrd("max")(sample_data), max_1)
-  # Significant decimal resolved correctly
-  mean_2 <- round_f(mean(sample_data, na.rm = TRUE), 3)
-  expect_equal(fmtrd("mean", d = 3)(sample_data), mean_2)
 })
 
 test_that("ord_summ_df works as expected", {
@@ -399,4 +315,98 @@ test_that("display_bign_head works as expected without treatment/subgrp", {
     mutate(!!head := .data[["CVALUE"]]) |>
     select(-all_of("CVALUE"))
   expect_equal(actual, exp, ignore_attr = TRUE)
+})
+
+test_that("sparse_vals works as expected", {
+  data_entry <- mentry(
+    adsl,
+    byvar = "SEX",
+    trtvar = "TRT01A",
+    trtsort = "TRT01AN",
+    subset = "SAFFL == 'Y'"
+  ) |>
+    mutate(DPTVAL = .data[["AGEGR1"]], DPTVALN = .data[["AGEGR1N"]])
+  count <- data_entry |>
+    dplyr::filter(.data[["SEX"]] == "F") |>
+    group_by(across(all_of(c("BYVAR1", "TRTVAR", "DPTVAL")))) |>
+    summarise(FREQ = length(unique(.data[["USUBJID"]])))
+  actual <- sparse_vals(
+    count,
+    data_sparse = data_entry,
+    sparseyn = "N",
+    sparsebyvalyn = "Y",
+    "BYVAR1",
+    character(0),
+    "BYVAR1N",
+    character(0)
+  )
+  expect_s3_class(actual, "data.frame")
+  expect_equal(setdiff(unique(actual$BYVAR1), unique(count$BYVAR1)), "M")
+  expect_equal(unique(actual$FREQ[actual$BYVAR1 == "M"]), 0)
+  count1 <- data_entry |>
+    dplyr::filter(.data[["AGEGR1"]] != "<65") |>
+    group_by(across(all_of(c("BYVAR1", "TRTVAR", "DPTVAL")))) |>
+    summarise(FREQ = length(unique(.data[["USUBJID"]])))
+  actual1 <- sparse_vals(
+    count1,
+    data_sparse = data_entry,
+    sparseyn = "Y",
+    sparsebyvalyn = "N",
+    "BYVAR1",
+    character(0),
+    "BYVAR1N",
+    character(0)
+  )
+  expect_s3_class(actual1, "data.frame")
+  expect_equal(setdiff(unique(actual1$DPTVAL), unique(count1$DPTVAL)), "<65")
+  actual2 <- sparse_vals(
+    count1,
+    data_sparse = data_entry,
+    sparseyn = "N",
+    sparsebyvalyn = "N",
+    "BYVAR1",
+    character(0),
+    "BYVAR1N",
+    character(0)
+  )
+  expect_s3_class(actual2, "data.frame")
+  expect_equal(actual2, count1)
+})
+
+test_that("sparse_vals with summary stat", {
+  data_entry <- mentry(
+    adsl,
+    byvar = "SEX",
+    trtvar = "TRT01A",
+    trtsort = "TRT01AN",
+    subset = "SAFFL == 'Y'"
+  )
+  sums <- data_entry |>
+    dplyr::filter(.data[["SEX"]] == "F") |>
+    group_by(across(all_of(c("BYVAR1", "TRTVAR")))) |>
+    summarise(mean = as.character(mean(.data[["AGE"]], na.rm = TRUE)))
+  actual <- sparse_vals(
+    sums,
+    data_sparse = data_entry,
+    sparseyn = "N",
+    sparsebyvalyn = "Y",
+    "BYVAR1",
+    character(0),
+    "BYVAR1N",
+    character(0),
+    fillvar = "mean",
+    fill_with = "-"
+  )
+  expect_s3_class(actual, "data.frame")
+  expect_equal(setdiff(unique(actual$BYVAR1), unique(sums$BYVAR1)), "M")
+  expect_equal(unique(actual$mean[actual$BYVAR1 == "M"]), "-")
+})
+
+test_that("dataset_vignette works", {
+  actual <- dataset_vignette(adsl, c("USUBJID", "TRT01A"), subset = "AGE >= 88")
+  expdata <- filter(adsl, .data[["AGE"]] >= 88)
+  expect_true("datatables" %in% class(actual))
+  expect_s3_class(actual$x$data, "data.frame")
+  expect_equal(nrow(actual$x$data), nrow(expdata))
+  expect_equal(ncol(actual$x$data), ncol(expdata))
 })

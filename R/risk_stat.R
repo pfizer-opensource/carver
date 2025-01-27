@@ -14,10 +14,11 @@
 #
 options(warn = -1)
 
+options(warn = -1)
+
 #' Calculate Risk Statistics for treatment pairs from pre-processed Adverse Events data
 #'
-#' @param datain Input dataset after pre_processing and running `mentry()` to *ADAE* data
-#' @param a_subset Analysis Subset condition specific to categorical analysis.
+#' @inheritParams mcatstat
 #' @param summary_by Measure to construct the summary by. Values: `'Patients' or 'Events'`.
 #' @param eventvar Event Variable to review by. Example: `'AEDECOD', 'AEBODSYS'`.
 #' @param ctrlgrp Treatment Control value.
@@ -25,13 +26,17 @@ options(warn = -1)
 #' for `forest_plot()`.
 #' @param statistics Statistic to be calculated. Values: `'Risk Ratio' or 'Risk Difference'`.
 #' @param alpha Alpha value to determine confidence interval for risk calculation. Default: `0.05`
-#' @param cutoff Incidence Cutoff Value; consider only terms with `incidence percentage > cutoff`.
+#' @param cutoff_where Filter condition for incidence/pct. Consider only terms with
+#' eg: "FREQ > 5" or "PCT <3". Must contain FREQ or PCT (count or percent)
 #' @param sort_opt How to sort terms, only for table/forest plot.
 #' Values: `'Ascending','Descending','Alphabetical'`.
 #' @param sort_var Metric to sort by. Values: `'Count','Percent','RiskValue'`.
 #' @param g_sort_by_ht For Forest Plot only - include sorting by high term/*BYVAR1*?
 #' Values: "Y"/"N". In the output, terms will be sorted by group first, then term. To be used
 #' along with `ht_dispyn` = Y in `ae_forest_plot()`
+#' @param riskdiff_pct To display risk and CI as % if `statistic` = risk difference (Y/N)
+#' @param hoveryn Include hover information (for graphs) Y/N
+#'
 #' @return A dataset containing risk statistic calculations for given treatment pair(s).
 #' @export
 #'
@@ -61,7 +66,7 @@ options(warn = -1)
 #'   trtgrp = "Xanomeline High Dose",
 #'   statistics = "Risk Ratio",
 #'   alpha = 0.05,
-#'   cutoff = 2,
+#'   cutoff_where = "PCT > 2",
 #'   sort_opt = "Ascending",
 #'   sort_var = "Count"
 #' )
@@ -74,16 +79,18 @@ risk_stat <-
            trtgrp,
            statistics = "Risk Ratio",
            alpha = 0.05,
-           cutoff = 2,
-           sort_opt,
-           sort_var,
-           g_sort_by_ht = "N") {
+           cutoff_where = NA,
+           sort_opt = "Ascending",
+           sort_var = "Count",
+           g_sort_by_ht = "N",
+           riskdiff_pct = "N",
+           sigdec = 1,
+           pctsyn = "Y",
+           hoveryn = "Y") {
     trtgrp <- str_to_vec(trtgrp, "~~")
-    stopifnot("Invalid Control Group" = ctrlgrp %in% unique(datain[["TRTVAR"]]))
-    stopifnot("Invalid Treatment Group" = all(trtgrp %in% unique(datain[["TRTVAR"]])))
     stopifnot(
       "Invalid Risk Statistics; specify any one of `Risk Ratio` or `Risk Difference`" =
-        statistics %in% c("Risk Ratio", "Risk Difference")
+        tolower(statistics) %in% c("risk ratio", "risk difference")
     )
     trt_list <- levels(datain[["TRTVAR"]])
     ## getting equivalent data variable for given summary by selection
@@ -102,61 +109,66 @@ risk_stat <-
 
     id_vars <- c("BYVAR1", "DPTVAL")
     value_vars <- c("FREQ", "PCT", "DENOMN")
-    distinct_vars <- c("TRTVAR", id_vars, value_vars)
-
+    mcat_out <- mcatstat(
+      datain = datain,
+      a_subset = a_subset,
+      uniqid = ifelse(tolower(summary_by) == "events", "ALLCT", summ_var),
+      dptvar = eventvar,
+      pctdisp = "TRT",
+      sigdec = sigdec,
+      pctsyn = pctsyn
+    )
+    if (nrow(mcat_out) == 0) {
+      return(mcat_out)
+    }
     ## calculating risk statistics mapping over each treatment
     risk_out <-
       map(set_names(trtgrp), \(trt) {
-        datain <- datain |>
+        mcatin <- mcat_out |>
           filter(.data[["TRTVAR"]] %in% c(ctrlgrp, trt))
-
-        mcat_out <- mcatstat(
-          datain = datain,
-          a_subset = a_subset,
-          uniqid = ifelse(tolower(summary_by) == "events", "ALLCT", summ_var),
-          dptvar = eventvar,
-          pctdisp = "TRT"
-        )
-
+        if (!is.na(cutoff_where) && str_detect(cutoff_where, "PCT|FREQ")) {
+          mcat_cut <- mcatin |>
+            filter(!!!parse_exprs(cutoff_where)) |>
+            distinct(across(all_of(id_vars))) |>
+            mutate(CUTFL = "Y")
+          mcatin <- mcatin |>
+            left_join(mcat_cut, by = id_vars) |>
+            filter(.data[["CUTFL"]] == "Y")
+        }
+        if (nrow(mcatin) < 1) {
+          return(data.frame())
+        }
         rout <- add_risk_stat(
-          mcatout = mcat_out,
+          mcatout = mcatin,
           ctrlgrp = ctrlgrp,
           trtgrp = trt,
           id_vars = id_vars,
           value_vars = value_vars,
           statistics = statistics,
-          alpha = alpha,
-          cutoff = cutoff
+          riskdiff_pct = riskdiff_pct,
+          alpha = alpha
         )
-
         if (nrow(rout) > 0) {
-          rout <- rout |>
-            left_join(distinct(select(mcat_out, any_of(
-              c(distinct_vars)
-            ))), by = c("TRTVAR", intersect(id_vars, names(mcat_out)))) |>
-            mutate(across(any_of(c(value_vars)), \(x) as.double(x))) |>
-            select(c(
-              any_of(c(id_vars)),
-              contains("PVAL"),
-              contains("RISK"),
-              contains("CTRL_"),
-              starts_with("TRT"),
-              any_of(c(value_vars)),
-              "TOTAL_N" = "DENOMN"
-            ))
+          rout <- mcat_out |>
+            filter(.data[["TRTVAR"]] %in% c(ctrlgrp, trt) |
+              str_detect(.data[["TRTVAR"]], "Total")) |>
+            left_join(rout, by = intersect(names(mcat_out), names(rout))) |>
+            mutate(across(any_of(c(value_vars)), \(x) as.double(x)), TOTAL_N = DENOMN) |>
+            filter(!.data[["RISK"]] %in% c(NA, Inf, NaN))
         }
         rout
       }) |>
       bind_rows()
-
-    if (nrow(risk_out) > 0) {
+    if (nrow(risk_out) > 0 && ncol(risk_out) > 1) {
       ## Add hover_text and order the final table
       risk_out <- risk_out |>
-        risk_hover_text(summary_by, eventvar) |>
         ord_summ_df(sort_var, sort_opt, g_sort_by_ht)
       risk_out[["TRTVAR"]] <- factor(risk_out[["TRTVAR"]],
         levels = trt_list, ordered = TRUE
       )
+      if (hoveryn == "Y") {
+        risk_out <- risk_hover_text(risk_out, summary_by, eventvar)
+      }
     }
     risk_out
   }
@@ -176,8 +188,8 @@ add_risk_stat <- function(mcatout,
                           id_vars = c("BYVAR1", "DPTVAL"),
                           value_vars = c("FREQ", "PCT", "DENOMN"),
                           statistics = "Risk Ratio",
-                          alpha = 0.05,
-                          cutoff = 2) {
+                          riskdiff_pct = "N",
+                          alpha = 0.05) {
   if (nrow(mcatout) < 1 || !all(c(ctrlgrp, trtgrp) %in% unique(mcatout$TRTVAR))) {
     return(data.frame())
   }
@@ -192,18 +204,11 @@ add_risk_stat <- function(mcatout,
       PCT = as.double(.data[["PCT"]])
     ) |>
     pivot_wider(
-      id_cols = any_of(c(id_vars)),
+      id_cols = any_of(c(id_vars, "CUTFL")),
       names_from = "TRTCD",
       values_from = any_of(c(value_vars))
     ) |>
-    mutate(across(where(is.numeric), ~ replace_na(.x, 0))) |>
-    filter(.data[["PCT_CTRLGRP"]] > cutoff |
-      .data[["PCT_TRTGRP"]] > cutoff)
-
-  if (nrow(risk_prep) < 1) {
-    message("`cutoff` value provided is too big, please specify a smaller `cutoff` value")
-    return(data.frame(NULL))
-  }
+    mutate(across(where(is.numeric), ~ replace_na(.x, 0)))
   ## Calculate Risk Statistics in `risk_out` column using `calc_risk_stat`
   risk_prep <- risk_prep |>
     group_by(across(any_of(c(id_vars)))) |>
@@ -216,13 +221,19 @@ add_risk_stat <- function(mcatout,
       calc_risk_stat
     )) |>
     ungroup()
+  # Show as percent if required
+  if (tolower(statistics) == "risk difference" && riskdiff_pct == "Y") {
+    ppct <- 100
+  } else {
+    ppct <- 1
+  }
   ## Extract Risk Statistics from the added `risk_out` column by each row
   rowwise(risk_prep) |>
     mutate(
-      PVALUE = flatten(.data[["risk_out"]])[["pval"]],
-      RISK = flatten(.data[["risk_out"]])[["risk"]],
-      RISKCIL = flatten(.data[["risk_out"]])[["low_ci"]],
-      RISKCIU = flatten(.data[["risk_out"]])[["upp_ci"]]
+      PVALUE = round(flatten(.data[["risk_out"]])[["pval"]], 4),
+      RISK = round(ppct * flatten(.data[["risk_out"]])[["risk"]], 3),
+      RISKCIL = round(ppct * flatten(.data[["risk_out"]])[["low_ci"]], 2),
+      RISKCIU = round(ppct * flatten(.data[["risk_out"]])[["upp_ci"]], 2)
     ) |>
     mutate(
       ADJPVALUE = p.adjust(.data[["PVALUE"]], method = "fdr"),
@@ -235,8 +246,7 @@ add_risk_stat <- function(mcatout,
       ACTIVE = trtgrp
     ) |>
     rename(CTRL_N = "FREQ_CTRLGRP", CTRL_PCT = "PCT_CTRLGRP") |>
-    select(-c("risk_out", any_of(starts_with("DENOMN")), any_of(ends_with("TRTGRP")))) |>
-    pivot_longer(c("CTRL", "ACTIVE"), values_to = "TRTVAR", names_to = NULL)
+    select(-c("risk_out", any_of(starts_with("DENOMN")), any_of(ends_with("TRTGRP"))))
 }
 
 #' Calculate Risk Statistics
@@ -270,15 +280,11 @@ calc_risk_stat <-
         suppressWarnings(riskdiff_wald(risk_mat, conf.level = 1 - alpha))
     } else {
       risk_mat <-
-        suppressWarnings(epitools::riskratio.wald(risk_mat, conf.level = 1 - alpha))
+        suppressWarnings(
+          epitools::riskratio.wald(risk_mat, conf.level = 1 - alpha, correction = TRUE)
+        )
     }
-
-    list(
-      risk = round(risk_mat$measure[2, 1], 3),
-      pval = round(risk_mat$p.value[2, 3], 4),
-      low_ci = round(risk_mat$measure[2, 2], 2),
-      upp_ci = round(risk_mat$measure[2, 3], 2)
-    )
+    extract_riskstats(risk_mat, statistic)
   }
 
 #' Calculate Risk difference
@@ -290,12 +296,7 @@ calc_risk_stat <-
 #'      input data can be one of the following: r x 2 table, vector of numbers from a
 #'      contigency table (will be transformed into r x 2 table in row-wise order),
 #'      or single factor or character vector that will be combined with y into a table.
-#' @param y single factor or character vector that will be combined with x into a table
-#'        (default is NULL)
 #' @param conf.level confidence level (default is 0.95)
-#' @param rev reverse order of "rows", "colums", "both", or "neither" (default)
-#' @param correction Yate's continuity correction
-#' @param verbose To return more detailed results
 #'
 #' @return a  list containg a data,measure,p.value,correction
 #' @export
@@ -306,22 +307,9 @@ calc_risk_stat <-
 #'   conf.level = 0.95
 #' )
 riskdiff_wald <-
-  function(x, y = NULL,
-           conf.level = 0.95,
-           rev = "neither",
-           correction = FALSE,
-           verbose = FALSE) {
-    if (is.matrix(x) && !is.null(y)) {
-      stop("y argument should be NULL")
-    }
-    if (is.null(y)) {
-      x <- epitools::epitable(x, rev = rev)
-    } else {
-      x <- epitools::epitable(x, y, rev = rev)
-    }
+  function(x, conf.level = 0.95) {
+    x <- epitools::epitable(x, rev = "neither")
     tmx <- epitools::table.margins(x)
-    p.exposed <- sweep(tmx, 2, tmx["Total", ], "/")
-    p.outcome <- sweep(tmx, 1, tmx[, "Total"], "/")
     Z <- qnorm(0.5 * (1 + conf.level))
     nr <- nrow(x)
     wald <- matrix(NA, nr, 3)
@@ -331,16 +319,14 @@ riskdiff_wald <-
       b <- x[i, 1]
       c <- x[1, 2]
       d <- x[1, 1]
-
-      # point estimate of risk difference
-      est <- (a / (a + b)) - (c / (c + d))
-      # standard error of risk difference
-      se_RD <- sqrt((a * b / (a + b)^3) + (c * d / (c + d)^3))
-
-      ci <- est + c(-1, 1) * Z * se_RD
+      p2 <- a / (a + b)
+      p1 <- c / (c + d)
+      est <- p1 - p2
+      se_RD <- sqrt((p1 * (1 - p1) / (c + d)) + (p2 * (1 - p2) / (a + b)))
+      ci <- (est + c(-1, 1) * Z * se_RD)
       wald[i, ] <- c(est, ci)
     }
-    pv <- epitools::tab2by2.test(x, correction = correction)
+    pv <- epitools::tab2by2.test(x, correction = FALSE)
     colnames(wald) <- c("estimate", "lower", "upper")
     rownames(wald) <- rownames(x)
     cn2 <- paste(
@@ -350,31 +336,14 @@ riskdiff_wald <-
     )
     names(dimnames(wald)) <- c(names(dimnames(x))[1], cn2)
 
-    rr <- list(
-      x = x,
-      data = tmx,
-      p.exposed = p.exposed,
-      p.outcome = p.outcome,
-      measure = wald,
-      conf.level = conf.level,
-      p.value = pv$p.value,
-      correction = pv$correction
-    )
     rrs <- list(
       data = tmx,
       measure = wald,
       p.value = pv$p.value,
       correction = pv$correction
     )
-
-    attr(rr, "method") <- "Unconditional MLE & normal approximation (Wald) CI"
     attr(rrs, "method") <- "Unconditional MLE & normal approximation (Wald) CI"
-
-    if (verbose == FALSE) {
-      rrs
-    } else {
-      rr
-    }
+    rrs
   }
 
 #' Add Risk Statistics specific Hover Text to data
@@ -423,4 +392,32 @@ risk_hover_text <- function(df, summary_by, eventvar) {
         .data[["PVALUE"]]
       )
     )
+}
+
+#' Extract Risk Statistics
+#'
+#' @return list of statistics
+#' @noRd
+extract_riskstats <- function(risk_mat, statistic) {
+  risk <- risk_mat$measure[2, 1]
+  pval <- risk_mat$p.value[2, 3]
+  low_ci <- risk_mat$measure[2, 2]
+  upp_ci <- risk_mat$measure[2, 3]
+
+  if (statistic == "Risk Difference") {
+    out <- list(
+      risk = 0 - risk,
+      pval = pval,
+      upp_ci = 0 - low_ci,
+      low_ci = 0 - upp_ci
+    )
+  } else {
+    out <- list(
+      risk = risk,
+      pval = pval,
+      upp_ci = upp_ci,
+      low_ci = low_ci
+    )
+  }
+  out
 }

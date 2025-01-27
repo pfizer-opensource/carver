@@ -58,8 +58,8 @@ order: "upper right~lower right~upper left~lower left" or as a vector of length 
 }
 }
 \examples{
-data("adsl")
 data("adlb")
+data("adsl")
 
 merged_data <- adsl_merge(
   adsl = adsl,
@@ -88,9 +88,9 @@ edish_plot(
   datain = pt_data,
   axis_opts = plot_axis_opts(
     xlinearopts = list(
-      breaks = c(0.1, 1, 2, 10),
-      limits = c(0.1, 10),
-      labels = c("0.1", "1", "2x ULN", "10")
+      breaks = c(0.1, 1, 2, 5),
+      limits = c(0.1, 5),
+      labels = c("0.1", "1", "2x ULN", "5")
     ),
     ylinearopts = list(
       breaks = c(0.1, 1, 3, 10),

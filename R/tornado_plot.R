@@ -1,3 +1,17 @@
+# Copyright 2024 Pfizer Inc
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
 #' Tornado Plot
 #'
 #' @param datain An input dataframe retrieved from `process_tornado_data`()`.
@@ -9,21 +23,20 @@
 #' @export
 #'
 #' @examples
-#' data(tornado_plot_data)
+#' data("adsl")
+#' data("adae")
 #'
 #' tornado_df <- process_tornado_data(
-#'   dataset_adsl = tornado_plot_data[["adsl"]],
-#'   dataset_analysis = tornado_plot_data[["adae"]],
+#'   dataset_adsl = adsl,
+#'   dataset_analysis = adae,
 #'   adsl_subset = "SAFFL == 'Y'",
-#'   analysis_subset = NA_character_,
-#'   ae_filter = "Treatment emergent",
+#'   analysis_subset = "TRTEMFL == 'Y'",
 #'   obs_residual = "30",
 #'   fmq_data = NA,
-#'   ae_catvar = "AESEV",
-#'   trtvar = "ARMCD",
-#'   trt_left = "A",
-#'   trt_right = "A",
-#'   pop_fil = "Overall Population",
+#'   ae_catvar = "AESEV/AESEVN",
+#'   trtvar = "ARM",
+#'   trt_left = "Xanomeline High Dose",
+#'   trt_right = "Xanomeline Low Dose",
 #'   pctdisp = "TRT",
 #'   denom_subset = NA_character_,
 #'   legendbign = "N",
@@ -120,8 +133,8 @@ tornado_plot <- function(datain,
 #' @param dataset_adsl (`data.frame`) ADSL dataset.
 #' @param dataset_analysis (`data.frame`) ADAE dataset.
 #' @param adsl_subset (`string`) Subset condition to be applied on `dataset_adsl`.
-#' @param analysis_subset Subset conditions for overall data.
-#' @param ae_catvar Categorical variable for severity analysis.
+#' @param analysis_subset Subset conditions for `dataset_analysis`
+#' @param ae_catvar Categorical variable for severity analysis and order variable. eg; "ASEV/ASEVN"
 #' @param denom_subset Subset condition to be applied to data set for
 #' calculating denominator.
 #' @param split_by (`string`) By variable for stratification.
@@ -132,15 +145,18 @@ tornado_plot <- function(datain,
 #' @param yvar Categorical Analysis variable for Y axis
 #' @param pctdisp Method to calculate denominator (for %) by
 #' Possible values: "TRT","VAR","COL","SUBGRP","CAT","NONE","NO","DPTVAR"
-#' @param pop_fil Population Filter for data set: Name of flag variable.
+#' @param subset Overall subset for data set. eg: "EFFFL == 'Y'"
 #' eg: `"SAFFL"`, `"EFFFL"` or `NA` for Overall Population.
 #' @param legendbign (`string`) Display BIGN in Legend (`Y/N`).
+#' @param pop_fil Population Filter for data set: Name of flag variable.
+#' eg: `"SAFFL"`, `"EFFFL"` or `NA` for Overall Population.
 #' @inheritParams ae_pre_processor
 #'
 #' @details
 #' \itemize{
 #' \item ae_catvar grouping variable for severity like AESEV(MILD, MODERATE,
-#' SEVERE). It must also have it's numeric variable in the dataset.
+#' SEVERE). It must be passed "/" separated with its numeric variable.
+#' eg: ASEV/ASEVN; ATOXGR/ATOXGRN
 #' \item yvar(dptvar) Adverse Event category, derived term from AE.
 #' Possible Values: AEBODSYS, AEDECOD, AEHLT, AEHLGT.
 #' }
@@ -151,18 +167,16 @@ tornado_plot <- function(datain,
 #' data(tornado_plot_data)
 #'
 #' process_tornado_data(
-#'   dataset_adsl = tornado_plot_data[["adsl"]],
-#'   dataset_analysis = tornado_plot_data[["adae"]],
+#'   dataset_adsl = adsl,
+#'   dataset_analysis = adae,
 #'   adsl_subset = "SAFFL == 'Y'",
-#'   analysis_subset = NA_character_,
-#'   ae_filter = "Treatment emergent",
+#'   analysis_subset = "TRTEMFL == 'Y'",
 #'   obs_residual = "30",
 #'   fmq_data = NA,
-#'   ae_catvar = "AESEV",
-#'   trtvar = "ARMCD",
-#'   trt_left = "A",
-#'   trt_right = "A",
-#'   pop_fil = "Overall Population",
+#'   ae_catvar = "AESEV/AESEVN",
+#'   trtvar = "ARM",
+#'   trt_left = "Xanomeline High Dose",
+#'   trt_right = "Xanomeline Low Dose",
 #'   pctdisp = "TRT",
 #'   denom_subset = NA_character_,
 #'   legendbign = "N",
@@ -174,8 +188,9 @@ process_tornado_data <-
            dataset_analysis,
            adsl_subset = NA_character_,
            analysis_subset = NA_character_,
-           ae_filter = "Any Event",
            obs_residual = NA_real_,
+           ae_filter = "Any Event",
+           pop_fil = NA_character_,
            fmq_data = NULL,
            split_by = NA_character_,
            ae_catvar,
@@ -183,45 +198,50 @@ process_tornado_data <-
            trt_left,
            trt_right,
            trtsort = NA_character_,
-           pop_fil = "Overall Population",
+           subset = NA_character_,
            pctdisp = "TRT",
            denom_subset = NA_character_,
            legendbign = "N",
-           yvar) {
+           yvar = "AESOC") {
     # Check data sets are not empty
-    # stopifnot("ADSL data is empty" = nrow(dataset_adsl) != 0)
+    stopifnot("ADSL data is empty" = nrow(dataset_adsl) != 0)
     stopifnot("Analysis data is empty" = nrow(dataset_analysis) != 0)
-
-    # stopifnot(all(c(ae_catvar, paste0(ae_catvar, "N")) %in%
-    #                 toupper(names(dataset_analysis))))
-
-    # Merge with adsl
-    # adsl_merged <- adsl_merge(
-    #   adsl = dataset_adsl,
-    #   adsl_subset = adsl_subset,
-    #   dataset_add = dataset_analysis
-    # )
-
+    maxvar <- str_to_vec(ae_catvar, "/")
+    numvar <- ifelse(length(maxvar) > 1, maxvar[2], paste0(maxvar[1], "N"))
+    stopifnot(all(c(numvar, maxvar[1]) %in% toupper(names(dataset_analysis))))
     # Pre-Processing data for Adverse Event
     data_pre <- ae_pre_processor(
       datain = dataset_analysis,
+      subset = analysis_subset,
       ae_filter = ae_filter,
       obs_residual = obs_residual,
-      fmq_data = fmq_data
+      fmq_data = fmq_data,
+      max_sevctc = "SEV",
+      sev_ctcvar = numvar,
+      hterm = character(0),
+      lterm = yvar
     )
+    # Merge with adsl if exists
+    if (is.data.frame(dataset_adsl)) {
+      data_pro <- adsl_merge(
+        adsl = dataset_adsl,
+        adsl_subset = adsl_subset,
+        dataset_add = data_pre$data
+      )
+    } else {
+      data_pro <- data_pre$data
+    }
 
     # Data mentry processing
     mentry_out <- mentry(
-      data_pre$data,
-      subset = analysis_subset,
-      byvar = ae_catvar,
+      data_pro,
+      subset = subset,
+      byvar = maxvar,
       subgrpvar = str_remove_all(split_by, " "),
       trtvar = trtvar,
       trtsort = trtsort,
       pop_fil = pop_fil
-    ) |>
-      group_by(!!sym(trtvar), SUBJID, !!sym(yvar)) |>
-      filter(!!sym(paste0(ae_catvar, "N")) == max(!!sym(paste0(ae_catvar, "N"))))
+    )
     stopifnot(
       "Given Subsets not present in Analysis Data" =
         nrow(mentry_out) != 0
@@ -234,7 +254,8 @@ process_tornado_data <-
       denom_subset = denom_subset,
       uniqid = "USUBJID",
       dptvar = yvar,
-      pctdisp = pctdisp
+      pctdisp = pctdisp,
+      sparseyn = "N"
     ) |> (\(x) {
       mutate(x,
         YVAR = as.numeric(PCT),

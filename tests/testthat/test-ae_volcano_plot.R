@@ -1,4 +1,37 @@
-data("ae_risk")
+data("adae")
+ae_pre <- ae_pre_processor(
+  datain = adae,
+  obs_residual = 0,
+  fmq_data = NA,
+  subset = "TRTEMFL == 'Y'"
+)
+
+ae_entry <- mentry(
+  datain = ae_pre$data,
+  subset = NA,
+  byvar = "AEBODSYS",
+  trtvar = "TRTA",
+  trtsort = "TRTAN",
+  subgrpvar = NA,
+  trttotalyn = "N",
+  add_grpmiss = "N",
+  sgtotalyn = "N",
+  pop_fil = "SAFFL"
+)
+
+ae_risk <- risk_stat(
+  datain = ae_entry,
+  a_subset = ae_pre$a_subset,
+  summary_by = "Patients",
+  eventvar = "AEDECOD",
+  ctrlgrp = "Placebo",
+  trtgrp = "Xanomeline High Dose",
+  statistics = "Risk Ratio",
+  alpha = 0.05,
+  cutoff_where = "PCT > 5",
+  sort_opt = "Ascending",
+  sort_var = "Count"
+)
 vaxis_opts <- ae_volcano_opts(
   datain = ae_risk,
   statistic = "Risk Ratio",
@@ -21,7 +54,7 @@ test_that("Test 1: Volcano plot Options works", {
     c("xaxis_label", "yaxis_label", "ylinearopts", "yaxis_scale", "xref")
   )
   expected <- list(
-    xaxis_label = "<--- Favors Control (N=69) ---- Favors Exposure (N=79) --->\nRisk Ratio",
+    xaxis_label = "<--- Favors Control (N=62) ---- Favors Exposure (N=69) --->\nRisk Ratio",
     yaxis_label = "-log10 p-value",
     ylinearopts = list(breaks = as.numeric(paste0("1e-", 0:20)), labels = as.character(0:20)),
     yaxis_scale = reverselog_trans(10),
@@ -33,7 +66,7 @@ test_that("Test 1: Volcano plot Options works", {
     pvalue_trans = "none"
   )
   expected2 <- list(
-    xaxis_label = "<--- Favors Control (N=69) ---- Favors Exposure (N=79) --->\nRisk Ratio",
+    xaxis_label = "<--- Favors Control (N=62) ---- Favors Exposure (N=69) --->\nRisk Ratio",
     yaxis_label = "p-value",
     ylinearopts = list(
       breaks = c(0.05, 0, rep(1, 10) / 10^(9:0)),

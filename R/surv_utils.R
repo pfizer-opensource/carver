@@ -1,3 +1,17 @@
+# Copyright 2024 Pfizer Inc
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
 #' Process data for Survival Analysis
 #'
 #' @inheritParams process_vx_scatter_data
@@ -79,7 +93,7 @@ surv_pre_processor <- function(dataset_adsl,
 #' @noRd
 #'
 pairwise_surv_stats <- function(datain) {
-  pairs <- utils::combn(sort(unique(datain[["TRTSORT"]])), 2)
+  pairs <- combn(sort(unique(datain[["TRTSORT"]])), 2)
 
   pair_stat <- map_chr(seq_len(ncol(pairs)), \(i) {
     trt_index <- pairs[, i]
@@ -88,7 +102,7 @@ pairwise_surv_stats <- function(datain) {
     trt_pair <- levels(pair_data[["TRTVAR"]])[trt_index] # nolint
     # tidy coxph fit
     summ <-
-      coxph(Surv(timevar, cnsrvar) ~ TRTVAR, data = pair_data) |>
+      survival::coxph(survival::Surv(timevar, cnsrvar) ~ TRTVAR, data = pair_data) |>
       broom::tidy(conf.int = TRUE, exponentiate = TRUE) |>
       filter(row_number() == 1)
     # extract coxph statistics

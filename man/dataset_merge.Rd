@@ -4,7 +4,7 @@
 \alias{dataset_merge}
 \title{Merge Datasets}
 \usage{
-dataset_merge(..., byvars, subset = NULL)
+dataset_merge(..., byvars, subset = NULL, type = "left")
 }
 \arguments{
 \item{...}{Datasets to be merged.}
@@ -13,6 +13,8 @@ dataset_merge(..., byvars, subset = NULL)
 
 \item{subset}{Dataset specific subset conditions as \code{list}, default is \code{NULL}.
 Has to be specified in the same order of datasets to be merged}
+
+\item{type}{Type of join to perform. Values: "left", "right", "inner", "full", "semi", "anti"}
 }
 \value{
 A \code{data.frame}
@@ -22,46 +24,39 @@ Merge Datasets
 }
 \examples{
 dataset_merge(
-  lab_data$adsl,
-  lab_data$adlb,
+  adsl,
+  adlb,
   byvars = "STUDYID~USUBJID~SUBJID",
-  subset = list("SEX=='F'", "PARAMCD == 'L00021S'")
+  subset = list("SEX=='F'", "PARAMCD == 'ALT'")
 )
 
 dataset_merge(
-  lab_data$adsl,
-  lab_data$adlb,
+  adsl,
+  adlb,
   byvars = "STUDYID~USUBJID~SUBJID",
   subset = list("SEX=='F'", NA_character_)
 )
 
 dataset_merge(
-  lab_data$adsl,
-  lab_data$adlb,
+  adsl,
+  adlb,
   byvars = "STUDYID~USUBJID~SUBJID",
-  subset = list(NA_character_, "PARAMCD == 'L00021S'")
+  subset = list(NA_character_, "PARAMCD == 'ALT'")
 )
 
 dataset_merge(
-  lab_data$adsl,
-  lab_data$adlb,
+  adsl,
+  adlb,
   byvars = "STUDYID~USUBJID~SUBJID",
-  subset = list("USUBJID == 'XYZ1 1003 10031009'", NA_character_)
-)
-
-dataset_merge(
-  waterfall_plot_data$adrs,
-  waterfall_plot_data$adtr,
-  byvars = "STUDYID~USUBJID~TRT01P",
-  subset = list("PARAMCD == 'BOR_C'", NA_character_)
+  subset = list("USUBJID == '01-701-1015'", NA_character_)
 )
 
 ## more than 2 datasets
 
 dataset_merge(
-  dplyr::filter(lab_data$adsl, USUBJID == "XYZ1 1003 10031009"),
-  lab_data$adsl,
-  lab_data$adlb,
+  dplyr::filter(adsl, USUBJID == "01-701-1015"),
+  adsl,
+  adlb,
   byvars = "STUDYID~USUBJID~SUBJID"
 )
 

@@ -35,33 +35,6 @@
 #' @export
 #'
 #' @examples
-#' data("survival")
-#'
-#' km_df <- survival[["adsl"]] |>
-#'   surv_pre_processor(
-#'     dataset_analysis = survival[["adtte"]],
-#'     analysis_subset = "PARAMCD == 'PFS_P'"
-#'   )
-#'
-#' km_df |>
-#'   km_plot(
-#'     trt_colors = "#F8766D~#00BA38~#619CFF"
-#'   )
-#'
-#' ## with confidence interval and multiple `risk table` statistics
-#' km_df |>
-#'   km_plot(
-#'     disp_conf.int = "Y",
-#'     risktab_stats = "n.risk~n.censor",
-#'     risktab_height = 0.25,
-#'     trt_colors = "#F8766D~#00BA38~#619CFF",
-#'     axis_opts = plot_axis_opts(
-#'       xlinearopts = list(breaks = 3),
-#'       ylinearopts = list(breaks = 0.1),
-#'       xaxis_label = "Progression-Free Survival Time (Months)",
-#'       yaxis_label = "Probability of Progression Free Survival"
-#'     )
-#'   )
 #'
 #' ## with `{pharmaverseadam}` test data sets
 #' ## run `install.packages("pharmaverseadam")` prior running this example
@@ -123,7 +96,7 @@ km_plot <-
       )))
     ## create the `survfit` object
     survfit_km <-
-      survfit2(
+      ggsurvfit::survfit2(
         Surv(timevar, cnsrvar) ~ TRTVAR,
         data = plot_data,
         conf.type = "log-log",
@@ -131,7 +104,7 @@ km_plot <-
       )
     ## get legend labels to display
     km_legend <- survfit_km |>
-      km_legend_txt(time_unit)
+      ggsurvfit::km_legend_txt(time_unit)
     ## get pairwise prop hazard stats using `survival::coxph()`
     pair_stat <- NULL
     if (disp_pair.stat == "Y") {
@@ -140,7 +113,7 @@ km_plot <-
     }
     ## Kaplan-Meir plot
     km <- survfit_km |>
-      ggsurvfit(
+      ggsurvfit::ggsurvfit(
         linewidth = 0.8,
         theme = list_modify(
           theme_std(axis_opts, legend_opts),
@@ -166,7 +139,7 @@ km_plot <-
     ## prepare km plot for display
     ### plot specific options
     km +
-      scale_ggsurvfit(
+      ggsurvfit::scale_ggsurvfit(
         x_scales =
           list(
             breaks =
@@ -203,7 +176,7 @@ km_plot <-
 km_legend_txt <- function(survfit_km, time_unit) {
   tibble::as_tibble(summary(survfit_km)[["table"]], rownames = "strata") |>
     mutate(across("strata", \(x) str_remove_all(x, "TRTVAR="))) |>
-    semi_join(tidy_survfit(survfit_km), by = "strata") |>
+    semi_join(ggsurvfit::tidy_survfit(survfit_km), by = "strata") |>
     mutate(
       txt = glue(
         "{strata} (N={records}, Events={events}, Median={round_f(median, 1)} {time_unit}, 95%CI ({round_f(`0.95LCL`, 1)}, {round_f(`0.95UCL`, 1)}))" # nolint

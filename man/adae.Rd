@@ -5,11 +5,11 @@
 \alias{adae}
 \title{ADAE}
 \format{
-Data frame with 1191 features and 55 fields
+Data frame with 1191 features and 56 fields
 }
 \source{
 \url{https://github.com/phuse-org/aesummaries/tree/main/inst/extdata/adae.xpt},
-downloaded 2023-03-17
+downloaded 2023-03-17, modified 2023-03-17
 }
 \usage{
 adae

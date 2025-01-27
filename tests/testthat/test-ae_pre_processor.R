@@ -1,172 +1,140 @@
 # testcase 1:
 data(adae)
 data(FMQ_Consolidated_List)
-test_that("Test Case 1: With standard inputs", {
+adae1 <- adae |>
+  dplyr::mutate(ASEVN = dplyr::recode(.data[["AESEV"]], "MILD" = 1, "MODERATE" = 2, "SEVERE" = 3))
+test_that("Test Case 1: With standard arguments", {
+  adaetest <- adae
+  adaetest$AEDECOD[1] <- NA
   actual <- ae_pre_processor(
-    datain = adae,
-    aeSubset = "AOCCPFL=='Y'",
-    aeDenomSubset = "!is.na(ASTDT)",
+    datain = adaetest,
     ae_filter = "Any Event",
-    aeObsPeriod = "Overall Duration",
-    aeObsResidual = 0,
-    trtvar = "TRTA",
-    trtsort = "TRTAN",
-    pop_fil = "SAFFL",
-    fmq_data = FMQ_Consolidated_List,
-    aeEventVar = "AEDECOD",
-    aeByVar = "AEBODSYS",
-    aeSubGrpVar = NA,
-    aeBigN = "N",
-    aeGrpVarMiss = "N",
-    aeTrtTot = "N",
-    aeSubGrpTot = "N"
+    obs_residual = NA,
+    fmq_data = NA
   )
-  date_formats <- c("%d%b%Y", "%Y-%m-%d")
-
-  expected <- adae %>%
+  date_formats <- c("%d%b%Y", "%Y-%m-%d", "%m/%d/%Y", "%d/%m/%Y")
+  expected <- adaetest |>
     mutate(
-      AESTDT = as.Date(ASTDT, tryFormats = date_formats, optional = FALSE),
-      AEENDT = as.Date(AENDT, tryFormats = date_formats, optional = FALSE),
-      RFSTDTC = as.Date(TRTSDT, tryFormats = date_formats, optional = FALSE),
-      RFENDTC = as.Date(TRTEDT, tryFormats = date_formats, optional = FALSE)
-    ) %>%
-    tidyr::drop_na(RFSTDTC) %>%
-    mutate(
-      AEDECOD = if_else(!is.na(AESTDT) & is.na(AEDECOD), "Not yet coded", AEDECOD),
-      AESTDT = if_else(is.na(AESTDT) & !is.na(AEDECOD), RFSTDTC, AESTDT),
-      AESEV = toupper(AESEV)
-    )
-
-  mdsin <- mentry(
-    datain = expected,
-    ui_aSubset = "AOCCPFL=='Y'",
-    ui_dSubset = "!is.na(ASTDT)",
-    ui_byvar = "AEBODSYS",
-    ui_subgrpvar = NA,
-    ui_trtvar = "TRTA",
-    ui_trtsort = "TRTAN",
-    ui_trttotalyn = "N",
-    ui_sgtotalyn = "N",
-    ui_bign = "N",
-    ui_addGrpMiss = "N",
-    ui_pop_fil = "SAFFL"
-  )
-  expect_named(actual, c("dsin", "dout", "bigN"))
-  expect_equal(actual$dsin, mdsin$dsin)
-  expect_equal(actual$dout, mdsin$dout)
-  expect_true(is.na(actual$bigN))
+      ASTDT = as.Date(.data[["ASTDT"]], tryFormats = date_formats, optional = FALSE),
+      AENDT = as.Date(.data[["AENDT"]], tryFormats = date_formats, optional = FALSE),
+      TRTSDT = as.Date(.data[["TRTSDT"]], tryFormats = date_formats, optional = FALSE),
+      TRTEDT = as.Date(.data[["TRTEDT"]], tryFormats = date_formats, optional = FALSE)
+    ) |>
+    tidyr::drop_na(all_of("TRTSDT")) |>
+    mutate(AEDECOD = if_else(is.na(.data[["AEDECOD"]]) & !is.na(.data[["ASTDT"]]),
+      "Not Yet Coded", .data[["AEDECOD"]]
+    ))
+  expect_named(actual, c("data", "a_subset"))
+  expect_equal(actual$data, expected)
+  expect_true(is.na(actual$a_subset))
 })
 
-# testcase 2:
 
-test_that("Test Case 2: Varying inputs", {
+test_that("Test Case 2: Check filtering", {
   actual <- ae_pre_processor(
     datain = adae,
-    aeSubset = "AOCCPFL=='Y'",
-    aeDenomSubset = "!is.na(ASTDT)",
-    ae_filter = "Treatment emergent",
-    aeObsPeriod = "Other",
-    aeObsResidual = 5,
-    trtvar = "TRTA",
-    trtsort = "TRTAN",
-    pop_fil = "SAFFL",
-    fmq_data = FMQ_Consolidated_List,
-    aeEventVar = "AEDECOD",
-    aeByVar = "AEBODSYS",
-    aeSubGrpVar = NA,
-    aeBigN = "N",
-    aeGrpVarMiss = "N",
-    aeTrtTot = "Y",
-    aeSubGrpTot = "N"
+    ae_filter = "Serious",
+    obs_residual = 5,
+    fmq_data = NA
   )
-  expect_named(actual, c("dsin", "dout", "bigN"))
-  expect_true(is.na(actual$bigN))
-  # AE filter applied:
-  expect_equal(unique(actual$dsin$TRTEMFL), "Y")
-  # Analysis Subset applied:
-  expect_equal(unique(actual$dsin$AOCCPFL), "Y")
-  # Denom Subset:
-  expect_false(any(is.na(actual$dout$ASTDT)))
-  # Observation Period:
-  expect_true(all(actual$dsin$AESTDT > actual$dsin$RFSTDTC))
-  expect_true(all(actual$dsin$AESTDT < (actual$dsin$RFENDTC + 5)))
-  # All required variables created in if():
-  expect_true(all(c("AESTDT", "AEENDT", "RFSTDTC", "RFENDTC", "AESEV") %in% names(actual$dout)))
-  # There are no non-coded terms in default adae:
-  expect_false("Not yet coded" %in% unique(actual$dsin$AEDECOD))
-  # Treatment
-  expect_is(actual$dsin$TRTVAR, "factor")
-  # Total Treatment:
-  expect_true("Total" %in% unique(actual$dsin$TRTVAR))
-  # FMQ is not given as eventvar:
-  expect_false("FMQ_NAM" %in% names(actual$dout))
+  date_formats <- c("%d%b%Y", "%Y-%m-%d", "%m/%d/%Y", "%d/%m/%Y")
+  expected <- adae |>
+    mutate(
+      ASTDT = as.Date(.data[["ASTDT"]], tryFormats = date_formats, optional = FALSE),
+      AENDT = as.Date(.data[["AENDT"]], tryFormats = date_formats, optional = FALSE),
+      TRTSDT = as.Date(.data[["TRTSDT"]], tryFormats = date_formats, optional = FALSE),
+      TRTEDT = as.Date(.data[["TRTEDT"]], tryFormats = date_formats, optional = FALSE)
+    ) |>
+    tidyr::drop_na(all_of("TRTSDT")) |>
+    filter(
+      .data[["AESER"]] == "Y", .data[["ASTDT"]] > .data[["TRTSDT"]],
+      .data[["ASTDT"]] < (.data[["TRTEDT"]] + 5)
+    )
+  expect_named(actual, c("data", "a_subset"))
+  expect_equal(actual$data, expected)
+  expect_equal(
+    actual$a_subset,
+    "AESER == 'Y' & (ASTDT > TRTSDT) & (ASTDT < (TRTEDT + 5))"
+  )
 })
 
 # test case 3:
 test_that("Test Case 3: FMQ created from Consolidated List", {
   actual <- ae_pre_processor(
     datain = adae,
-    aeSubset = "USUBJID != ''",
-    aeDenomSubset = "!is.na(ASTDT)",
-    ae_filter = c("Mild", "Recovered/Resolved"),
-    aeObsPeriod = "Overall Duration",
-    trtvar = "TRTA",
-    trtsort = "TRTAN",
-    pop_fil = "SAFFL",
-    fmq_data = FMQ_Consolidated_List,
-    aeEventVar = "AEDECOD",
-    aeByVar = "FMQ_NAM",
-    aeSubGrpVar = NA,
-    aeBigN = "Y",
-    aeGrpVarMiss = "N",
-    aeTrtTot = "N",
-    aeSubGrpTot = "N"
+    ae_filter = NA,
+    obs_residual = NA,
+    fmq_data = FMQ_Consolidated_List
   )
-  expect_named(actual, c("dsin", "dout", "bigN"))
-  expect_is(actual$bigN, "data.frame")
-  # AE filter applied:
-  expect_equal(toupper(unique(actual$dsin$AESEV)), "MILD")
-  expect_equal(toupper(unique(actual$dsin$AEOUT)), "RECOVERED/RESOLVED")
   # FMQ is given as BYVAR
-  expect_true("FMQ_NAM" %in% names(actual$dout))
-  # Using PT = "Rash" as example:
-  Fmq_rash <- FMQ_Consolidated_List %>%
-    filter(PT == "Rash") %>%
+  expect_true("FMQ_NAM" %in% names(actual$data))
+  # Using PT = "Anxiety" as example:
+  Fmq_Anxiety <- FMQ_Consolidated_List |>
+    filter(PT == "Anxiety") |>
     mutate(FMQ_NAM = paste0(FMQ, "/", FMQCAT))
-  expectedfmq <- paste(unique(Fmq_rash$FMQ_NAM), collapse = "~~")
-  actualfmq <- actual$dout %>%
-    filter(AEDECOD == "RASH") %>%
-    distinct(FMQ_NAM) %>%
+  expectedfmq <- paste(unique(Fmq_Anxiety$FMQ_NAM), collapse = "~~")
+  actualfmq <- actual$data |>
+    filter(AEDECOD == "ANXIETY") |>
+    distinct(FMQ_NAM) |>
     pull()
   expect_equal(actualfmq, expectedfmq)
 })
-# test case 4
-test_that("Test Case 4: Dates Converted As Expected:", {
+
+# test case 3:
+test_that("Test Case 4: Filters executed correctly", {
+  expect_error(
+    ae_pre_processor(
+      datain = adae,
+      ae_filter = "GRADE 1",
+      obs_residual = NA,
+      fmq_data = FMQ_Consolidated_List
+    ), "ATOXGR not found in data. Cannot apply ae_filter"
+  )
   actual <- ae_pre_processor(
     datain = adae,
-    aeSubset = "USUBJID != ''",
-    aeDenomSubset = "!is.na(ASTDT)",
     ae_filter = "Serious",
-    aeObsPeriod = "Other",
-    aeObsResidual = 5,
-    trtvar = "TRTA",
-    trtsort = "TRTAN",
-    pop_fil = "SAFFL",
-    fmq_data = FMQ_Consolidated_List,
-    aeEventVar = "AEDECOD",
-    aeByVar = "AEBODSYS",
-    aeSubGrpVar = NA,
-    aeBigN = "N",
-    aeGrpVarMiss = "N",
-    aeTrtTot = "Y",
-    aeSubGrpTot = "N"
+    subset = "AGE > 80",
+    fmq_data = NA
   )
-  expect_named(actual, c("dsin", "dout", "bigN"))
-  # AE filter applied:
-  expect_equal(unique(actual$dsin$AESER), "Y")
-  # expected class to be 'Date'
-  expect_is(actual$dsin$AESTDT, "Date")
-  expect_is(actual$dsin$AEENDT, "Date")
-  expect_is(actual$dsin$RFSTDTC, "Date")
-  expect_is(actual$dsin$RFENDTC, "Date")
+  expect_named(actual, c("data", "a_subset"))
+  expect_equal(nrow(actual$data), 0)
+  expect_equal(actual$a_subset, "AESER == 'Y' & AGE > 80")
+  actual1 <- ae_pre_processor(
+    datain = data.frame()
+  )
+  expect_equal(actual1, list(data = data.frame(), a_subset = NA_character_))
+})
+
+# test case 5:
+test_that("Test Case 5: Max Sev/Toxicity", {
+  actual <- ae_pre_processor(
+    datain = adae1,
+    subset = "TRTEMFL == 'Y' & SITEID == '703'",
+    max_sevctc = "SEV",
+    sev_ctcvar = "ASEVN",
+    hterm = "AEBODSYS",
+    lterm = "AEDECOD",
+    pt_total = "Y"
+  )
+  expected <- adae1 |>
+    filter(TRTEMFL == "Y", SITEID == "703") |>
+    mutate(
+      ASTDT = as.Date(.data[["ASTDT"]], tryFormats = date_formats, optional = FALSE),
+      AENDT = as.Date(.data[["AENDT"]], tryFormats = date_formats, optional = FALSE),
+      TRTSDT = as.Date(.data[["TRTSDT"]], tryFormats = date_formats, optional = FALSE),
+      TRTEDT = as.Date(.data[["TRTEDT"]], tryFormats = date_formats, optional = FALSE)
+    ) |>
+    tidyr::drop_na(all_of("TRTSDT")) |>
+    group_by(across(all_of(c("TRTA", "USUBJID", "AEBODSYS", "AEDECOD")))) |>
+    mutate(MAX_SEVCTC = ifelse(.data[["ASEVN"]] == max(.data[["ASEVN"]], na.rm = TRUE), 1, 0)) |>
+    filter(.data[["MAX_SEVCTC"]] == 1) |>
+    group_by(across(any_of(c("TRTA", "USUBJID")))) |>
+    mutate(ANY = ifelse(.data[["ASEVN"]] == max(.data[["ASEVN"]], na.rm = TRUE), 1, 0)) |>
+    group_by(across(any_of(c("TRTA", "USUBJID", "AEBODSYS")))) |>
+    mutate(HT_FL = ifelse(.data[["ASEVN"]] == max(.data[["ASEVN"]], na.rm = TRUE), 1, 0)) |>
+    group_by(across(any_of(c("TRTA", "AEDECOD", "USUBJID")))) |>
+    mutate(PT_CNT = ifelse(.data[["ASEVN"]] == max(.data[["ASEVN"]], na.rm = TRUE), 1, 0)) |>
+    ungroup()
+  expect_equal(actual$data, expected)
+  expect_equal(actual$a_subset, "TRTEMFL == 'Y' & SITEID == '703' & MAX_SEVCTC == 1")
 })

@@ -10,11 +10,19 @@ occ_tier_summary(
   summary_by = "Patients",
   hterm = "AEBODSYS",
   lterm = "AEDECOD",
+  htermctyn = "Y",
   pctdisp = "TRT",
-  cutoff = 2,
+  cutoff_where = NA,
+  sum_row = "N",
+  sum_row_label = "Number of Participants with Any AE",
   apply_hrow_cutoff = "N",
   sort_opt = "Ascending",
-  sort_var = "Count"
+  sort_var = "Count",
+  sort_col = 1,
+  nolwrtierdispyn = "N",
+  sigdec_cat = 2,
+  pctsyn = "Y",
+  stathead = "n (\%)"
 )
 }
 \arguments{
@@ -24,28 +32,48 @@ occ_tier_summary(
 
 \item{summary_by}{Measure to construct the summary by. Values: \verb{'Patients' or 'Events'}.}
 
-\item{hterm}{High Level Event term variable, used for analysis}
+\item{hterm}{High Level Event term variable, used for analysis (tilde-separated)}
 
 \item{lterm}{Low Level Event term variable, used for analysis}
+
+\item{htermctyn}{To show count of high term rows or not. Should correspond to and be same number
+of terms passed in \code{hterm} (tilde-separated). To suppress showing counts for any term pass "N"}
 
 \item{pctdisp}{Method to calculate denominator (for \%) by.
 Possible values: \code{"TRT"}, \code{"VAR"}, \code{"COL"}, \code{"SUBGRP"}, \code{"CAT"}, \code{"NONE"}, \code{"NO"}, \code{"DPTVAR"},
 \code{"BYVARxyN"}}
 
-\item{cutoff}{Incidence Cutoff Value; consider only terms with \verb{incidence percentage > cutoff}.}
+\item{cutoff_where}{Filter condition for incidence/pct. Consider only terms with
+eg: "FREQ > 5" or "PCT <3". Must contain FREQ or PCT (count or percent)}
 
-\item{apply_hrow_cutoff}{To apply cutoff value to high terms in addition to low term.
+\item{sum_row}{To show summary/any term row or not. 'Y'/'N'}
+
+\item{sum_row_label}{Label for Summary Row to be displayed, if Y.}
+
+\item{apply_hrow_cutoff}{To apply \code{cutoff_where} value to high terms in addition to low term.
 If set to "Y" same cutoff is applied to remove both  high and low level terms that don't meet
 the criteria.
 If set to "N" (default), cutoff is applied only to Lower Level term. The terms that do not fit
 the criteria are then excluded from the counts for High Level term. This does not happen in case
-of "N" - all counts are included in high term which is displayed as long as it meets the criteria
-as well.}
+of "N" - all low terms are included in high term which is displayed as long as it meets the
+criteria as well.}
 
 \item{sort_opt}{How to sort terms, only for table/forest plot.
 Values: \verb{'Ascending','Descending','Alphabetical'}.}
 
 \item{sort_var}{Metric to sort by. Values: \verb{'Count','Percent','RiskValue'}.}
+
+\item{sort_col}{Which treatment column to sort by. (Depends on trt levels) eg: 1, 2, 3}
+
+\item{nolwrtierdispyn}{When\code{apply_hrow_cutoff} = Y, to display high level terms with zero low
+level terms satisfying the cutoff threshold or not? If Y, high terms will be displayed even with
+no corresponding lower levels in the table.}
+
+\item{sigdec_cat}{Number of decimal places for \% displayed in output}
+
+\item{pctsyn}{Display Percentage Sign in table or not. Values: \code{"Y"/"N"}}
+
+\item{stathead}{Label for sub-column header in output. eg. "n (\%)"}
 }
 \value{
 Summarized data frame for Adverse Events based on high and lower terms.
@@ -53,7 +81,35 @@ Summarized data frame for Adverse Events based on high and lower terms.
 \description{
 Generic Occurrence Summary Tiered Table
 }
+\details{
+\itemize{
+\item \code{cutoff_where} is applied to event lower term only, unless \code{apply_hrow_cutoff} is given.
+\item If \code{apply_hrow_cutoff} is Y, cutoff_where is applied to higher terms as well. If it is N,
+lower terms which do not meet criteria are removed from higher term count. eg: if \code{cutoff_where}
+is set to "PCT >= 2" and \code{hterm} and \code{lterm} are AEBODSYS and AEDECOD:
+
+EYE DISORDERS         9 (3.1)
+Dry eye        3 (1.4)
+Wet eye        6 (2.4)
+
+Here if \code{apply_hrow_cutoff} is set to N then 'Dry eye' row will be excluded and the 3 excluded
+from count of EYE DISORDERS as well (9). If Y, then 'Dry eye' will be excluded but EYE DISORDERS
+not impacted as it is 4.4\% and its PCT >= 2.
+
+\item If \code{cutoff_where} is PCT >= 3 and \code{nolwrtierdispyn} set to Y, then
+neither Dry eye nor Wet eye will be shown, but EYE DISORDERS will still be displayed.
+
+If \code{nolwrtierdispyn} is N in this case, EYE DISORDERS will also be removed as no low terms meet
+the criteria.
+}
+}
 \examples{
+data("adae")
+ae_pre_process <- ae_pre_processor(
+  datain = adae,
+  obs_residual = 0,
+  fmq_data = NA
+)
 ae_entry <- ae_pre_process[["data"]] |>
   mentry(
     subset = NA,
@@ -72,7 +128,7 @@ output <- occ_tier_summary(
   hterm = "AEBODSYS",
   lterm = "AEDECOD",
   pctdisp = "TRT",
-  cutoff = 2,
+  cutoff_where = "PCT > 2",
   apply_hrow_cutoff = "N",
   sort_opt = "Ascending",
   sort_var = "Count"
@@ -80,5 +136,85 @@ output <- occ_tier_summary(
 output |>
   tbl_processor() |>
   tbl_display()
+# Example 2: ADAE table with max sev/ctc grade:
+ae_pre <- ae_pre_processor(
+  adae,
+  subset = "TRTEMFL == 'Y'",
+  max_sevctc = "SEV",
+  sev_ctcvar = "AESEVN",
+  pt_total = "Y"
+)
+ae_entry_max <- adsl_merge(
+  adsl,
+  adsl_subset = 'SAFFL == "Y"',
+  ae_pre[["data"]]
+) |>
+  mentry(
+    subset = NA,
+    byvar = "AEBODSYS",
+    trtvar = "TRTA",
+    trtsort = "TRTAN",
+    trttotalyn = "N",
+    add_grpmiss = "N",
+    subgrpvar = "AESEV",
+    sgtotalyn = "N",
+    pop_fil = "Overall Population"
+  )
+rpt_data <- occ_tier_summary(
+  ae_entry_max,
+  a_subset = ae_pre[["a_subset"]],
+  summary_by = "Patients",
+  hterm = "AEBODSYS",
+  lterm = "AEDECOD",
+  cutoff_where = "FREQ > 2",
+  pctdisp = "TRT",
+  sum_row = "Y",
+  sum_row_label = "Any Adverse Event",
+  nolwrtierdispyn = "N",
+  sort_opt = "Alphabetical",
+  stathead = "n (\%)"
+)
+rpt_data |>
+  tbl_processor() |>
+  tbl_display(dpthead = "No. of Adverse Events_SOC and PT") |>
+  flextable::autofit()
+## ADPR Example:
+\dontrun{
+pr_entry <- adsl |>
+  adsl_merge(
+    adsl_subset = "SAFFL == 'Y'",
+    dataset_add = adpr
+  ) |>
+  mentry(
+    subset = NA,
+    byvar = "PRSOC",
+    trtvar = "TRT01A",
+    trtsort = "TRT01AN",
+    trttotalyn = "N",
+    add_grpmiss = "N",
+    sgtotalyn = "N",
+    pop_fil = "Overall Population"
+  )
+output <- occ_tier_summary(
+  pr_entry,
+  a_subset = "ONPERFL == 'Y' & PRDECOD != ''",
+  summary_by = "Patients",
+  hterm = "PRSOC",
+  lterm = "PRDECOD",
+  pctdisp = "TRT",
+  apply_hrow_cutoff = "N",
+  sort_opt = "Ascending",
+  sort_var = "Count",
+  sum_row = "Y",
+  sum_row_label = "Participants with 1 term",
+  htermctyn = "N"
+)
+output |>
+  display_bign_head(
+    mentry_data = pr_entry
+  ) |>
+  tbl_processor() |>
+  tbl_display()
+}
 
 }

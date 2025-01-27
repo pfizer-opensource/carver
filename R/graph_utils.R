@@ -21,7 +21,6 @@
 #' @export
 #'
 #' @examples
-#' library(carver)
 #' library(ggplot2)
 #' ggplot(data = mtcars, mapping = aes(x = mpg, y = hp)) +
 #'   geom_point() +
@@ -71,7 +70,7 @@ g_seriescol <- function(gdata,
   levs <- levels(unique(gdata[[SERIESVAR]]))
   vals <- levs[levs %in% unique(gdata[[SERIESVAR]])]
   seriescols <- setNames(col_list[seq_along(vals)], vals)
-  return(seriescols)
+  seriescols
 }
 
 #' Recode Shapes to Numbers
@@ -142,7 +141,7 @@ g_seriessym <- function(gdata,
   levs <- levels(unique(gdata[[SERIESVAR]]))
   vals <- levs[levs %in% unique(gdata[[SERIESVAR]])]
   ptshapes <- setNames(shapelist[seq_along(vals)], vals)
-  return(ptshapes)
+  ptshapes
 }
 
 
@@ -159,7 +158,6 @@ g_seriessym <- function(gdata,
 #' @export
 #'
 #' @examples
-#' library(carver)
 #' empty_plot()
 empty_plot <- function(message = "No data available for these values",
                        fontsize = 8) {
@@ -173,7 +171,7 @@ empty_plot <- function(message = "No data available for these values",
     layout(
       xaxis = list(visible = FALSE), yaxis = list(visible = FALSE)
     )
-  return(list(plot = g_plot, ptly = fig))
+  list(plot = g_plot, ptly = fig)
 }
 
 
@@ -204,8 +202,6 @@ def_axis_spec <- function(arg, vec, val) {
 #' @export
 #'
 #' @examples
-#' library(carver)
-#'
 #' plot_axis_opts(
 #'   xlinearopts = list(
 #'     breaks = c(0.001, 0.01, 0.1, 1, 10, 100),
@@ -400,7 +396,7 @@ plot_aes_opts <- function(datain,
       out$contrast <- unname(g_seriescol(datain, series_contrast, "aesvar"))
     }
   }
-  return(out)
+  out
 }
 
 #' Return N count in plot legend (treatment)
@@ -425,7 +421,7 @@ plot_aes_opts <- function(datain,
 #' msumstat(
 #'   adsl_entry,
 #'   dptvar = "AGE",
-#'   statvar = "meansd"
+#'   statvar = "mean"
 #' )$gsum |>
 #'   plot_display_bign(adsl_entry)
 plot_display_bign <- function(datain,
@@ -453,7 +449,7 @@ plot_display_bign <- function(datain,
   } else {
     datain[["TRTTXT"]] <- datain[["TRTVAR"]]
   }
-  return(datain)
+  datain
 }
 
 #' Theme for ggplots with only X axis title/ticks
@@ -557,7 +553,7 @@ theme_std <- function(axis_opts = plot_axis_opts(),
       panel.grid.major.y = element_line(linewidth = 0.1, color = "grey")
     )
   }
-  return(t)
+  t
 }
 
 #' Calculate plot title N values
@@ -599,7 +595,6 @@ plot_title_nsubj <- function(datain, plot_data, by) {
 #' @export
 #'
 #' @examples
-#' library(carver)
 #' MPG <- ggplot2::mpg
 #' MPG[["cyl"]] <- as.character(MPG[["cyl"]])
 #' tbl_to_plot(

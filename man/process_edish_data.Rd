@@ -7,9 +7,10 @@
 process_edish_data(
   datain,
   xvar = "both",
-  alt_paramcd = "L00030S",
-  ast_paramcd = "L00028S",
-  bili_paramcd = "L00021S"
+  alt_paramcd = "ALT",
+  ast_paramcd = "AST",
+  bili_paramcd = "BILI",
+  legendbign = "Y"
 )
 }
 \arguments{
@@ -26,6 +27,8 @@ variable.}
 \item{ast_paramcd}{\code{PARAMCD} value for \verb{ASPARTATE AMINOTRANSFERASE} in \code{datain}.}
 
 \item{bili_paramcd}{\code{PARAMCD} value for \code{BILIRUBIN} in \code{datain}.}
+
+\item{legendbign}{(\code{string}) Display BIGN in Legend (\code{Y/N}).}
 }
 \value{
 A \code{data.frame} required for \code{edish_plot}.

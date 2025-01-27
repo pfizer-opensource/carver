@@ -18,6 +18,7 @@
 
 globalVariables(c(
   "ADJPVALUE",
+  ".env",
   "AEDECOD",
   "AEENDT",
   "AENDT",
@@ -96,11 +97,15 @@ globalVariables(c(
   "DENOMN_TRTGRP",
   "FMQ_NAM",
   "USUBJID",
+  "SUBJID",
+  "x",
   "key",
   ":=",
   "curve_n",
   "point_n",
   "Status",
   "Value",
-  "ASEV"
+  "ASEV",
+  "TA",
+  "REPTYPE"
 ))

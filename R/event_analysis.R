@@ -36,7 +36,8 @@
 #'   ae_pre_processor(
 #'     ae_filter = "ANY",
 #'     obs_residual = 0,
-#'     fmq_data = FMQ_Consolidated_List
+#'     fmq_data = FMQ_Consolidated_List,
+#'     subset = "AOCCPFL == 'Y'"
 #'   )
 #'
 #' ## prepare data for plot
@@ -50,7 +51,7 @@
 #' ## prepare data for plot
 #' prep_event_analysis <- prep_entry |>
 #'   process_event_analysis(
-#'     a_subset = glue::glue("AOCCPFL == 'Y' & {prep_ae$a_subset}"),
+#'     a_subset = prep_ae$a_subset,
 #'     summary_by = "Events",
 #'     hterm = "FMQ_NAM",
 #'     ht_val = "ABDOMINAL PAIN",
@@ -239,7 +240,7 @@ process_event_analysis <-
         HTERM = hterm,
         HVAL = str_remove_all(ht_val, glue("/{toupper(ht_scope)}")),
         LVAL = lt_val,
-        Percent = paste(.data$PCT, "% \n Low Term:", .data$DPTVAL),
+        Percent = paste(.data$CPCT, "% \n Low Term:", .data$DPTVAL),
         PCT_N = as.numeric(.data$PCT)
       ) |>
       group_by(.data$TRTVAR) |>
@@ -254,7 +255,7 @@ process_event_analysis <-
       filter_events(lterm, lt_val, "DPTVAL") |>
       mutate(
         PCT_N = as.numeric(.data$PCT),
-        Percent = paste(.data$PCT, "%")
+        Percent = paste(.data$CPCT, "%")
       ) |>
       arrange(.data$TRTVAR, .data$PCT_N)
 

@@ -8,7 +8,7 @@ split_section_headers(
   datain,
   split_by = "",
   split_by_prefix = "",
-  split_lab = "",
+  split_lab = " ",
   sep = "~"
 )
 }

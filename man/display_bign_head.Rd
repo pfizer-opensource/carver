@@ -44,8 +44,7 @@ adsl_entry <- mentry(
 msumstat(
   adsl_entry,
   dptvar = "AGE",
-  statvar = "meansd",
-  sigdec = 2,
+  statvar = "mean",
   dptvarn = 2
 )$tsum |>
   display_bign_head(adsl_entry)

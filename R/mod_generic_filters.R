@@ -76,6 +76,18 @@ mod_generic_filters_ui <- function(id) {
             selected = "N",
             inline = TRUE
           )
+        ),
+        fluidRow(
+          column(
+            width = 4,
+            tagAppendAttributes(
+              actionButton(
+                inputId = ns("apply_gen_filt"),
+                label = "Apply"
+              ),
+              class = "sidebar-btn"
+            )
+          )
         )
       )
     ),
@@ -130,10 +142,6 @@ mod_generic_filters_ui <- function(id) {
         ),
         column(
           width = 3,
-          uiOutput(ns("ae_catvar_UI"))
-        ),
-        column(
-          width = 3,
           selectInput(
             ns("ae_llt"),
             "Event Term",
@@ -148,6 +156,10 @@ mod_generic_filters_ui <- function(id) {
             "Summary By",
             choices = c("Participants" = "Patients", "Events" = "Events")
           )
+        ),
+        column(
+          width = 3,
+          uiOutput(ns("ae_catvar_UI"))
         ),
         column(
           width = 3,
@@ -342,7 +354,7 @@ mod_generic_filters_ui <- function(id) {
           textInput(
             ns("statvar"),
             label = "Statistics",
-            value = "N~Range~Meansd~Median~q1q3"
+            value = "N~minmaxc~mean(sd)~Median~q1q3"
           )
         ),
         column(
@@ -350,7 +362,7 @@ mod_generic_filters_ui <- function(id) {
           textInput(
             ns("statlabel"),
             label = "Statistics Labels",
-            value = "N~Range~Mean (SD)~Median~(Q1, Q3)"
+            value = "N~(Min,Max)~Mean (SD)~Median~(Q1,Q3)"
           )
         )
       )
@@ -403,10 +415,8 @@ mod_generic_filters_server <-
         req(repName())
         if (repName() == "eDISH_plot") {
           text <- "PARAMCD %in% c('ALT', 'AST', 'BILI')"
-          hide("box_3")
         } else {
           text <- "USUBJID != ''"
-          show("box_3")
         }
         updateTextInput(
           session,
@@ -432,7 +442,8 @@ mod_generic_filters_server <-
         } else {
           hide("box_2")
         }
-        if (repName() %in% c("ae_forest_plot", "ae_volcano_plot", "adae_risk_summary")) {
+        if (repName() %in%
+          c("ae_forest_plot", "ae_volcano_plot", "adae_risk_summary", "tornado_plot")) {
           show("box_3")
         } else {
           hide("box_3")
@@ -463,20 +474,26 @@ mod_generic_filters_server <-
 
         if (repName() == "Event Analysis") {
           show("ref_line")
-          hide("summary_by")
           hide("cutoff")
+          updateSelectInput(
+            session,
+            "summary_by",
+            choices = c("Events" = "Events", "Participants" = "Patients")
+          )
         } else {
           hide("ref_line")
-          show("summary_by")
           show("cutoff")
         }
 
         if (repName() == "tornado_plot") {
-          hide("ui_llt")
-          hide("ae_llt")
+          hide("ui_hlt")
+          hide("ae_hlt")
           hide("summary_by")
+          hide("cutoff")
+          hide("statistics")
+          hide("alpha")
         } else {
-          show("ui_hlt")
+          show("ui_llt")
           show("treatment1")
           show("treatment2")
           show("treatment1_label")
@@ -523,6 +540,7 @@ mod_generic_filters_server <-
         req(repName())
         req(repType())
         req(input$ae_filter)
+        req(input$a_subset)
         if (tolower(domain()) == "adae") {
           print("AE preprocessing start")
           ### calling Pre Processing AE data
@@ -533,7 +551,8 @@ mod_generic_filters_server <-
                 app_sys("extdata"), "/FMQ_Consolidated_List.csv"
               )),
               ae_filter = input$ae_filter,
-              obs_residual = ifelse(input$period == "Other", input$period_spec, NA)
+              obs_residual = ifelse(input$period == "Other", input$period_spec, NA),
+              subset = input$a_subset
             ),
             message = "Executing pre processing for AE...",
             min = 0,
@@ -616,7 +635,7 @@ mod_generic_filters_server <-
       }) |>
         bindEvent(
           list(
-            repName(), input$overall_subset, input$trttotalyn, trt_var(),
+            repName(), input$apply_gen_filt, trt_var(),
             trt_sort(), popfilter(), input$ae_hlt, input$byvar, input$subgrp, input$subtotyn
           )
         )
@@ -657,7 +676,7 @@ mod_generic_filters_server <-
           output$treatment1_label_UI <- renderUI({
             req(tolower(repName()) %in% c("tornado_plot", "ae_volcano_plot"))
             textInput(ns("treatment1_label"),
-              if (repName() == "tornado_plot") "Treatment Left Label" else "Label for Control Group",
+              if (repName() == "tornado_plot") "Treatment Left Label" else "Label for Control Group", # nolint
               value = if (repName() == "tornado_plot") input$treatment1 else "Control"
             )
           })
@@ -665,7 +684,7 @@ mod_generic_filters_server <-
           output$treatment2_label_UI <- renderUI({
             req(tolower(repName()) %in% c("tornado_plot", "ae_volcano_plot"))
             textInput(ns("treatment2_label"),
-              if (repName() == "tornado_plot") "Treatment Right Label" else "Label for Treatment Group",
+              if (repName() == "tornado_plot") "Treatment Right Label" else "Label for Treatment Group", # nolint
               value = if (repName() == "tornado_plot") input$treatment2 else "Treatment"
             )
           })
@@ -718,7 +737,7 @@ mod_generic_filters_server <-
           })
           updateSelectInput(
             session,
-            "ae_hlt",
+            "ae_llt",
             selected = c("Primary System Organ Class (AESOC)" = "AESOC")
           )
         }
@@ -840,7 +859,7 @@ mod_generic_filters_server <-
       }) |>
         bindEvent(list(
           repName(), rv$ment_out, input$dptvar, input$statvar, input$pctdisp_adsl,
-          input$totcat, input$misscat, input$a_subset
+          input$totcat, input$misscat, input$apply_gen_filt
         ))
 
       observe({
@@ -856,12 +875,16 @@ mod_generic_filters_server <-
         req(input$treatment1)
         req(input$treatment2)
         req(input$trtbign)
-        req(input$ae_hlt)
+        req(input$ae_llt)
         if (tolower(repName()) %in% c("tornado_plot")) {
           print("AE Tornado plot pre-processing start")
 
           data <- sourcedata()[[domain()]]
-
+          if (!is.null(sourcedata()[["ADSL"]])) {
+            data_adsl <- sourcedata()[["ADSL"]]
+          } else {
+            data_adsl <- NULL
+          }
           ae_catvarN <- paste0(input$ae_catvar, "N")
           if (!(ae_catvarN %in% colnames(data))) {
             data <- data |>
@@ -872,7 +895,7 @@ mod_generic_filters_server <-
             mutate(SUBJID := .data[["USUBJID"]])
 
           rv$process_tornado_data <- process_tornado_data(
-            dataset_adsl = NULL,
+            dataset_adsl = data_adsl,
             dataset_analysis = data,
             adsl_subset = "",
             analysis_subset = input$a_subset,
@@ -891,7 +914,7 @@ mod_generic_filters_server <-
             pctdisp = "TRT",
             denom_subset = NA,
             legendbign = input$trtbign,
-            yvar = input$ae_hlt
+            yvar = input$ae_llt
           )
 
           print("AE Tornado plot pre-processing end")
@@ -900,8 +923,8 @@ mod_generic_filters_server <-
         bindEvent(list(
           repName(), trt_var(), trt_sort(), popfilter(),
           input$ae_filter, input$ae_catvar, input$period, input$period_spec,
-          input$treatment1, input$treatment2, input$pctdisp, input$denom_subset,
-          input$trtbign, input$ae_hlt
+          input$treatment1, input$treatment2, input$pctdisp, input$apply_gen_filt,
+          input$ae_hlt
         ))
 
       observe({
@@ -941,7 +964,7 @@ mod_generic_filters_server <-
         print("Edish process ends")
       }) %>%
         bindEvent(list(
-          trt_var(), trt_sort(), popfilter(), input$a_subset, input$overall_subset
+          trt_var(), trt_sort(), popfilter(), input$apply_gen_filt
         ))
 
       filters <- reactive({
@@ -954,7 +977,7 @@ mod_generic_filters_server <-
           req(input$statistics)
           req(input$alpha)
         }
-        if (repName() == "ae_volcano_plot") {
+        if (repName() %in% c("tornado_plot", "ae_volcano_plot")) {
           req(input$treatment1)
           req(input$treatment2)
           req(input$treatment1_label)
@@ -996,6 +1019,7 @@ mod_generic_filters_server <-
           ref_line = input$ref_line,
           dptlabel = input$dptlabel,
           statlabel = input$statlabel,
+          ae_catvar = input$ae_catvar,
           bylabel = input$bylabel,
           subbign = input$subbign
         )

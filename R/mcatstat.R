@@ -22,7 +22,7 @@
 #'  category
 #' @param a_subset Analysis Subset condition specific to categorical analysis.
 #' @param denom_subset Subset condition to be applied to data set for calculating denominator.
-#' @param uniqid Variable to calculate unique counts of. Expected values: `"USUBJID"`, `"SITEID"`,
+#' @param uniqid Variable(s) to calculate unique counts of. eg. `"USUBJID"`, `"SITEID"`,
 #' `"ALLCT"`
 #' @param dptvar Categorical Analysis variable and ordering variable if exists,
 #' separated by /. eg: `"SEX"`, `"SEX/SEXN"`, `"AEDECOD"`, `"ISTPT/ISTPTN"`
@@ -40,7 +40,12 @@
 #' @param dptvarn Number to assign as `DPTVARN`, useful for block sorting when
 #' multiple `mcatstat()` outputs are created to be combined.
 #' @param pctsyn Display Percentage Sign in table or not. Values: `"Y"/"N"`
+#' @param sigdec Number of decimal places for % displayed in output
 #' @param denomyn Display denominator in output or not. Values: `"Y"/"N"`
+#' @param sparseyn To sparse missing categories/treatments or not? `"Y"/"N"`
+#' @param sparsebyvalyn Sparse missing categories within by groups. `"Y"/"N"`
+#' @param return_zero Return rows with zero counts if analysis subset/ non-missing does not
+#' exist in data. `"Y"/"N"`
 #'
 #' @details
 #' \itemize{
@@ -113,17 +118,25 @@ mcatstat <- function(datain = NULL,
                      total_catlabel = "Total",
                      dptvarn = 1,
                      pctsyn = "Y",
-                     denomyn = "N") {
-  stopifnot("No data for mcatstat" = nrow(datain) != 0)
-  stopifnot("uniqid should exist in data or be ALLCT" = uniqid %in% c(names(datain), "ALLCT"))
+                     sigdec = 2,
+                     denomyn = "N",
+                     sparseyn = "N",
+                     sparsebyvalyn = "N",
+                     return_zero = "N") {
+  if (nrow(datain) == 0) {
+    return(datain)
+  }
+  stopifnot("uniqid should exist in data or be ALLCT" = all(uniqid %in% c(names(datain), "ALLCT")))
   # Identify by groups if exists
   BYVAR <- var_start(datain, "BYVAR")
   # Identify subgroups if exists
   SUBGRP <- var_start(datain, "SUBGRP")
+  SUBGRPN <- var_start(datain, "SUBGRPN")
+  BYVARN <- var_start(datain, "BYVARN")
   dptvars <- sep_var_order(dptvar)
   # Process unique ID variable (if passed as "ALLCT")
   # If unique ID is ALLCT, use all rows instead of unique subjects
-  if (uniqid == "ALLCT") {
+  if (all(uniqid == "ALLCT")) {
     datain <- datain |>
       mutate(ALLCT = row_number())
   }
@@ -145,44 +158,77 @@ mcatstat <- function(datain = NULL,
         .data[["DPTVAL"]]
       )
     )
-  # Apply subsets to get num
-  if (!is.na(a_subset) && str_squish(a_subset) != "") {
-    data_num <- data_pro |>
-      filter(!!!parse_exprs(a_subset))
-  } else {
-    data_num <- data_pro
-  }
-  # Subset for denom data
-  if (!is.na(denom_subset) && str_squish(denom_subset) != "") {
-    data_denom <- data_pro |>
-      filter(!!!parse_exprs(denom_subset))
-  } else {
-    data_denom <- data_pro
-  }
-  if (nrow(data_num) < 1 || nrow(data_denom) < 1) {
-    return(data.frame())
-  }
+  # Apply subsets to get num and denom data:
+  dflist <- map(list(a_subset, denom_subset), \(s) {
+    if (!is.na(s) && str_squish(s) != "") {
+      filter(data_pro, !!!parse_exprs(s))
+    } else {
+      data_pro
+    }
+  })
+  data_num <- dflist[[1]]
+  data_denom <- dflist[[2]]
+  # If missing categories to be included
   if (miss_catyn == "N") {
     data_num <- data_num |>
       filter(.data[["DPTVAL"]] != miss_catlabel)
   }
   # Set groups by Treatment, Sub,By if any to use for counts
   # Get N count as variable FREQ:
-  counts <- data_num |>
-    group_by(across(any_of(c(
-      "TRTVAR", SUBGRP, var_start(datain, "SUBGRPN"), BYVAR,
-      var_start(datain, "BYVARN"), "DPTVAL", "DPTVALN"
-    )))) |>
-    summarise(FREQ = length(unique(.data[[uniqid]]))) |>
-    ungroup()
-
-  # If cumulative count is required then
-  if (cum_ctyn == "Y") {
-    counts <- counts |>
-      group_by(across(any_of(c("TRTVAR", BYVAR, SUBGRP)))) |>
-      arrange(.data[["DPTVALN"]], .by_group = TRUE) |>
-      mutate(FREQ = cumsum(.data[["FREQ"]])) |>
+  countgrp <- c(
+    var_start(data_num, "TRTVAR"), SUBGRP, SUBGRPN, BYVAR,
+    BYVARN, "DPTVAL", "DPTVALN"
+  )
+  # If a_subset returns NONE and equired to return 0 count row:
+  if (nrow(data_num) < 1 && return_zero == "Y") {
+    counts <- data_pro |>
+      group_by(across(any_of(countgrp))) |>
+      summarise(FREQ = 0) |>
       ungroup()
+  } else {
+    # Else proceed to calculate count and percentage
+    if (nrow(data_num) < 1 || nrow(data_denom) < 1) {
+      return(data.frame())
+    }
+    # Get count dataset and sparse categories
+    counts <- data_num |>
+      group_by(across(any_of(countgrp))) |>
+      summarise(FREQ = n_distinct(across(any_of(uniqid)))) |>
+      ungroup()
+    # Sparse categories (within by groups for sparseyn)
+    # sparsebyvalyn will also impute for 'by' categories
+    if (sparseyn == "Y" || (sparsebyvalyn == "Y" && length(BYVAR) > 0)) {
+      data_sparse <- data_pro
+    } else {
+      data_sparse <- counts
+    }
+    counts <- counts |>
+      sparse_vals(
+        data_sparse = data_sparse,
+        sparseyn = "Y",
+        sparsebyvalyn = "N",
+        BYVAR,
+        SUBGRP,
+        BYVARN,
+        SUBGRPN
+      ) |>
+      sparse_vals(
+        data_sparse = data_sparse,
+        sparseyn = "N",
+        sparsebyvalyn = sparsebyvalyn,
+        BYVAR,
+        SUBGRP,
+        BYVARN,
+        SUBGRPN
+      )
+    # If cumulative count is required then
+    if (cum_ctyn == "Y") {
+      counts <- counts |>
+        group_by(across(any_of(c("TRTVAR", BYVAR, SUBGRP)))) |>
+        arrange(.data[["DPTVALN"]], .by_group = TRUE) |>
+        mutate(FREQ = cumsum(.data[["FREQ"]])) |>
+        ungroup()
+    }
   }
   # Calculate denominator/pct and add requisite variables for standard display processing:
   df <- counts |>
@@ -192,9 +238,11 @@ mcatstat <- function(datain = NULL,
       pctdisp,
       pctsyn,
       denomyn,
+      sigdec,
       BYVAR,
       SUBGRP
-    ) |>
+    )
+  df <- df |>
     mutate(
       DPTVAR = dptvars$vars, XVAR = .data[["DPTVAL"]], DPTVARN = dptvarn, CN = "C"
     ) |>
@@ -202,7 +250,7 @@ mcatstat <- function(datain = NULL,
 
   message("mcatstat success")
 
-  return(df)
+  df
 }
 
 #' Caclulate denominator and oercentage for mcatstat
@@ -227,6 +275,7 @@ calc_denom <- function(counts,
                        pctdisp = "TRT",
                        pctsyn = "Y",
                        denomyn = "N",
+                       sigdec = 2,
                        BYVAR,
                        SUBGRP) {
   # Check Allowable pctdisp values
@@ -237,12 +286,13 @@ calc_denom <- function(counts,
   )
   # Set denominator values for percentage
   if (pctdisp %in% c("NONE", "NO")) {
-    df <- counts |> mutate(CVALUE = .data[["FREQ"]]) # No percentage if pctdisp is NO/NONE
+    df <- counts |> mutate(CVALUE = as.character(.data[["FREQ"]]))
+    # No percentage if pctdisp is NO/NONE
   } else {
     # Identify which variables go towards creating Denominator
     if (pctdisp == "VAR") {
       # If pctdisp = VAR, total percent across all records
-      df <- counts |> mutate(DENOMN = length(unique(data_denom[[uniqid]])))
+      df <- counts |> mutate(DENOMN = nrow(unique(data_denom[uniqid])))
     } else {
       percgrp <- switch(gsub("[[:digit:]]", "", pctdisp),
         "TRT" = "TRTVAR",
@@ -258,18 +308,24 @@ calc_denom <- function(counts,
       # Get denominator count per above variables
       df <- data_denom |>
         group_by(across(all_of(percgrp))) |>
-        summarise(DENOMN = length(unique(.data[[uniqid]]))) |>
+        summarise(DENOMN = n_distinct(across(any_of(uniqid)))) |>
         inner_join(counts, by = percgrp, multiple = "all")
     }
 
     # Calculate percentage as PCT and concatenate as CVALUE
     p <- ifelse(pctsyn == "N", "", "%") # nolint
-    df <- df |> mutate(PCT = round_f((FREQ * 100) / DENOMN, 2))
+    df <- df |>
+      mutate(
+        PCT = (.data[["FREQ"]] * 100) / DENOMN,
+        CPCT = round_f(.data[["PCT"]], sigdec)
+      )
     if (denomyn == "Y") {
-      df <- df |> mutate(CVALUE = glue("{FREQ}/{DENOMN} ({PCT}{p})"))
+      cstat <- "{FREQ}/{DENOMN} ({CPCT}{p})"
     } else {
-      df <- df |> mutate(CVALUE = glue("{FREQ} ({PCT}{p})"))
+      cstat <- "{FREQ} ({CPCT}{p})"
     }
+    df <- df |>
+      mutate(CVALUE = ifelse(FREQ == 0, "0", glue(cstat)))
   }
   return(df |> ungroup())
 }

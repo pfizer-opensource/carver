@@ -35,14 +35,40 @@
 #' @export
 #'
 #' @examples
-#' data(ae_risk)
+#' data("adae")
+#' ae_pre_process <- ae_pre_processor(
+#'   datain = adae,
+#'   obs_residual = 0
+#' )
+#'
+#' ae_entry <- mentry(
+#'   datain = ae_pre_process$data,
+#'   byvar = "AEBODSYS",
+#'   trtvar = "TRTA",
+#'   trtsort = "TRTAN",
+#'   pop_fil = "SAFFL"
+#' )
+#'
+#' ae_risk <- risk_stat(
+#'   datain = ae_entry,
+#'   a_subset = ae_pre_process$a_subset,
+#'   summary_by = "Patients",
+#'   eventvar = "AEDECOD",
+#'   ctrlgrp = "Placebo",
+#'   trtgrp = "Xanomeline High Dose",
+#'   statistics = "Risk Ratio",
+#'   alpha = 0.05,
+#'   cutoff_where = "PCT > 2",
+#'   hoveryn = "Y"
+#' ) |>
+#'   dplyr::mutate(key = dplyr::row_number())
 #' forest_plot_base(
 #'   ae_risk,
 #'   xvar = "RISK",
 #'   yvar = "DPTVAL",
 #'   xminvar = "RISKCIL",
 #'   xmaxvar = "RISKCIU",
-#'   hovervar = "HOVER_RISK",
+#'   hovervar = "HOVER_TEXT",
 #'   series_var = "TRTPAIR",
 #'   xrefline = 1,
 #'   axis_opts = plot_axis_opts(
@@ -128,7 +154,33 @@ forest_plot_base <- function(datain,
 #' @export
 #'
 #' @examples
-#' data(ae_risk)
+#' data("adae")
+#' ae_pre_process <- ae_pre_processor(
+#'   datain = adae,
+#'   obs_residual = 0
+#' )
+#'
+#' ae_entry <- mentry(
+#'   datain = ae_pre_process$data,
+#'   byvar = "AEBODSYS",
+#'   trtvar = "TRTA",
+#'   trtsort = "TRTAN",
+#'   pop_fil = "SAFFL"
+#' )
+#'
+#' ae_risk <- risk_stat(
+#'   datain = ae_entry,
+#'   a_subset = ae_pre_process$a_subset,
+#'   summary_by = "Patients",
+#'   eventvar = "AEDECOD",
+#'   ctrlgrp = "Placebo",
+#'   trtgrp = "Xanomeline High Dose",
+#'   statistics = "Risk Ratio",
+#'   alpha = 0.05,
+#'   cutoff_where = "PCT > 2",
+#'   hoveryn = "Y"
+#' ) |>
+#'   dplyr::mutate(key = dplyr::row_number())
 #' forest_plot_scatter(
 #'   datain = ae_risk,
 #'   xvar = "PCT",
@@ -139,7 +191,7 @@ forest_plot_base <- function(datain,
 #'     shape = g_seriessym(ae_risk, NA, "TRTVAR"),
 #'     size = rep(1, 2)
 #'   ),
-#'   hovervar = "HOVER_PCT",
+#'   hovervar = "HOVER_TEXT",
 #'   xaxis_pos = "top"
 #' )
 #'
@@ -216,12 +268,39 @@ forest_plot_scatter <- function(datain,
 #' @param plot_height Height of plotly output, if specifically required
 #' @param xpos Where should X xaxis for `splot` and `fplot` be displayed in interactive plot?
 #' Values: "top"/"bottom". Value for static output is decided prior to passing in this function.
-#'
+#' @param legend_opts Legend styling option, a `list` containing `pos`(position) and
+#' `dir` (direction).
 #' @return plot_grid object or plotly forest plot object
 #' @export
 #'
 #' @examples
-#' data(ae_risk)
+#' data("adae")
+#' ae_pre_process <- ae_pre_processor(
+#'   datain = adae,
+#'   obs_residual = 0
+#' )
+#'
+#' ae_entry <- mentry(
+#'   datain = ae_pre_process$data,
+#'   byvar = "AEBODSYS",
+#'   trtvar = "TRTA",
+#'   trtsort = "TRTAN",
+#'   pop_fil = "SAFFL"
+#' )
+#'
+#' ae_risk <- risk_stat(
+#'   datain = ae_entry,
+#'   a_subset = ae_pre_process$a_subset,
+#'   summary_by = "Patients",
+#'   eventvar = "AEDECOD",
+#'   ctrlgrp = "Placebo",
+#'   trtgrp = "Xanomeline High Dose",
+#'   statistics = "Risk Ratio",
+#'   alpha = 0.05,
+#'   cutoff_where = "PCT > 2",
+#'   hoveryn = "Y"
+#' ) |>
+#'   dplyr::mutate(key = dplyr::row_number())
 #' splot <- forest_plot_scatter(
 #'   datain = ae_risk,
 #'   xvar = "PCT",
@@ -232,7 +311,7 @@ forest_plot_scatter <- function(datain,
 #'     shape = g_seriessym(ae_risk, NA, "TRTVAR"),
 #'     size = rep(1, 2)
 #'   ),
-#'   hovervar = "HOVER_PCT",
+#'   hovervar = "HOVER_TEXT",
 #'   xaxis_pos = "top",
 #'   legend_opts = list(pos = "bottom", dir = "horizontal"),
 #'   axis_opts = list(xsize = 8, xtsize = 6, xaxis_label = "Percentage")
@@ -243,7 +322,7 @@ forest_plot_scatter <- function(datain,
 #'   yvar = "DPTVAL",
 #'   xminvar = "RISKCIL",
 #'   xmaxvar = "RISKCIU",
-#'   hovervar = "HOVER_RISK",
+#'   hovervar = "HOVER_TEXT",
 #'   series_var = "TRTPAIR",
 #'   xrefline = 1,
 #'   axis_opts = plot_axis_opts(
@@ -263,7 +342,8 @@ forest_display <- function(plot_list,
                            rel_widths = c(0.25, 0.38, 0.27, 0.10),
                            interactive = "N",
                            plot_height = NULL,
-                           xpos = "top") {
+                           xpos = "top",
+                           legend_opts = list(pos = "bottom", dir = "horizontal")) {
   stopifnot(all(c("splot", "fplot") %in% names(plot_list)))
   stopifnot(
     "rel_widths should be equal to the number of plot columns" =
@@ -298,8 +378,9 @@ forest_display <- function(plot_list,
       plotly_legend(lg_pos = c(0.5, -0.2), dir = "h")
     combine_plot$x$source <- "plot_output"
   } else {
-    legend1 <- cowplot::get_legend(plot_list[["splot"]])
-    legend2 <- cowplot::get_legend(plot_list[["fplot"]])
+    legpattern <- paste0("guide-box-", trimws(legend_opts$pos))
+    legend1 <- cowplot::get_plot_component(plot_list[["splot"]], pattern = legpattern)
+    legend2 <- cowplot::get_plot_component(plot_list[["fplot"]], pattern = legpattern)
     plot_list[["splot"]] <- plot_list[["splot"]] + theme(legend.position = "none")
     plot_list[["fplot"]] <- plot_list[["fplot"]] + theme(legend.position = "none")
     # Combine for grid ggplot output

@@ -5,3 +5,7 @@
 ^CODE_OF_CONDUCT\.md$
 ^README\.Rmd$
 ^app\.R$
+^R/surv_utils\.R$
+^R/km_plot\.R$
+^LICENSE\.md$
+^.github$

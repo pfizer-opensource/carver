@@ -9,7 +9,8 @@ forest_display(
   rel_widths = c(0.25, 0.38, 0.27, 0.1),
   interactive = "N",
   plot_height = NULL,
-  xpos = "top"
+  xpos = "top",
+  legend_opts = list(pos = "bottom", dir = "horizontal")
 )
 }
 \arguments{
@@ -26,6 +27,9 @@ Values: "Y"/"N"}
 
 \item{xpos}{Where should X xaxis for \code{splot} and \code{fplot} be displayed in interactive plot?
 Values: "top"/"bottom". Value for static output is decided prior to passing in this function.}
+
+\item{legend_opts}{Legend styling option, a \code{list} containing \code{pos}(position) and
+\code{dir} (direction).}
 }
 \value{
 plot_grid object or plotly forest plot object
@@ -34,7 +38,33 @@ plot_grid object or plotly forest plot object
 Display combined Forest Plot
 }
 \examples{
-data(ae_risk)
+data("adae")
+ae_pre_process <- ae_pre_processor(
+  datain = adae,
+  obs_residual = 0
+)
+
+ae_entry <- mentry(
+  datain = ae_pre_process$data,
+  byvar = "AEBODSYS",
+  trtvar = "TRTA",
+  trtsort = "TRTAN",
+  pop_fil = "SAFFL"
+)
+
+ae_risk <- risk_stat(
+  datain = ae_entry,
+  a_subset = ae_pre_process$a_subset,
+  summary_by = "Patients",
+  eventvar = "AEDECOD",
+  ctrlgrp = "Placebo",
+  trtgrp = "Xanomeline High Dose",
+  statistics = "Risk Ratio",
+  alpha = 0.05,
+  cutoff_where = "PCT > 2",
+  hoveryn = "Y"
+) |>
+dplyr::mutate(key = dplyr::row_number())
 splot <- forest_plot_scatter(
   datain = ae_risk,
   xvar = "PCT",
@@ -45,7 +75,7 @@ splot <- forest_plot_scatter(
     shape = g_seriessym(ae_risk, NA, "TRTVAR"),
     size = rep(1, 2)
   ),
-  hovervar = "HOVER_PCT",
+  hovervar = "HOVER_TEXT",
   xaxis_pos = "top",
   legend_opts = list(pos = "bottom", dir = "horizontal"),
   axis_opts = list(xsize = 8, xtsize = 6, xaxis_label = "Percentage")
@@ -56,7 +86,7 @@ fplot <- forest_plot_base(
   yvar = "DPTVAL",
   xminvar = "RISKCIL",
   xmaxvar = "RISKCIU",
-  hovervar = "HOVER_RISK",
+  hovervar = "HOVER_TEXT",
   series_var = "TRTPAIR",
   xrefline = 1,
   axis_opts = plot_axis_opts(

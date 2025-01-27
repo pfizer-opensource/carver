@@ -28,7 +28,6 @@
 #' @export
 #'
 #' @examples
-#' library(carver)
 #' data(adae)
 #' data(cm)
 #' multi_interval(

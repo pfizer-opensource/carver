@@ -12,7 +12,7 @@ adsl_entry <- mentry(
 adsl_sum <- adsl_summary(
   datain = adsl_entry,
   vars = "AGEGR1/AGEGR1N~AGE-S~SEX/SEXN~RACE/RACEN",
-  stat_vars = "N~Meansd"
+  stat_vars = "n~mean(sd)"
 )
 tbl_data <- adsl_sum |>
   display_bign_head(
@@ -50,7 +50,7 @@ tbl_data1 <- adsl_cat |>
     addrowvars = NA
   )
 tbl1 <- tbl_data1 |>
-  tbl_display(bylabel = "Ethnicity")
+  tbl_display(bylabel = "Ethnicity", boldheadyn = "Y")
 
 test_that("tbl_processor works standard", {
   expect_s3_class(tbl_data, "data.frame")
@@ -62,4 +62,27 @@ test_that("tbl_processor works without trt/dpt", {
   expect_s3_class(tbl_data1, "data.frame")
   expect_snapshot(print(tbl_data1, n = Inf, width = Inf))
   expect_true(class(tbl1) == "flextable")
+})
+
+test_that("tbl_processor works with keepvars", {
+  testdata <- adsl_cat |>
+    mutate(NewCol = "Keepthis")
+  tbl_data2 <- testdata |>
+    display_bign_head(
+      mentry_data = adsl_entry1,
+      notrthead = "Participants, n (%)"
+    ) |>
+    tbl_processor(
+      disp_value_col = "N",
+      addrowvars = NA,
+      keepvars = "NewCol"
+    )
+  expect_s3_class(tbl_data2, "data.frame")
+  expect_true("NewCol" %in% colnames(tbl_data2))
+  expect_true(unique(tbl_data2$NewCol) == "Keepthis")
+})
+
+test_that("Empty_tbl works", {
+  tbl_empty <- empty_tbl()
+  expect_snapshot(tbl_empty)
 })
