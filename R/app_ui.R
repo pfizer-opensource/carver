@@ -99,7 +99,7 @@ app_ui <- function(request) {
               ),
               selectInput("ADaM_Data_d",
                 "CDISC ADaM Data",
-                choices = c("ADSL", "ADAE", "CM"),
+                choices = c("ADSL", "ADAE", "ADLB", "CM"),
                 multiple = TRUE
               )
             ),

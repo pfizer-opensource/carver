@@ -36,9 +36,9 @@
 #' Adverse Events Analysis Dataset.
 #'
 #' @source <https://github.com/phuse-org/aesummaries/tree/main/inst/extdata/adae.xpt>,
-#' downloaded 2023-03-17
+#' downloaded 2023-03-17, modified 2023-03-17
 #'
-#' @format Data frame with 1191 features and 55 fields
+#' @format Data frame with 1191 features and 56 fields
 "adae"
 
 #' FMQ Consolidated List
@@ -56,15 +56,8 @@
 #'
 #' Pre Processed `adae` data from `ae_pre_processor()`
 #'
-#' @format List of data frames of length `3`
-"ae_pre"
-
-#' ae_risk
-#'
-#' Output from `risk_stat()`
-#'
-#' @format Data frame with `46` rows and `17` variables
-"ae_risk"
+#' @format List of length `2`, 1 data frame and 1 string
+"ae_pre_process"
 
 #' event_df
 #'

@@ -6,96 +6,74 @@
 \usage{
 ae_pre_processor(
   datain,
+  fmq_data = NULL,
+  date_vars = c("ASTDT", "AENDT", "TRTSDT", "TRTEDT"),
   ae_filter = "Any Event",
-  aeSubset = "AOCCPFL=='Y'",
-  aeDenomSubset = "!is.na(ASTDT)",
-  aeObsPeriod = "Overall Duration",
-  aeObsResidual = 0,
+  subset = NA,
+  obs_residual = NA_real_,
+  max_sevctc = NA_character_,
+  sev_ctcvar = "ASEVN",
+  hterm = "AEBODSYS",
+  lterm = "AEDECOD",
+  rpt_byvar = character(0),
   trtvar = "TRTA",
-  trtsort = "TRTAN",
-  pop_fil = "SAFFL",
-  fmq_data = NA,
-  aeEventVar = "AEDECOD",
-  aeByVar = "AEBODSYS",
-  aeSubGrpVar = NA,
-  aeBigN = "Y",
-  aeGrpVarMiss = "Y",
-  aeTrtTot = "Y",
-  aeSubGrpTot = "Y"
+  pt_total = "N"
 )
 }
 \arguments{
-\item{datain}{the ADaM dataset read from the \code{dataread()} utility is taken as input data.}
+\item{datain}{the input ADaM (\emph{ADAE}) dataset.}
 
-\item{ae_filter}{The filter UI elements that are applied for the report is taken as input.}
+\item{fmq_data}{FMQ table dataframe, if passed, will be merged to adae date by PT.}
 
-\item{aeSubset}{Subset conditions for analysis of dependent variable.}
+\item{date_vars}{Vector of variables to be converted to R date format}
 
-\item{aeDenomSubset}{Subset conditions for overall report}
+\item{ae_filter}{Vector of adverse event types to be used as filter conditions.
+Permissible Values: "ANY", "ANY EVENT", "TREATMENT EMERGENT", "SERIOUS",
+"DRUG-RELATED", "RELATED", "MILD", "MODERATE", "SEVERE", "RECOVERED/RESOLVED",
+"RECOVERING/RESOLVING", "NOT RECOVERING/NOT RESOLVING", "FATAL", "GRADE N"}
 
-\item{aeObsPeriod}{applied for considering AE event that happened in specific duration.
-if user pass "Overall duration" it will filter the \code{STUDYFL == "Y"} records. "Other" will filter
-the period which falls under the start and end date.}
+\item{subset}{Analysis subset condition to be applied to \code{ADAE} dataset prior to ADSL join;
+will be appended to \code{ae_filter}}
 
-\item{aeObsResidual}{If \code{aeObsResidual} sets to "Other", Use this argument to pass a period
-(in numeric) to extend the obseravation period.}
+\item{obs_residual}{If not NA, use this argument to pass a period (numeric) to extend the
+observation period. If passed as NA, overall study duration is considered for analysis.
+eg. if 5, only events occurring upto 5 days past the TRTEDT are considered.}
 
-\item{trtvar}{Treatment variable name string assigned as TRTVAR.}
+\item{max_sevctc}{If needed to filter maximum severity/ctc grade rows. Values: NA/"SEV"/"CTC"}
 
-\item{trtsort}{Treatment sorting variable - numeric or character}
+\item{sev_ctcvar}{Variable to determine max severity. eg: ASEVN, ATOXGRN}
 
-\item{pop_fil}{Population Filter for data set.}
+\item{hterm}{High Level Event Term (req for max Sev tables only)}
 
-\item{fmq_data}{FMQ table data set}
+\item{lterm}{Low Level Event Term (req for max Sev tables only)}
 
-\item{aeEventVar}{Event term variable - Lower Level}
+\item{rpt_byvar}{Page/report by variable if any, to identify max sev/ctc}
 
-\item{aeByVar}{By variable name string assigns to BYVAR1,BYVAR2, etc}
+\item{trtvar}{Treatment Variable}
 
-\item{aeSubGrpVar}{Subgroup variable name string assigns to SUBGRPVAR1, SUBGRPVAR2, etc.,}
-
-\item{aeBigN}{Display big N in column header (y/n).}
-
-\item{aeGrpVarMiss}{Include missing values of by group and sub group variables "Y"/"N"}
-
-\item{aeTrtTot}{Display total treatment column in table or plot (y/n).}
-
-\item{aeSubGrpTot}{Display total AE subgroup column in treatment or plot (y/n)}
+\item{pt_total}{Required to calculate total of preferred terms? Y/N}
 }
 \value{
-: a list containing 3 objects
+: a list containing 2 objects
 \itemize{
-\item dsin - Processed dataframe output for further utilities, with analysis subset
-\item dout - Processed dataframe output to be carried to further utilities; no analysis subset
-\item trtbign - table or numeric value for big N count, pass to mdisplay
+\item data - Processed dataframe output for further utilities (pass to \code{mentry()})
+\item a_subset - Analysis Subset condition as a string
+(pass to \code{mentry()} OR further utilities as required)
 }
 }
 \description{
 Pre-processing data for Adverse Event domain specific reports
 }
 \examples{
-library(carver)
 data(adae)
 data(FMQ_Consolidated_List)
+
 data_pre <- ae_pre_processor(
   datain = adae,
-  aeSubset = "AOCCPFL=='Y'",
-  aeDenomSubset = "!is.na(ASTDT)",
-  ae_filter = "Any Event",
-  aeObsPeriod = "Overall Duration",
-  aeObsResidual = 0,
-  trtvar = "TRTA",
-  trtsort = "TRTAN",
-  pop_fil = "SAFFL",
-  fmq_data = FMQ_Consolidated_List,
-  aeEventVar = "AEDECOD",
-  aeByVar = "AEBODSYS",
-  aeSubGrpVar = NA,
-  aeBigN = "Y",
-  aeGrpVarMiss = "Y",
-  aeTrtTot = "Y",
-  aeSubGrpTot = "Y"
+  ae_filter = "Serious",
+  obs_residual = 0,
+  fmq_data = FMQ_Consolidated_List
 )
-
-data_pre$dout
+data_pre$data
+data_pre$a_subset
 }

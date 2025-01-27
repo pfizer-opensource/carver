@@ -1,0 +1,155 @@
+---
+output:
+  html_document:
+    df_print: paged
+  pdf_document:
+classoption: landscape, a4paper
+params:
+  ADSL_DSIN: adsl
+  A_DSIN: adae
+  ADSL_SUBSET: !r NA_character_
+  POPULATION_FILTER: SAFFL
+  OVERALL_SUBSET: !is.na(ASTDT)
+  AE_FILTER: TREATMENT EMERGENT
+  A_SUBSET: !r NA
+  AEOBSRESIDUAL: !r NA_real_
+  TRTVAR: TRTA
+  TRTSORT: TRTAN
+  FMQ_DATA: FMQ_Consolidated_List
+  LEGEND_BIGN: Y
+  GRPVARMISS: N
+  SUMMARY_BY: Patients
+  HT: AEBODSYS
+  EVENT_VAR: AEDECOD
+  CTRLGRP: Placebo
+  TRTGRP: Xanomeline High Dose
+  CTRLGRP_LAB: Control
+  TRTGRP_LAB: Exposure
+  CUTOFF_WHERE: "FREQ > 5"
+  STATISTICS: Risk Ratio
+  ALPHA: 0.05
+  SORTOPT: Ascending
+  SORTVAR: Count
+  XAXISOPTS: !r list(labelsize = 8, labelface = "plain", ticksize = 8, tickface = "plain")
+  YAXISOPTS: !r list(labelsize = 8, labelface = "plain", ticksize = 8, tickface = "plain")
+  XAXISLINEAROPTS: !r list()
+  LEGENDOPTS: !r list(label = "", pos = "bottom", dir = "horizontal")
+  PVALUE_TRANS: "-log10"
+  REF_OFFSET: 1
+  PVALUE_SIG: 0.05
+  INTERACTIVE: N
+  TITLE: "Volcano plot for {params$STATISTICS} of {str_to_title(params$AE_FILTER)} Adverse Events"
+  FOOTNOTE: !r c("N is the total number of {summary_by}", "Classifications of adverse events are based on the Medical Dictionary for Regulatory Activities. (MedDRA v21.1)",  "Dashed Horizontal line represents incidence percentage reference line.", "Totals for the No. of Participants/Events at a higher level are not necessarily the sum of those at the lower levels since a participant may report two or more.")
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = FALSE, warning = FALSE, message = FALSE, fig.width = 8,
+  fig.height = 5, fig.align = "center"
+)
+## load libraries
+library(carver)
+library(rlang, include.only = "parse_expr")
+library(stringr, include.only = "str_to_title")
+title <- glue::glue(params$TITLE)
+if (tolower(params$SUMMARY_BY) != "events") {
+  summary_by <- "participants"
+  footnote <- "The number of participants reporting at least 1 occurrence of the event specified."
+} else {
+  summary_by <- "events"
+  footnote <- "Event counts are the sum of individual occurrences within that category."
+}
+footer <- glue::glue(paste(params$FOOTNOTE, collapse = "  \n"), "  \n", footnote)
+```
+
+```{r adae_prep, message=FALSE, eval=TRUE}
+## Prepare AE data
+adae_prep <- eval(parse_expr(params$A_DSIN)) |>
+  ### Pre-process AE
+  ae_pre_processor(
+    fmq_data = eval(parse_expr(params$FMQ_DATA)),
+    ae_filter = params$AE_FILTER,
+    obs_residual = params$AEOBSRESIDUAL
+  )
+adae_merge <- eval(parse_expr(params$ADSL_DSIN)) |>
+  ### Merge with adsl
+  adsl_merge(
+    adsl_subset = params$ADSL_SUBSET,
+    dataset_add = adae_prep$data
+  )
+```
+
+```{r adae_mentry, message=FALSE, eval=TRUE}
+
+## Apply subset filtering on processed AE data
+adae_entry <- adae_merge |>
+  mentry(
+    subset = params$OVERALL_SUBSET,
+    byvar = params$HT,
+    trtvar = params$TRTVAR,
+    trtsort = params$TRTSORT,
+    add_grpmiss = params$GRPVARMISS,
+    pop_fil = params$POPULATION_FILTER
+  )
+# Calculate Risk Statistic
+adae_risk <- risk_stat(
+  datain = adae_entry,
+  a_subset = adae_prep$a_subset,
+  summary_by = params$SUMMARY_BY,
+  eventvar = params$EVENT_VAR,
+  ctrlgrp = params$CTRLGRP,
+  trtgrp = params$TRTGRP,
+  statistics = params$STATISTICS,
+  alpha = params$ALPHA,
+  cutoff_where = params$CUTOFF_WHERE,
+  sort_opt = params$SORTOPT,
+  sort_var = params$SORTVAR
+) |>
+  plot_display_bign(mentry_data = adae_entry, bignyn = params$LEGEND_BIGN)
+```
+
+```{r plot}
+# Get volcano specific options
+volcano_opts <- adae_risk |>
+  ae_volcano_opts(
+    trt1_label = params$CTRLGRP_LAB,
+    trt2_label = params$TRTGRP_LAB,
+    statistic = params$STATISTICS,
+    pvalue_trans = params$PVALUE_TRANS,
+    xref_offset = params$REF_OFFSET
+  )
+# Get remaining axis options - user can change volcano_opts, if desired
+axis_options <- plot_axis_opts(
+  xlinearopts = params$XAXISLINEAROPTS,
+  ylinearopts = volcano_opts$ylinearopts,
+  xopts = params$XAXISOPTS,
+  yopts = params$YAXISOPTS,
+  xaxis_label = volcano_opts$xaxis_label,
+  yaxis_label = volcano_opts$yaxis_label,
+  yaxis_scale = volcano_opts$yaxis_scale
+)
+
+# Create plot output
+plot_output <- adae_risk |>
+  ae_volcano_plot(
+    axis_opts = axis_options,
+    legend_opts = params$LEGENDOPTS,
+    xref = volcano_opts$xref,
+    pvalue_sig = params$PVALUE_SIG,
+    interactive = params$INTERACTIVE
+  )
+```
+
+```{r output, results = "asis"}
+cat("####", title, "  \n")
+plot_output
+cat("  \n", footer, "\n\n\n\\pagebreak\n")
+```
+
+```{css styling}
+h4 {
+    font-size: 14px;
+    font-weight: bold;
+    color: #666666 !important;
+}
+```

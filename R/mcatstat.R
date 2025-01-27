@@ -13,242 +13,319 @@
 # limitations under the License.
 #
 #' Summary analysis for categorical variables
+#'
 #' \code{mcatstat()} returns a new dataframe containing counts and percentages
 #' of a categorical analysis variable according to grouping and treatment
 #' variables passed in \code{mentry()}
 #'
-#' @param datain Input data from `mentry()` output (dsin) to get counts for each
+#' @param datain Input data from `mentry()` output to get counts for each
 #'  category
-#' @param d_datain Input data from `mentry()` output (dout) to calculate the
-#' denominator for percentage calculation
-#' of the counts from `datain`
-#' @param ui_uniqid Variable to calculate unique counts of.
-#' Likely values: "USUBJID", "SITEID", NA
-#' @param ui_dptvar Categorical Analysis variable. eg: "SEX","AEDECOD"
-#' @param ui_pctdisp Method to calculate denominator (for %) by.
-#' Possible values: "TRT","VAR","COL","SUBGRP","CAT","NONE","NO","DPTVAR"
-#' @param miss_catyn To include empty/blank values as "Missing" in categories of
-#' `ui_dptvar` variable or not. Values: "Y"/"N"
+#' @param a_subset Analysis Subset condition specific to categorical analysis.
+#' @param denom_subset Subset condition to be applied to data set for calculating denominator.
+#' @param uniqid Variable(s) to calculate unique counts of. eg. `"USUBJID"`, `"SITEID"`,
+#' `"ALLCT"`
+#' @param dptvar Categorical Analysis variable and ordering variable if exists,
+#' separated by /. eg: `"SEX"`, `"SEX/SEXN"`, `"AEDECOD"`, `"ISTPT/ISTPTN"`
+#' @param pctdisp Method to calculate denominator (for %) by.
+#' Possible values: `"TRT"`, `"VAR"`, `"COL"`, `"SUBGRP"`, `"CAT"`, `"NONE"`, `"NO"`, `"DPTVAR"`,
+#' `"BYVARxyN"`
+#' @param miss_catyn To include empty/blank values as `miss_catlabel` in categories of
+#' `dptvar` variable or not. Values: `"Y"/"N"`
+#' @param miss_catlabel Label for missing values
 #' @param cum_ctyn To return cumulative frequency instead of individual
-#' frequencies for each category. Possible values: "Y"/"N"
-#' @param total_catyn To return a 'Total' row for the categories of `ui_dptvar`
-#' variable or not. Possible values: "Y"/"N"
-#' @param dptvarn Number to assign as 'DPTVARN', useful for block sorting when
+#' frequencies for each category. Values: `"Y"/"N"`
+#' @param total_catyn To return a 'Total' row for the categories of `dptvar`
+#' variable or not. Possible values: `"Y"/"N"`
+#' @param total_catlabel Label for total category row. eg- "All"/"Total"
+#' @param dptvarn Number to assign as `DPTVARN`, useful for block sorting when
 #' multiple `mcatstat()` outputs are created to be combined.
+#' @param pctsyn Display Percentage Sign in table or not. Values: `"Y"/"N"`
+#' @param sigdec Number of decimal places for % displayed in output
+#' @param denomyn Display denominator in output or not. Values: `"Y"/"N"`
+#' @param sparseyn To sparse missing categories/treatments or not? `"Y"/"N"`
+#' @param sparsebyvalyn Sparse missing categories within by groups. `"Y"/"N"`
+#' @param return_zero Return rows with zero counts if analysis subset/ non-missing does not
+#' exist in data. `"Y"/"N"`
 #'
 #' @details
 #' \itemize{
-#' \item Objects passed to `datain` and `d_datain` can be the $dsin and $dout
-#' return elements respectively from either \code{mentry()} or
-#' \code{ae_pre_processor()}
-#' \item `ui_uniqid` is the variable name to get unique counts of. If given as
-#' NA, it sums all observations for the given category. If "USUBJID" then it
+#' \item Object passed to `datain` is the return element from `mentry()`
+#' \item `a_subset` condition is applied to data to be analysed, and not applied for getting
+#' denominator
+#' \item `denom_subset` condition, if given, to apply to denominator data alone. Usually used
+#' with `pctdisp` = "SUBGRP" or "DPTVAR"
+#' \item `uniqid` is the variable name to get unique counts of. If given as
+#' *"ALLCT"*, it sums all observations for the given category. If *"USUBJID"* then it
 #' calculates the number of unique subjects per category.
-#' \item `cum_ctyn` as "Y" to get output value as cumulative frequencies instead
-#'  of individual frequencies. If "Y", `total_catyn` will be reset to "N"
-#' \item pctdisp has possible values for method to get denominator to calculate
+#' \item `cum_ctyn` as `"Y"` to get output value as cumulative frequencies instead
+#'  of individual frequencies. If `"Y"`, `total_catyn` will be reset to `"N"`
+#' \item `pctdisp` has possible values for method to get denominator to calculate
 #'  percentage:
-#'       NONE/NO: No percent calculation
-#'       TRT: Treatment total counts acts as denominator
-#'       VAR: Variable Total of all treatments/groups acts as denominator
-#'       COL: Column wise denominator - percentage within each
-#'        Treatment-Subgroup(s) combination
-#'       CAT: Row-wise denominator - percentage within each Bygroup(s)-dptvar
-#'        combination
-#'       SUBGRP: Percentage within each Treatment-By group(s)-Subgroup(s)
-#'        combination
-#'       DPTVAR: Percentage within each Treatment-By group(s)-Subgroup(s)-dptvar
-#'        combination.
+#'  \itemize{
+#'    \item **NONE/NO**: No percent calculation
+#'    \item **TRT**: Treatment total counts acts as denominator
+#'    \item **VAR**: Variable Total of all treatments/groups acts as denominator
+#'    \item **COL**: Column wise denominator - percentage within each `Treatment-Subgroup(s)`
+#'    combination
+#'    \item **CAT**: Row-wise denominator - percentage within each `Bygroup(s)-dptvar` combination
+#'    \item **SUBGRP**: Percentage within each `Treatment-By group(s)-Subgroup(s)` combination
+#'    \item **DPTVAR**: Percentage within each `Treatment-By group(s)-Subgroup(s)-dptvar`
+#'    combination.
+#'    \item **BYVARxyN**: Percentage using `Treatment-Bygroup` combination as denominator. eg if
+#'    `BYVAR12N` then uses `TRT-BYVAR1-BYVAR2` combination, if `BYVAR1N` then only `TRT-BYVAR1`
+#'    \item **SGRPN**: Percentage using Subgroup total as denominator
+#'  }
 #' }
 #'
 #' @return a data.frame with counts and/or percentages, passed to
-#'  \code{mdisplay()} or for further risk statistic calculation
+#'   passed to `tbl_processor()` or graph functions
 #' @export
 #'
 #' @examples
-#' data(ae_pre)
+#' data("adsl")
 #'
-#' ae_cat <- mcatstat(
-#'   datain = ae_pre$dsin,
-#'   d_datain = ae_pre$dout,
-#'   ui_uniqid = "USUBJID",
-#'   ui_dptvar = "AEDECOD",
-#'   ui_pctdisp = "TRT"
-#' )
-#' ae_cat
+#' df_mentry <-
+#'   adsl |> mentry(
+#'     subset = "EFFFL=='Y'",
+#'     byvar = "AGEGR1",
+#'     trtvar = "TRT01A",
+#'     trtsort = "TRT01AN",
+#'     subgrpvar = "SEX/SEXN",
+#'     trttotalyn = "N",
+#'     add_grpmiss = "N",
+#'     sgtotalyn = "N",
+#'     pop_fil = "Overall Population"
+#'   )
+#'
+#' df_mentry |>
+#'   mcatstat(
+#'     a_subset = "SUBGRPVAR1 == 'F'",
+#'     uniqid = "USUBJID",
+#'     dptvar = "RACE/RACEN",
+#'     pctdisp = "TRT"
+#'   )
+#'
 mcatstat <- function(datain = NULL,
-                     d_datain = NULL,
-                     ui_uniqid = "USUBJID",
-                     ui_dptvar = NULL,
-                     ui_pctdisp = "TRT",
+                     a_subset = NA_character_,
+                     denom_subset = NA_character_,
+                     uniqid = "USUBJID",
+                     dptvar = NULL,
+                     pctdisp = "TRT",
                      miss_catyn = "N",
+                     miss_catlabel = "Missing",
                      cum_ctyn = "N",
                      total_catyn = "N",
-                     dptvarn = 1) {
+                     total_catlabel = "Total",
+                     dptvarn = 1,
+                     pctsyn = "Y",
+                     sigdec = 2,
+                     denomyn = "N",
+                     sparseyn = "N",
+                     sparsebyvalyn = "N",
+                     return_zero = "N") {
   if (nrow(datain) == 0) {
-    print("Mcatstat has no data to display")
-    return(NULL)
+    return(datain)
   }
-
+  stopifnot("uniqid should exist in data or be ALLCT" = all(uniqid %in% c(names(datain), "ALLCT")))
   # Identify by groups if exists
   BYVAR <- var_start(datain, "BYVAR")
   # Identify subgroups if exists
   SUBGRP <- var_start(datain, "SUBGRP")
-  BYVARN <- var_start(datain, "BYVARN")
   SUBGRPN <- var_start(datain, "SUBGRPN")
-
-  # Data ungroup prior to counting
-  datain <- datain %>% ungroup()
-  d_datain <- d_datain %>% ungroup()
-  # Set unique ID variable to get counts of
-  if (!is.na(ui_uniqid)) {
-    datain$UNIQID <- datain[[ui_uniqid]]
-    d_datain$UNIQID <- d_datain[[ui_uniqid]]
-  } else {
-    datain <- datain %>% mutate(UNIQID = row_number())
-    d_datain <- d_datain %>% mutate(UNIQID = row_number())
+  BYVARN <- var_start(datain, "BYVARN")
+  dptvars <- sep_var_order(dptvar)
+  # Process unique ID variable (if passed as "ALLCT")
+  # If unique ID is ALLCT, use all rows instead of unique subjects
+  if (all(uniqid == "ALLCT")) {
+    datain <- datain |>
+      mutate(ALLCT = row_number())
   }
-
-  # Setting Categories
-  datain$DPTVAL <- datain[[ui_dptvar]]
-  d_datain$DPTVAL <- d_datain[[ui_dptvar]]
-
-  # Convert empty categories to "Missing":
-  if (is.character(datain$DPTVAL)) {
-    datain <- datain %>% mutate(DPTVAL = ifelse(DPTVAL %in% c("", " ", NA),
-      "Missing", DPTVAL
-    ))
-    d_datain <- d_datain %>% mutate(DPTVAL = ifelse(DPTVAL %in% c("", " ", NA),
-      "Missing", DPTVAL
-    ))
-    # To display missing categories or not per miss_catyn
-    if (miss_catyn == "N") {
-      datain <- datain %>% filter(DPTVAL != "Missing")
+  # Process DPT variable
+  data_pro <- datain |>
+    create_grpvars(
+      dptvars$vars,
+      dptvars$order,
+      "DPTVAL",
+      ifelse(cum_ctyn == "Y", "N", total_catyn),
+      totlabel = total_catlabel
+    ) |>
+    rename(all_of(c("DPTVAL" = "DPTVAL1", "DPTVALN" = "DPTVAL1N"))) |>
+    mutate(
+      DPTVAL = as.character(.data[["DPTVAL"]]),
+      DPTVAL = ifelse(
+        str_squish(.data[["DPTVAL"]]) == "" | is.na(.data[["DPTVAL"]]),
+        miss_catlabel,
+        .data[["DPTVAL"]]
+      )
+    )
+  # Apply subsets to get num and denom data:
+  dflist <- map(list(a_subset, denom_subset), \(s) {
+    if (!is.na(s) && str_squish(s) != "") {
+      filter(data_pro, !!!parse_exprs(s))
+    } else {
+      data_pro
+    }
+  })
+  data_num <- dflist[[1]]
+  data_denom <- dflist[[2]]
+  # If missing categories to be included
+  if (miss_catyn == "N") {
+    data_num <- data_num |>
+      filter(.data[["DPTVAL"]] != miss_catlabel)
+  }
+  # Set groups by Treatment, Sub,By if any to use for counts
+  # Get N count as variable FREQ:
+  countgrp <- c(
+    var_start(data_num, "TRTVAR"), SUBGRP, SUBGRPN, BYVAR,
+    BYVARN, "DPTVAL", "DPTVALN"
+  )
+  # If a_subset returns NONE and equired to return 0 count row:
+  if (nrow(data_num) < 1 && return_zero == "Y") {
+    counts <- data_pro |>
+      group_by(across(any_of(countgrp))) |>
+      summarise(FREQ = 0) |>
+      ungroup()
+  } else {
+    # Else proceed to calculate count and percentage
+    if (nrow(data_num) < 1 || nrow(data_denom) < 1) {
+      return(data.frame())
+    }
+    # Get count dataset and sparse categories
+    counts <- data_num |>
+      group_by(across(any_of(countgrp))) |>
+      summarise(FREQ = n_distinct(across(any_of(uniqid)))) |>
+      ungroup()
+    # Sparse categories (within by groups for sparseyn)
+    # sparsebyvalyn will also impute for 'by' categories
+    if (sparseyn == "Y" || (sparsebyvalyn == "Y" && length(BYVAR) > 0)) {
+      data_sparse <- data_pro
+    } else {
+      data_sparse <- counts
+    }
+    counts <- counts |>
+      sparse_vals(
+        data_sparse = data_sparse,
+        sparseyn = "Y",
+        sparsebyvalyn = "N",
+        BYVAR,
+        SUBGRP,
+        BYVARN,
+        SUBGRPN
+      ) |>
+      sparse_vals(
+        data_sparse = data_sparse,
+        sparseyn = "N",
+        sparsebyvalyn = sparsebyvalyn,
+        BYVAR,
+        SUBGRP,
+        BYVARN,
+        SUBGRPN
+      )
+    # If cumulative count is required then
+    if (cum_ctyn == "Y") {
+      counts <- counts |>
+        group_by(across(any_of(c("TRTVAR", BYVAR, SUBGRP)))) |>
+        arrange(.data[["DPTVALN"]], .by_group = TRUE) |>
+        mutate(FREQ = cumsum(.data[["FREQ"]])) |>
+        ungroup()
     }
   }
-  # Check if DPTVAL-N variable already exists for sorting purpose
-  datain <- datain %>%
-    rename(any_of(c("DPTVALN" = paste0(ui_dptvar, "N"))))
+  # Calculate denominator/pct and add requisite variables for standard display processing:
+  df <- counts |>
+    calc_denom(
+      data_denom,
+      uniqid,
+      pctdisp,
+      pctsyn,
+      denomyn,
+      sigdec,
+      BYVAR,
+      SUBGRP
+    )
+  df <- df |>
+    mutate(
+      DPTVAR = dptvars$vars, XVAR = .data[["DPTVAL"]], DPTVARN = dptvarn, CN = "C"
+    ) |>
+    select(any_of(c(BYVAR, "TRTVAR", SUBGRP, "DPTVAR", "DPTVAL", "CVALUE")), everything())
 
-  # If DPTVAL-N does not exist already, create it
-  if (!("DPTVALN" %in% names(datain))) {
-    datain <- datain %>%
-      arrange(DPTVAL) %>%
-      mutate(DPTVALN = ifelse(as.character(DPTVAL) == "Missing", 999,
-        as.integer(fct_inorder(as.character(DPTVAL)))
-      ))
-  }
+  message("mcatstat success")
 
+  df
+}
 
-
-  # Display a Total row as sum of all categories if total_catyn is Y
-  if ((total_catyn == "Y") && (cum_ctyn != "Y")) {
-    datain <- datain %>%
-      mutate(DPTVAL = "Total", DPTVALN = 1000) %>%
-      bind_rows(datain, .)
-    d_datain <- d_datain %>%
-      mutate(DPTVAL = "Total", DPTVALN = 1000) %>%
-      bind_rows(datain, .)
-  }
-
-
-  # Set groups by Treatment, Sub,By if any to use for counts
-  countgrp <- c("TRTVAR", SUBGRP, SUBGRPN, BYVAR, BYVARN, "DPTVAL", "DPTVALN")
-
-  # Get N count as variable FREQ:
-  counts <- datain %>%
-    group_by(across(any_of(countgrp))) %>%
-    summarise(FREQ = length(unique(UNIQID))) %>%
-    ungroup()
-
-  # If cumulative count is required then
-  if (cum_ctyn == "Y") {
-    counts <- counts %>%
-      group_by(across(any_of(c("TRTVAR", BYVAR, SUBGRP)))) %>%
-      arrange(DPTVALN, .by_group = TRUE) %>%
-      mutate(FREQ = cumsum(FREQ)) %>%
-      ungroup()
-  }
+#' Caclulate denominator and oercentage for mcatstat
+#'
+#' @param counts Dataframe containing counts (FREQ) by category
+#' @param data_denom Dataframe subsetted to use as denominator data
+#' @param uniqid Variable to calculate unique counts of.
+#' Likely values: "USUBJID", "SITEID", "ALLCT"
+#' @param pctdisp Method to calculate denominator (for %) by.
+#' Possible values: "TRT","VAR","COL","SUBGRP","CAT","NONE","NO","DPTVAR", "BYVARxyN"
+#' @param pctsyn Display Percentage Sign in table or not. "Values: "Y"/"N"
+#' @param denomyn Display denominator in output column or not. "Values: "Y"/"N"
+#' @param BYVAR  By group variables assigned. eg c("BYVAR1", "BYVAR2")
+#' @param SUBGRP Subgroup variables assigned. eg c("SUBGRPVAR1", "SUBGRPVAR2")
+#'
+#' @return A dataframe containing denominator and/or percentage values
+#'
+#' @noRd
+calc_denom <- function(counts,
+                       data_denom,
+                       uniqid = "USUBJID",
+                       pctdisp = "TRT",
+                       pctsyn = "Y",
+                       denomyn = "N",
+                       sigdec = 2,
+                       BYVAR,
+                       SUBGRP) {
   # Check Allowable pctdisp values
-  validpct <- c(
-    "TRT",
-    "VAR",
-    "COL",
-    "SUBGRP",
-    "SGRPN",
-    "CAT",
-    "NONE",
-    "NO",
-    "DPTVAR"
+  stopifnot(
+    "Invalid pctdisp" =
+      str_remove(pctdisp, "[[:digit:]]+") %in%
+        c("TRT", "VAR", "COL", "SUBGRP", "SGRPN", "CAT", "NONE", "NO", "DPTVAR", "BYVARN")
   )
-
-  if (!((ui_pctdisp %in% validpct) || str_detect(ui_pctdisp, "BYVAR[0-9]+N"))) {
-    return(NULL)
-  }
-
   # Set denominator values for percentage
-  if (ui_pctdisp %in% c("NONE", "NO")) {
-    df <- counts %>% mutate(CVALUE = FREQ) # No percentage if pctdisp is NO/NONE
+  if (pctdisp %in% c("NONE", "NO")) {
+    df <- counts |> mutate(CVALUE = as.character(.data[["FREQ"]]))
+    # No percentage if pctdisp is NO/NONE
   } else {
-    # Identify which variables go towards creating combo for Denominator
-    if (ui_pctdisp == "VAR") {
+    # Identify which variables go towards creating Denominator
+    if (pctdisp == "VAR") {
       # If pctdisp = VAR, total percent across all records
-      denom <-
-        counts %>%
-        ungroup() %>%
-        mutate(DENOMN = length(unique(d_datain$UNIQID)))
+      df <- counts |> mutate(DENOMN = nrow(unique(data_denom[uniqid])))
     } else {
-      if (ui_pctdisp == "TRT") { # Percent By each treatment if pctdisp = TRT
-        percgrp <- "TRTVAR"
-      } else if (ui_pctdisp == "CAT") { # Percent row-wise if pctdisp=CAT
-        percgrp <- c(BYVAR, "DPTVAL")
-      } else if (ui_pctdisp == "COL") { # Percent column-wise if pctdisp=COL
-        percgrp <- c("TRTVAR", SUBGRP)
-      } else if (ui_pctdisp == "SUBGRP") { # Percent by Treatment, By and
-        # Subgroup if pctdisp=SUBGRP
-        percgrp <- c("TRTVAR", SUBGRP, BYVAR)
-      } else if (ui_pctdisp == "SGRPN") { # Percent if pctdisp=SUBGRP
-        percgrp <- SUBGRP
-      } else if (str_detect(ui_pctdisp, "BYVAR[0-9]+N")) { # Percent by
-        # combination of By Variables if pctdisp = BYVARXYN
-        bys <-
-          paste0("BYVAR", as.integer(unlist(str_split(
-            str_extract(ui_pctdisp, "[[:digit:]]+"), ""
-          ))))
-        percgrp <- c("TRTVAR", bys)
-      } else if (ui_pctdisp == "DPTVAR") { # row-wise calculation with By, Trt
-        # and Sub. Almost always 100%
-        percgrp <- c("TRTVAR", SUBGRP, BYVAR, "DPTVAL")
-      }
-      # Take denominator variables only when they exist in dataframe
-      percgrp <- percgrp[percgrp %in% names(datain)]
-
+      percgrp <- switch(gsub("[[:digit:]]", "", pctdisp),
+        "TRT" = "TRTVAR",
+        "CAT" = c(BYVAR, "DPTVAL"),
+        "COL" = c("TRTVAR", SUBGRP),
+        "SUBGRP" = c("TRTVAR", SUBGRP, BYVAR),
+        "SGRPN" = SUBGRP,
+        "DPTVAR" = c("TRTVAR", SUBGRP, BYVAR, "DPTVAL"),
+        "BYVARN" = c("TRTVAR", paste0("BYVAR", str_to_vec(
+          str_extract(pctdisp, "[[:digit:]]+"), ""
+        )))
+      ) |> intersect(names(data_denom))
       # Get denominator count per above variables
-      denom <- d_datain %>%
-        group_by(across(all_of(percgrp))) %>%
-        summarise(DENOMN = length(unique(UNIQID))) %>%
+      df <- data_denom |>
+        group_by(across(all_of(percgrp))) |>
+        summarise(DENOMN = n_distinct(across(any_of(uniqid)))) |>
         inner_join(counts, by = percgrp, multiple = "all")
     }
 
     # Calculate percentage as PCT and concatenate as CVALUE
-    df <- denom %>%
+    p <- ifelse(pctsyn == "N", "", "%") # nolint
+    df <- df |>
       mutate(
-        PCT = format(round((FREQ * 100) / DENOMN, 2), nsmall = 2),
-        CVALUE = paste0(FREQ, " (", PCT, "%)")
+        PCT = (.data[["FREQ"]] * 100) / DENOMN,
+        CPCT = round_f(.data[["PCT"]], sigdec)
       )
+    if (denomyn == "Y") {
+      cstat <- "{FREQ}/{DENOMN} ({CPCT}{p})"
+    } else {
+      cstat <- "{FREQ} ({CPCT}{p})"
+    }
+    df <- df |>
+      mutate(CVALUE = ifelse(FREQ == 0, "0", glue(cstat)))
   }
-
-  # Add requisite variables for standard mdisplay processing:
-  df <- df %>%
-    ungroup() %>%
-    mutate(
-      DPTVAR = ui_dptvar,
-      XVAR = DPTVAL,
-      DPTVARN = dptvarn, CN = "C"
-    ) %>%
-    select(DPTVAR, DPTVAL, XVAR, everything())
-
-  print("mcat success")
-
-  return(df)
+  return(df |> ungroup())
 }

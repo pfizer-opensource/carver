@@ -2,113 +2,113 @@
 % Please edit documentation in R/mentry.R
 \name{mentry}
 \alias{mentry}
-\title{Function to read in and process data with subsets and variables.}
+\title{Read and process data with subsets and variables}
 \usage{
 mentry(
   datain,
-  ui_aSubset,
-  ui_dSubset,
-  ui_byvar = NA,
-  ui_subgrpvar = NA,
-  ui_trtvar = NA,
-  ui_trtsort = NA,
-  ui_trttotalyn = "N",
-  ui_sgtotalyn = "N",
-  ui_bign = "Y",
-  ui_addGrpMiss,
-  ui_pop_fil
+  subset = NA,
+  byvar = NA,
+  subgrpvar = NA,
+  trtvar = NA,
+  trtsort = NA,
+  trttotalyn = "N",
+  trttotlabel = "Total",
+  trtmissyn = "N",
+  sgtotalyn = "N",
+  add_grpmiss = "N",
+  pop_fil = "Overall Population"
 )
 }
 \arguments{
-\item{datain}{Input dataset - can be any ADaM data}
+\item{datain}{Input dataset can be any \code{ADaM} data.}
 
-\item{ui_aSubset}{Subset conditions for analysis of dependent variable}
+\item{subset}{Subset conditions for analysis of dependent variable.}
 
-\item{ui_dSubset}{Subset conditions for overall report}
+\item{byvar}{Tilde(\code{~}) separated strings for grouping variable names. Assigns to
+\verb{BYVAR1, BYVAR2}, etc. Use \code{'/'} to specify ordering variables. eg: \code{SEX/SEXN~COUNTRY}.`}
 
-\item{ui_byvar}{By variable name string assigns to BYVAR1,BYVAR2, etc}
+\item{subgrpvar}{Tilde(\code{~}) separated strings for grouping variable names. Assigns to
+\code{SUBGRPVAR1}, \code{SUBGRPVAR2}, etc. Use \code{'/'} to specify ordering variables.
+eg: \code{RACE/RACEN~ETHNIC}.}
 
-\item{ui_subgrpvar}{Subgroup variable name string assigns to SUBGRPVAR1, SUBGRPVAR2, etc}
+\item{trtvar}{Treatment variable name string assigned as \code{TRTVAR}.}
 
-\item{ui_trtvar}{Treatment variable name string assigned as TRTVAR}
+\item{trtsort}{Treatment sorting variable name string - numeric or
+character variable assigned as \code{TRTSORT}.}
 
-\item{ui_trtsort}{Treatment sorting variable - numeric or character}
+\item{trttotalyn}{Add total treatment values to be displayed as column in
+table or category in plot (\code{"Y"/"N"}).}
 
-\item{ui_trttotalyn}{Display total treatment column in table or plot (y/n)}
+\item{trttotlabel}{Label for total Treatment column/group}
 
-\item{ui_sgtotalyn}{Display total subgroup column in treatment or plot (y/n)}
+\item{trtmissyn}{Retain Missing treatment counts in Total (if \code{trttotalyn} = Y). Missing
+treatment will not be considered as a column in analysis in any case.}
 
-\item{ui_bign}{Display big N in column header (y/n)}
+\item{sgtotalyn}{Add total subgroup values to be displayed as column in
+table or category in plot (\code{"Y"/"N"}).}
 
-\item{ui_addGrpMiss}{Add row or column for missing category in grouping variables}
+\item{add_grpmiss}{Add row or column for missing category in grouping
+variables. (\code{"Y"/"N"})}
 
-\item{ui_pop_fil}{Population Filter for dataset}
+\item{pop_fil}{Population Filter for data set: Name of flag variable.
+eg: \code{"SAFFL"}, \code{"EFFFL"} or \code{NA} for Overall Population.}
 }
 \value{
-a list containing 3 objects
-\itemize{
-\item \code{dsin}- processed dataframe output to be carried to further utilities
-\item \code{bign}- table or numeric value for big N count, pass to mdisplay
-\item \code{dout}- Subset data used for denominator calculation in categorical analysis
-}
+a \code{data.frame} output to be used in further utilities with applied \code{subset}
 }
 \description{
-It takes arguments for TRT,BY and/or SUBGROUP variables, subset conditions and processes input
-data. This data flows into categorical and numerical utilities
+The input data gets processed based on \code{TRT}, \code{BY} and/or \code{SUBGROUP} variables and filtered by
+subset conditions. This processed data flows into categorical and numerical utilities such as
+\code{mcatstat()} and \code{msumstat()} for further analysis.
 }
 \details{
 \enumerate{
-\item By Variabel Processing
-Identifying byvars if byvar is given, create BYVAR1,2,etc
-If byvars also have a corresponding numeric code list variable then create BYVAR1N..
-for sorting purpose check for numeric code list variable for the subgroup var,
-if not create numeric variable
-Convert to character if numeric
-Re-code blanks from Bygrp vars as Missing
-remove missing category value from grouping variable as per user choice
-\item Treatment Variable Processing
-Identifying Treatment Variable,treatment sorting variable
-removed non treatment values
-If treatment sort variable doesn't exist, make it same as TRTVAR
-If treat sort is not numeric, convert to numeric
-treatment total column
-Convert TRTVAR to a factor in same order as TRTSORT
-\item Subgroup Variable processing
-Identifying Subgroup variable
-check for numeric code list variable for the subgroup var, if not create numeric variable
-Re-code blanks from By and Subgroup vars as Missing
-remove missing category value from grouping variable as per user choice
-Subgroup total column for the last subgroup variable
-\item Subset Processing
-applying population subset selected
-applying denominator/over all subset condition passed by the user
-applying analysis subset condition passed by the user
-\item Calculate big N for mdisplay
-big n if treatment exist or subgroup exists
-big n if both treatment & Subgroup don't exist
-If no big N required then NA
+\item \strong{By Variable Processing}
+Identify \code{byvars} if byvar is given, create \code{BYVAR1}, \code{BYVAR2}, etc.
+Check for numeric code list variable for the grouping var, if not
+create numeric variable for sorting as \code{BYVAR1N}, \code{BYVAR2N} etc.
+Convert to \code{character} if \code{numeric}.
+Re-code blanks from grouping variables as \code{"Missing"}
+Remove missing category value from grouping variable per user choice.
+\item \strong{Treatment Variable Processing}
+Identify Treatment Variable, treatment sorting variable.
+Remove non treatment values.
+If treatment sort variable doesn't exist, make it same as \code{TRTVAR}
+If treatment sort is not numeric, convert to numeric
+Add treatment total column based on \code{trttotalyn}
+Convert \code{TRTVAR} to a factor in same order as \code{TRTSORT}
+\item \strong{Subgroup Variable processing}
+Identify Subgroup variable: create \code{SUBGRPVAR1N}, \code{SUBGRPVAR2N} etc if \code{subgrpvar} is
+specified.
+Check presence of numeric code list variables for the subgroup variables,
+if not create numeric variable for sorting purpose as \code{SUBGRPVAR1N} etc
+Re-code blanks from By and Subgroup vars as \code{Missing}
+Remove missing category value from grouping variable per user choice
+Add Subgroup total column for the last subgroup variable
+\item \strong{Subset Processing}
+Applying population subset selected
+Applying denominator/overall subset condition passed by the user
+Applying analysis subset condition passed by the user
+\item \strong{Calculate Big N for displaying in final output}
+\code{data.frame} with Count \code{N} for each treatment/subgroup if they exist.
+If no \verb{Big N} required, then \code{NA} is returned.
 }
 }
 \examples{
-library(carver)
 data(adsl)
-datain <- mentry(
-  datain = adsl,
-  ui_aSubset = "EFFFL=='Y'",
-  ui_dSubset = NA,
-  ui_byvar = "SEX,AGEGR1",
-  ui_trtvar = "TRT01A",
-  ui_trtsort = "TRT01AN",
-  ui_subgrpvar = "SITEGR1,BMIBLGR1",
-  ui_bign = "Y",
-  ui_trttotalyn = "N",
-  ui_addGrpMiss = "N",
-  ui_sgtotalyn = "N",
-  ui_pop_fil = "Overall Population"
-)
 
-datain$dsin
-datain$dout
-datain$bign
+df_mentry <-
+  adsl |> mentry(
+    subset = "EFFFL=='Y'",
+    byvar = "SEX/SEXN~AGEGR1",
+    trtvar = "TRT01A",
+    trtsort = "TRT01AN",
+    subgrpvar = "RACE/RACEN~BMIBLGR1",
+    trttotalyn = "N",
+    add_grpmiss = "N",
+    sgtotalyn = "N",
+    pop_fil = "Overall Population"
+  )
 
+df_mentry
 }

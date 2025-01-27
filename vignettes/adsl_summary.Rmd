@@ -1,0 +1,153 @@
+---
+title: "Subject Level Summary Table"
+output: 
+  rmarkdown::html_vignette:
+     highlight: haddock
+     code_folding: show
+     df_print: paged
+vignette: >
+  %\VignetteIndexEntry{Subject Level Summary Table}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+```{=html}
+<style>.h1, h1{color: #333A73 !important;}</style>
+```
+```{=html}
+<style>.h2, h2{color: #333A73 !important;}</style>
+```
+```{=html}
+<style>.h3, h3{color: #333A73 !important;}</style>
+```
+
+# Introduction
+
+This article describes creating reports which can be classified as ADSL Summary Tables using `adsl_summary` function. Example here is created using `ADSL` domain.
+
+**Note:** *All examples assume CDISC ADaM format as input unless otherwise specified.*
+
+# Programming Flow
+
+-   [Read in Data](#readdata)
+-   [Preprocess Data](#preprocess)
+-   [ADSL Summary Table](#summarisation)
+-   [ADSL Table Display](#output)
+
+## Read in Data {#readdata}
+
+```{r message=FALSE, warning=FALSE}
+library(carver)
+library(dplyr)
+library(purrr) # nolint
+data(adsl)
+```
+
+## Preprocess Data {#preprocess}
+
+Before creating `adsl_summary`, it is required to use the pre-processing function: `mentry` which serves as an essential step in preparing the data for summarisation.
+
+### `mentry()`
+
+The next step in pre-processing involves the usage of `mentry` function to read and process data
+with subsets and variables. It takes in the `adsl` as input . The input data gets processed
+based on `TRT`(mandatory variable for generating columns in the final table), `BY`(optional variable used to group rows  in the final table) and/or `SUBGROUP`(optional variable used to add subgroups under the columns-TRT in the final table) variables and filtered by subset conditions.
+
+**Note:** *For additional information such as parameters info, refer to the mentry() documentation.*
+
+```{r message=FALSE, warning=FALSE}
+mentry_df <- adsl |>
+  mentry(
+    subset = NA_character_,
+    byvar = NA_character_,
+    trtvar = "TRT01A",
+    trtsort = "TRT01AN",
+    subgrpvar = NA_character_,
+    trttotalyn = "Y",
+    add_grpmiss = "N",
+    pop_fil = "SAFFL"
+  )
+```
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+dataset_vignette(as.data.frame(mentry_df))
+```
+
+## ADSL Summary Table {#summarisation}
+
+This step is used in creating the ADSL summary table using the 'adsl_summary' function. 
+
+The following are the arguments for the table:
+
+-   `datain`: The input data for table generation. The output data from `mentry_df` function.
+-   `vars`: Names of `adsl` variables to display in final output which are tilde-separated, Add `"-S"` for numeric variables.
+-   `stat_vars`: Statistics to display in table for numeric vars, tilde-separated.
+-   `pctdisp`: Denominator to calculate percentages by.
+Values: `"TRT", "VAR", "COL", "SUBGRP", "SGRPN", "CAT", "NONE", "NO", "DPTVAR"`.
+-  `total_catyn` To return a 'Total' row for categorical analysis in `vars`. Values: `"Y"/"N"`
+-  `total_catlabel` Label for total category row. eg- "All"/"Total"
+-  `miss_catyn` To include empty/blank values as `miss_catlabel` in categories of `dptvar` variable or not. Values: `"Y"/"N"`
+-  `miss_catlabel` Label for missing values
+-  `a_subset` Analysis Subset condition; tilde-separated for each variable in `vars`.
+-  `denom_subset` Subset condition to be applied to dataset for calculating denominator, tilde-separated for categorical variables within `vars`.
+
+```{r message=FALSE, warning=FALSE}
+adsl_sum <- mentry_df |>
+  adsl_summary(
+    vars = "AGEGR1/AGEGR1N~AGE-S~SEX/SEXN~RACE/RACEN",
+    stat_vars = "N~Range~Meansd~Median~IQR",
+    pctdisp = "TRT",
+    total_catyn = "N",
+    total_catlabel = "Total",
+    miss_catyn = "N",
+    miss_catlabel = "Missing",
+    a_subset = "AGE<65~AGE>80~SEX=='F'~NA",
+    denom_subset = NA_character_
+  )
+```
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+dataset_vignette(as.data.frame(adsl_sum))
+```
+
+## ADSL Table Display {#output}
+
+### Prepare data for general table display
+This step is used creating the ADSL summary table using 'tbl_processor' function to prepare data for general table display.
+
+The following are the arguments:
+
+- `datain` Input dataframe. The output data from `adsl_summary` function.
+- `dptlabel` Tilde-separated labels to set to category variables in data.
+If analysis vars (`DPTVAR`) contains `AGEGR1, RACE`; `dptlabel` may be `"Age Group~Race"`.
+- `statlabel` Tilde-separated labels corresponding to each Statistic in data.
+- `extra_df` Additional dataframe, to merge with `datain`.
+- `extra_mergeby` Variables to merge `extra_df` by, if present.
+- `dropvars` Variables additional to standard present in input data to be removed from output
+- `disp_value_col` Hide/Show value column from the final display.
+- `addrowvars` Group Variable(s) to be removed as a column and instead used as row headers in the value column.
+
+### Create flextable output from display templates
+This step is used creating the ADSL summary table using 'tbl_display' to create flextable output from display templates.
+
+The following are the arguments:
+
+- `datain` Input dataframe. The output data from `tbl_processor` function.
+- `bylabel` Change `BYVAR` names to label, if any.
+- `dpthead` String to become name of the column containing categories (`DPTVAL`) in output.
+- `font` Font face for text inside table
+- `fontsize` Font size for text inside table
+
+### ADSL Table Display Output {#output}
+The ADSL Summary Table is generated successfully. Below is the Table generated:
+
+```{r message=FALSE, warning=FALSE}
+adsl_sum |>
+  display_bign_head(mentry_data = mentry_df) |>
+  tbl_processor(
+    statlabel = "N~Range~Meansd~Median~IQR",
+    dptlabel = "Age Group~NONE~Sex~Race",
+    addrowvar = "DPTVAR"
+  ) |>
+  tbl_display() |>
+  flextable::autofit()
+```

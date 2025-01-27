@@ -12,279 +12,503 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-#' @title To generate event graphs for FDA Medical queries
+#' Event graphs for FDA Medical queries
 #'
-#' @param datain input dataset
-#' @param datain_N input adsl bign dataset with tretament counts based on the population
-#' @param hl_var MedDRA queries or high level variables valid value : "FMQ_NAM","AEBODSYS"
-#' @param hl_val Queries/term name captured in the `hl_var` variable, One selection e.g.,
-#' erythema
-#' @param hl_scope scope of the MedDRA queries; valid value : Narrow or Broad
-#' @param ll_var MedDRA variable; valid value : AEDECOD
-#' @param ll_val MedDRA value, One selection e.g., erythema
-#' @param ll_scope scope of the MedDRA queries; valid value : Narrow or Broad
-#' @param summary_by  set to 'Events' or 'patients' based on the requirement to ass the titles and
-#' footnotes
-#' @param ref_line y axis position of the Horzondal reference line
+#' @param datain `list` obtained from `process_event_analysis`
+#' @param fig.align Alignment of plots, `"h"` for horizontal or `"v"` for vertical.
+#' @param disp.proportion Display proportion of plots horizontally or vertically, should sum up
+#' to `10`.
+#' @param ref_line y axis position of the Horizontal reference line.
+#' @param x_tickangle angle of `x` axis `ticks`, default is `15`
+#' @param pt_color Color of bars for Preferred Terms.
+#' @param interactive Display interactive graph `"Y"/"N"`
 #'
-#' @return generated the normal plot and interactive plotly
+#' @return `ggplot` or `plotly` object.
 #' @export
 #'
 #' @examples
-#' library(carver)
-#' data("event_df")
-#' goutput <- event_analysis(
-#'   datain = event_df$dsin,
-#'   datain_N = event_df$dout,
-#'   hl_var = "FMQ_NAM",
-#'   hl_val = "ABDOMINAL PAIN",
-#'   hl_scope = "Narrow",
-#'   ll_var = "AEDECOD",
-#'   ll_val = "ABDOMINAL DISCOMFORT",
-#'   ll_scope = "Narrow",
-#'   summary_by = "Events",
-#'   ref_line = 2
-#' )
-#' goutput$plot
 #'
-event_analysis <- function(datain = NULL,
-                           datain_N = NULL,
-                           hl_var = "FMQ_NAM",
-                           hl_val = "erythema",
-                           hl_scope = "Narrow",
-                           ll_var = "AEDECOD",
-                           ll_val = "erythema",
-                           ll_scope = "Narrow",
-                           summary_by = "Events",
-                           ref_line = 2) {
-  names(datain) <- toupper(names(datain))
-
-  # Calculating subject count for higher level event variable
-  event_mcat <- mcatstat(
-    datain = datain,
-    d_datain = datain_N,
-    ui_uniqid = ifelse(summary_by == "Patients", "USUBJID", NA),
-    ui_dptvar = ll_var,
-    ui_pctdisp = "TRT"
-  )
-
-  # concatenating higher level event variable and scope
-  if (hl_var %in% c("FMQ_NAM", "SMQ_NAM", "CQ_NAM")) {
-    if (toupper(hl_scope) == "NARROW") {
-      hl_val1 <- paste0(str_to_upper(hl_val), "/", str_to_upper(hl_scope))
-    } else {
-      hl_val1 <- str_to_upper(hl_val)
-    }
-  } else {
-    hl_val1 <- hl_val
-  }
-  # concatenating lower level event variable and scope
-  if (ll_var %in% c("FMQ_NAM", "SMQ_NAM", "CQ_NAM")) {
-    if (toupper(ll_scope) == "NARROW") {
-      ll_val1 <- paste0(str_to_upper(ll_val), "/", str_to_upper(ll_scope))
-    } else {
-      ll_val1 <- str_to_upper(hl_val)
-    }
-  } else {
-    ll_val1 <- ll_val
-  }
-
-  # Sub setting the higher level event variable
-  if (hl_var %in% c("FMQ_NAM", "SMQ_NAM", "CQ_NAM")) {
-    hl_summ <- event_mcat %>% # filter(BYVAR1%in%hl_val1) %>%
-      filter(str_detect(toupper(BYVAR1), toupper(hl_val1))) %>%
-      mutate(Percent = paste(PCT, "% \n Low Term:", DPTVAL)) %>%
-      group_by(TRTVAR) %>%
-      mutate(
-        pct = as.numeric(PCT),
-        DECODh = ifelse(str_detect(toupper(DPTVAL), toupper(ll_val1)), 9999, rank(PCT))
+#' data(adae)
+#' data(FMQ_Consolidated_List)
+#'
+#' ## process `ADAE` with `ae_pre_processor()`
+#' prep_ae <- adae |>
+#'   ae_pre_processor(
+#'     ae_filter = "ANY",
+#'     obs_residual = 0,
+#'     fmq_data = FMQ_Consolidated_List,
+#'     subset = "AOCCPFL == 'Y'"
+#'   )
+#'
+#' ## prepare data for plot
+#' prep_entry <- prep_ae[["data"]] |>
+#'   mentry(
+#'     trtvar = "TRTA",
+#'     trtsort = "TRTAN",
+#'     trttotalyn = "N",
+#'     byvar = "FMQ_NAM"
+#'   )
+#' ## prepare data for plot
+#' prep_event_analysis <- prep_entry |>
+#'   process_event_analysis(
+#'     a_subset = prep_ae$a_subset,
+#'     summary_by = "Events",
+#'     hterm = "FMQ_NAM",
+#'     ht_val = "ABDOMINAL PAIN",
+#'     ht_scope = "Narrow",
+#'     lterm = "AEDECOD",
+#'     lt_val = "ABDOMINAL DISCOMFORT",
+#'     lt_scope = "Narrow"
+#'   )
+#'
+#' ## static plot
+#' event_analysis_plot(
+#'   datain = prep_event_analysis,
+#'   disp.proportion = "4~6",
+#'   ref_line = 1
+#' )
+#'
+#' ## interactive plot
+#' event_analysis_plot(
+#'   datain = prep_event_analysis,
+#'   ref_line = 1,
+#'   interactive = "Y"
+#' )
+#'
+event_analysis_plot <-
+  function(datain,
+           fig.align = "h",
+           disp.proportion = "3~7",
+           ref_line = NA_integer_,
+           x_tickangle = 15,
+           pt_color = "royalblue3",
+           interactive = "N") {
+    pt_df <- datain[["pt_df"]]
+    query_df <- datain[["query_df"]]
+    ## plot options
+    yscales <- get_yscales(query_df)
+    props <- as.numeric(str_to_vec(disp.proportion))
+    pt_title <-
+      paste0(str_to_title(str_remove_all(toupper(unique(
+        pt_df[["DPTVAL"]]
+      )), "/NARROW|/BROAD")), " PT")
+    query_title <-
+      str_wrap(paste0(
+        toupper(sub(
+          "\\_.*", "", unique(query_df[["HTERM"]])
+        )),
+        " Categorization of ",
+        str_to_title(unique(query_df[["HVAL"]]))
+      ), width = 80)
+    ## get plots for preferred term and MedDRA queries
+    pt_plot <-
+      pt_plot(
+        pt_df,
+        yscales,
+        as.numeric(ref_line),
+        as.numeric(x_tickangle),
+        pt_color
       )
-  } else {
-    hl_summ <- event_mcat %>% # filter(BYVAR1%in%hl_val1) %>%
-      filter(toupper(BYVAR1) == toupper(hl_val1)) %>%
-      mutate(Percent = paste(PCT, "% \n Low Term:", DPTVAL)) %>%
-      group_by(TRTVAR) %>%
+    query_plot <-
+      query_plot(
+        query_df,
+        yscales,
+        as.numeric(ref_line),
+        as.numeric(x_tickangle),
+        pt_color
+      )
+    ## plot layout
+    if (fig.align == "h") {
+      rel_widths <- props
+      rel_heights <- 1
+    } else {
+      rel_widths <- 1
+      rel_heights <- props
+    }
+    ## plot type
+    if (interactive == "N") {
+      pt_plot <- pt_plot +
+        geom_hline(yintercept = ref_line, linetype = "dashed") +
+        ggtitle(pt_title)
+      query_plot <- query_plot +
+        geom_hline(yintercept = ref_line, linetype = "dashed") +
+        ggtitle(query_title)
+
+      p <- cowplot::plot_grid(
+        pt_plot,
+        query_plot,
+        nrow = if_else(fig.align == "h", 1, 2),
+        rel_widths = rel_widths,
+        rel_heights = rel_heights
+      )
+    } else {
+      pt_plot <- pt_plot |>
+        event_plotly(ref_line, pt_title)
+      query_plot <- query_plot |>
+        event_plotly(ref_line, query_title)
+
+      p <- subplot(
+        pt_plot,
+        query_plot,
+        nrows = if_else(fig.align == "h", 1, 2),
+        widths = map_dbl(rel_widths, \(x) ifelse(fig.align == "h", x / 10, x)),
+        heights = map_dbl(rel_heights, \(x) ifelse(fig.align == "h", x, x / 10)),
+        margin = 0.055
+      )
+    }
+    p
+  }
+
+#' Process data for Event Analysis
+#'
+#' @inheritParams mentry
+#' @param a_subset Analysis subset condition.
+#' @param summary_by Set to `'Events'` or `'Patients'`.
+#' @param hterm `MedDRA` queries or high level variables; valid values : `"FMQ_NAM"`, `"AEBODSYS"`
+#' @param ht_val Queries/term name captured in the `hl_var` variable, e.g.`"Erythema"`
+#' @param ht_scope Scope of the `MedDRA` queries; Valid values : `"Narrow"` or `"Broad"`
+#' @param lterm `MedDRA` variable; Valid value : `"AEDECOD"`
+#' @param lt_val `MedDRA` value, e.g., `"Erythema"`
+#' @param lt_scope Scope of the `MedDRA` queries; Valid values : `"Narrow"` or `"Broad"`
+#'
+#' @return List of data frames summarized by `hterm` and `lterm`
+#' @export
+#'
+#' @examples
+#' data(adae)
+#' data(FMQ_Consolidated_List)
+#'
+#' ## process `ADAE` with `ae_pre_processor()`
+#' prep_ae <- adae |>
+#'   ae_pre_processor(
+#'     ae_filter = "ANY",
+#'     obs_residual = 0,
+#'     fmq_data = FMQ_Consolidated_List
+#'   )
+#' prep_entry <- prep_ae[["data"]] |>
+#'   mentry(
+#'     trtvar = "TRTA",
+#'     trtsort = "TRTAN",
+#'     trttotalyn = "N",
+#'     byvar = "FMQ_NAM"
+#'   )
+#' ## prepare data for plot
+#' prep_event_analysis <- prep_entry |>
+#'   process_event_analysis(
+#'     a_subset = glue::glue("AOCCPFL == 'Y' & {prep_ae$a_subset}"),
+#'     summary_by = "Events",
+#'     hterm = "FMQ_NAM",
+#'     ht_val = "ABDOMINAL PAIN",
+#'     ht_scope = "Narrow",
+#'     lterm = "AEDECOD",
+#'     lt_val = "ABDOMINAL DISCOMFORT",
+#'     lt_scope = "Narrow"
+#'   )
+#'
+#' prep_event_analysis[["pt_df"]]
+#' prep_event_analysis[["query_df"]]
+#'
+process_event_analysis <-
+  function(datain,
+           a_subset = NA_character_,
+           summary_by = "Events",
+           hterm,
+           ht_val,
+           ht_scope,
+           lterm,
+           lt_val,
+           lt_scope) {
+    stopifnot(is.data.frame(datain) & nrow(datain) > 0)
+    stopifnot(
+      "`summary_by` should be one of 'Patients' or 'Events'" =
+        toupper(summary_by) %in% c("PATIENTS", "EVENTS")
+    )
+    ht_val <- get_event_scope(hterm, ht_val, ht_scope)
+    lt_val <- get_event_scope(lterm, lt_val, lt_scope, ht_val)
+
+    ae_counts <- datain |>
+      mcatstat(
+        a_subset = a_subset,
+        uniqid = ifelse(toupper(summary_by) == "PATIENTS", "USUBJID", "ALLCT"),
+        dptvar = lterm,
+        pctdisp = "TRT"
+      )
+
+    hl_summ <- ae_counts |>
+      filter_events(hterm, ht_val, "BYVAR1") |>
       mutate(
-        pct = as.numeric(PCT),
-        DECODh = ifelse(str_detect(toupper(DPTVAL), toupper(ll_val1)), 9999, rank(PCT))
+        HTERM = hterm,
+        HVAL = str_remove_all(ht_val, glue("/{toupper(ht_scope)}")),
+        LVAL = lt_val,
+        Percent = paste(.data$CPCT, "% \n Low Term:", .data$DPTVAL),
+        PCT_N = as.numeric(.data$PCT)
+      ) |>
+      group_by(.data$TRTVAR) |>
+      mutate(DECODh = ifelse(str_detect(
+        toupper(.data$DPTVAL), toupper(lt_val)
+      ), 9999, rank(.data$PCT))) |>
+      ungroup()
+
+    stopifnot("No data available for higher terms" = nrow(hl_summ) > 0)
+
+    ll_summ <- ae_counts |>
+      filter_events(lterm, lt_val, "DPTVAL") |>
+      mutate(
+        PCT_N = as.numeric(.data$PCT),
+        Percent = paste(.data$CPCT, "%")
+      ) |>
+      arrange(.data$TRTVAR, .data$PCT_N)
+
+    stopifnot("No data available for preferred terms" = nrow(ll_summ) > 0)
+
+    list(hl_summ, ll_summ) |>
+      set_names(c("query_df", "pt_df")) |>
+      map(\(x) {
+        levels <- str_wrap(levels(x$TRTVAR), 15)
+        df <- mutate(x, TRTVAR = str_wrap(.data$TRTVAR, 15))
+        df[["TRTVAR"]] <- factor(df[["TRTVAR"]], levels = levels)
+        df
+      })
+  }
+
+#' Bar chart for Preferred Term
+#'
+#' @param df `pt_df` obtained from `process_event_analysis`
+#' @param yscales y axis range and breaks
+#' @param ref_line Reference Line
+#' @param x_tickangle Angle for x axis `ticks`
+#' @param pt_color color of Preferred Term bars
+#'
+#' @return ggplot object
+#' @noRd
+#'
+pt_plot <-
+  function(df,
+           yscales,
+           ref_line = NA_integer_,
+           x_tickangle,
+           pt_color) {
+    df |>
+      ggplot(aes(
+        x = .data$TRTVAR,
+        y = .data$PCT_N,
+        text = .data$Percent
+      )) +
+      geom_bar(
+        stat = "identity",
+        width = 0.4,
+        fill = pt_color,
+        color = "#606060",
+        linewidth = 0.4
+      ) +
+      scale_y_continuous(
+        limits = c(0, yscales$ymax),
+        breaks = seq(0, yscales$ymax, yscales$ybreak)
+      ) +
+      labs(x = "Treatment", y = "Percentage of Participants", colour = NULL) +
+      theme_std(axis_opts = list_modify(plot_axis_opts(), xtangle = x_tickangle)) +
+      theme(legend.text = element_text(size = 8))
+  }
+
+#' Bar chart for Higher Terms/MedDRA Queries
+#'
+#' @param df `query_df` obtained from `process_event_analysis`
+#' @param yscales y axis range and breaks
+#' @param ref_line Reference Line
+#' @param x_tickangle Angle for x axis `ticks`
+#' @param pt_color color of Preferred Term bars
+#'
+#' @return ggplot object
+#' @noRd
+#'
+query_plot <-
+  function(df,
+           yscales,
+           ref_line = NA_integer_,
+           x_tickangle,
+           pt_color) {
+    cols <-
+      get_query_bar_colors(
+        unique(df[["DPTVAL"]]),
+        unique(df[["LVAL"]]),
+        pt_color
+      )
+
+    df |>
+      mutate(across("DPTVAL", ~ toupper(.x))) |>
+      ggplot(
+        aes(
+          x = .data$TRTVAR,
+          y = .data$PCT_N,
+          fill = reorder(.data$DPTVAL, -.data$DECODh),
+          group = .data$DECODh,
+          text = .data$Percent
+        )
+      ) +
+      geom_bar(
+        position = "stack",
+        stat = "identity",
+        width = 0.4,
+        color = "#606060",
+        linewidth = 0.4
+      ) +
+      scale_fill_manual(
+        values = cols,
+        name = NULL
+      ) +
+      scale_y_continuous(
+        limits = c(0, yscales$ymax),
+        breaks = seq(0, yscales$ymax, yscales$ybreak)
+      ) +
+      labs(x = "Treatment", y = "Percentage of Participants", colour = NULL) +
+      theme_std(
+        legend_opts = list(pos = "right", dir = "vertical"),
+        axis_opts = list_modify(plot_axis_opts(), xtangle = x_tickangle)
+      ) +
+      theme(
+        legend.text = element_text(size = 8),
+        legend.background = element_rect(color = NA)
       )
   }
-  # Sub setting the lower level event variable
-  if (ll_var %in% c("FMQ_NAM", "SMQ_NAM", "CQ_NAM")) {
-    ll_summ <- event_mcat %>%
-      filter(str_detect(toupper(DPTVAL), toupper(ll_val1))) %>%
-      mutate(pct = as.numeric(PCT), Percent = paste(pct, "%")) %>%
-      arrange(TRTVAR, pct)
+
+#' Filter events
+#'
+#' @param df data frame
+#' @param var name of  variable
+#' @param val values of `var`
+#' @param filter_var variable to filter
+#'
+#' @noRd
+#'
+#' @return filtered data frame
+#'
+filter_events <- function(df, var, val, filter_var) {
+  if (var %in% c("FMQ_NAM", "CQ_NAM")) {
+    df <- df |>
+      filter(str_detect(toupper(.data[[filter_var]]), toupper(val)))
   } else {
-    ll_summ <- event_mcat %>%
-      filter(toupper(DPTVAL) == toupper(ll_val1)) %>%
-      mutate(pct = as.numeric(PCT), Percent = paste(pct, "%")) %>%
-      arrange(TRTVAR, pct)
+    df <- df |>
+      filter(toupper(.data[[filter_var]]) == toupper(val))
   }
-  # Getting Max PCT value for stacked plot to have same scale for both plots
-  yaxis_max <- hl_summ %>%
-    group_by(TRTVAR) %>%
-    summarise(pct_s = sum(pct))
-  yscal_max <-
-    ifelse(max(yaxis_max$pct_s) < 5,
-      max(yaxis_max$pct_s) + 10,
-      max(yaxis_max$pct_s) + 5
-    )
-  yscal_br <- ifelse(yscal_max > 40, 5, 2)
+  df
+}
 
-  # Generating bar chart for PT level
-  pt_plot <- ll_summ %>%
-    ggplot(aes(x = TRTVAR, y = pct, text = Percent)) +
-    geom_bar(
-      stat = "identity",
-      width = 0.4,
-      fill = "royalblue3",
-      color = "black",
-      size = 0.4
-    ) +
-    scale_y_continuous(
-      limits = c(0, yscal_max),
-      breaks = seq(0, yscal_max, yscal_br)
-    ) +
-    labs(x = "Treatment", y = "Percentage of Participants", colour = NULL) +
-    geom_hline(yintercept = ref_line, linetype = "dashed") +
-    theme_bw() +
-    theme(
-      axis.text.x = element_text(
-        angle = 15,
-        hjust = 1,
-        size = 8
-      ),
-      axis.text.y = element_text(size = 6),
-      plot.title = element_text(size = 8),
-      legend.text = element_text(size = 5),
-      plot.margin = unit(c(1, 0, 0, 1.5), "cm")
-    )
+#' Concatenate event with scope
+#'
+#' @param var name of the variable
+#' @param val values of `var`
+#' @param scope scope of `MedDRA` queries
+#' @param hval name of higher level variable
+#'
+#' @return `vector` of variable names
+#' @noRd
+#'
+get_event_scope <- function(var, val, scope, hval = NULL) {
+  glue_val <- toupper(val)
+  if (var %in% c("FMQ_NAM", "CQ_NAM")) {
+    if (toupper(scope) == "NARROW") {
+      glue_val <- glue("{glue_val}/{toupper(scope)}")
+    } else {
+      if (!is.null(hval)) {
+        glue_val <- toupper(hval)
+      }
+    }
+  }
+  glue_val
+}
 
-  pt_plot1 <- pt_plot + ggtitle(paste0(str_to_title(ll_val), " PT"))
-  pt_ptly <- plotly::ggplotly(pt_plot, tooltip = "text", source = "plot_output") %>%
-    plotly::add_annotations(
-      text = paste0(str_to_title(ll_val), " PT"),
+#' Get range and breaks for y axis
+#'
+#' @param df plot data
+#'
+#' @return List of y axis range and breaks
+#' @noRd
+#'
+get_yscales <- function(df) {
+  ymax <- df |>
+    group_by(.data$TRTVAR) |>
+    summarise(pct_s = sum(.data$PCT_N)) |>
+    ungroup() |>
+    filter(.data$pct_s == max(.data$pct_s, na.rm = TRUE)) |>
+    mutate(
+      yscal_max = ifelse(.data$pct_s < 5, .data$pct_s + 10, .data$pct_s + 5),
+      .keep = "none"
+    ) |>
+    pull()
+
+  list(ymax = ymax, ybreak = ifelse(ymax > 40, 5, 2))
+}
+
+#' Get colors for stacked bars
+#'
+#' @param dptval unique values of `DPTVAL`
+#' @param lval lower term
+#' @param pt_color color of Preferred Term bars
+#'
+#' @return Vector of hex colors
+#' @noRd
+#'
+get_query_bar_colors <- function(dptval, lval, pt_color) {
+  if (lval %in% toupper(dptval) && length(dptval) > 1) {
+    cols <-
+      c(pt_color, scales::hue_pal()(length(dptval) - 1)) |>
+      set_names(c(lval, setdiff(toupper(dptval), lval)))
+  } else if (lval %in% toupper(dptval)) {
+    cols <- pt_color
+  } else {
+    cols <- scales::hue_pal()(length(dptval))
+  }
+  cols
+}
+
+#' Event Analysis plotly
+#'
+#' @param p `ggplot` object
+#' @param ref_line Reference line
+#' @param title_text title to display
+#'
+#' @return `plotly` object
+#' @noRd
+#'
+event_plotly <- function(p, ref_line, title_text) {
+  p |>
+    as_plotly(legend_opts = list(label = "", pos = "right", dir = "v")) |>
+    insert_ref_line(ref_line) |>
+    add_annotations(
+      text = title_text,
       x = 0.5,
       y = 1,
       yref = "paper",
       xref = "paper",
       xanchor = "center",
-      yanchor = "top",
+      yanchor = "bottom",
       showarrow = FALSE,
-      yshift = 35,
       font = list(size = 12)
     )
+}
 
-  # Generating bar chart for query level
-  all_cols <- grDevices::colors()[grep("gr(a|e)|royalblue", grDevices::colors(), invert = TRUE)]
-  manualcolors <- c(
-    "royalblue3",
-    all_cols[seq(length(all_cols), 3,
-      length.out = length(unique(hl_summ$DPTVAL))
-    )]
-  )
-  query_plot <- hl_summ %>%
-    ggplot(aes(
-      x = TRTVAR,
-      y = pct,
-      fill = reorder(DPTVAL, -DECODh),
-      group = DECODh,
-      text = Percent
-    )) +
-    geom_bar(
-      position = "stack",
-      stat = "identity",
-      width = 0.5,
-      color = "black",
-      size = 0.4
-    ) +
-    scale_y_continuous(
-      limits = c(0, yscal_max),
-      breaks = seq(0, yscal_max, yscal_br)
-    ) +
-    scale_fill_manual(values = manualcolors) +
-    labs(x = "Treatment", y = "Percentage of Participants", colour = NULL) +
-    geom_hline(yintercept = ref_line, linetype = "dashed") +
-    theme_bw() +
-    theme(
-      axis.text.x = element_text(
-        angle = 15,
-        hjust = 1,
-        size = 8
-      ),
-      axis.text.y = element_text(size = 6),
-      plot.title = element_text(size = 8),
-      legend.text = element_text(size = 5),
-      plot.margin = unit(c(1, 0, 0, 1.5), "cm")
-    )
-  query_plot1 <-
-    query_plot + ggtitle(str_wrap(paste0(
-      toupper(sub("\\_.*", "", hl_var)),
-      " Categorization of ", str_to_title(hl_val)
-    ), width = 80))
-  query_ptly <- plotly::ggplotly(query_plot, tooltip = "text", source = "plot_output") %>%
-    plotly::add_annotations(
-      text = str_wrap(paste0(
-        toupper(sub("\\_.*", "", hl_var)),
-        " Categorization of ", str_to_title(hl_val)
-      ), width = 80),
-      x = 0.5,
-      y = 1,
-      yref = "paper",
-      xref = "paper",
-      xanchor = "center",
-      yanchor = "top",
-      showarrow = FALSE,
-      yshift = 35,
-      font = list(size = 12)
-    ) %>%
-    plotly::layout(legend = list(title = ""))
-  inter_fig <- plotly::subplot(
-    pt_ptly,
-    query_ptly,
-    titleY = TRUE,
-    shareX = TRUE,
-    shareY = TRUE,
-    widths = c(0.5, 0.5),
-    margin = 0.005
-  ) %>% plotly::layout(showlegend = TRUE, height = 600)
-
-  static_fig <- cowplot::plot_grid(
-    pt_plot1,
-    query_plot1,
-    nrow = 1,
-    align = "h",
-    rel_widths = c(4, 6)
-  )
-
-
-  title <- paste0("Event Analysis plot of Adverse Events")
-  footnote <- paste0(
-    "* N is the total number of ",
-    ifelse(tolower(summary_by) == "patients", "participants", "events"),
-    ". \n",
-    "Classifications of adverse events are based on the Medical Dictionary for Regulatory Activities (MedDRA v21.1). \n", # nolint
-    "FMQ classification is based on FDA FMQ consolidated list. \n",
-    "Dashed Horizontal line represents incidence percentage reference line. \n",
-    "Totals for the No. of Participants/Events at a higher level are not necessarily the sum of those at the lower levels since a participant may report two or more. \n", # nolint
-    "PT - Preferred Term ; FMQ - FDA MedDRA Queries \n",
-    ifelse(
-      tolower(summary_by) == "patients",
-      "The number of participants reporting at least 1 occurrence of the event specified.",
-      "Event counts are the sum of individual occurrences within that category."
-    )
-  )
-
-  # return list of plots
-  return(
+#' Overwrite plotly line shape without using `shapes` argument in `plotly::layout()`
+#'
+#' This is due to an existing bug in `plotly`.[https://community.rstudio.com/t/drawing-lines-from-layouts-doesnt-work-on-ggplotly/54116] # nolint
+#'
+#' @param p `ggplot` object
+#' @param ref_line Reference line
+#'
+#' @return Modified `plotly` object
+#' @noRd
+#'
+insert_ref_line <- function(p, ref_line) {
+  p$x$layout$shapes <- list(
     list(
-      ptly = inter_fig,
-      plot = static_fig,
-      rpt_data = hl_summ,
-      rpt_data1 = ll_summ,
-      title = title,
-      footnote = footnote
+      type = "line",
+      line = list(color = "black", dash = "dot"),
+      x0 = 0,
+      x1 = 1,
+      y0 = ref_line,
+      y1 = ref_line,
+      xref = "paper",
+      yref = "y"
     )
   )
+  p
 }

@@ -1,0 +1,185 @@
+---
+output:
+  pdf_document:
+  html_document:
+    df_print: paged
+classoption: landscape, a4paper
+params:
+  ADSL_DSIN: adsl
+  A_DSIN: adae
+  ADSL_SUBSET: !r NA_character_
+  POPULATION_FILTER: SAFFL
+  OVERALL_SUBSET: !is.na(ASTDT)
+  AE_FILTER: TREATMENT EMERGENT
+  A_SUBSET: !r NA
+  AEOBSRESIDUAL: !r NA_real_
+  TRTVAR: TRTA
+  TRTSORT: TRTAN
+  FMQ_DATA: FMQ_Consolidated_List
+  LEGEND_BIGN: Y
+  GRPVARMISS: N
+  SUMMARY_BY: Patients
+  HT: AEBODSYS
+  EVENT_VAR: AEDECOD
+  CTRLGRP: Placebo
+  TRTGRP: Xanomeline High Dose~~Xanomeline Low Dose
+  CUTOFF_WHERE: "FREQ > 5"
+  STATISTICS: Risk Ratio
+  ALPHA: 0.05
+  SORTOPT: Ascending
+  SORTVAR: Count
+  SORT_BY_HT: N
+  SERIES_COLOR: black~royalblue2~goldenrod~orchid3~brown~pink
+  SERIES_SYMBOL: !r NA
+  SERIES_SYMSIZE: !r rep(1, 5)
+  TRTPAIR_COLOR: "#F8766D~#7CAE00~#00BFC4~#C77CFF"
+  HT_DISPYN: N
+  PVALUE_DISPYN: Y
+  XAXISOPTS: !r list(labelsize = 8, labelface = "plain", ticksize = 6, tickface = "plain")
+  XAXISLINEAROPTS: !r list()
+  XAXISLABEL: Risk Ratio
+  XAXIS_SCALE: identity
+  TERM_LABEL: ""
+  TEXT_SIZE: 2.4
+  RISK_REFVAL: 1
+  HLT_SIGYN: Y
+  PVALUE_SIG: 0.05
+  TERMS_PERPAGE: 15
+  PAIRWISE: N
+  TITLE: "Forest plot for Risk Ratio of Treatment Emergent Adverse Events"
+  FOOTNOTE: "n is the number of Participants \\\\ Classifications of adverse events are based on the
+  Medical Dictionary for Regulatory Activities. (MedDRA v21.1) \\\\ Dashed Vertical line represents risk value reference line \\\\ The number of participants reporting at least 1 occurrence of the event specified."
+  WIDTHS: "0.55~0.35~0.1"
+  INTERACTIVE: N
+header-includes:
+  - \usepackage{fancyhdr}
+  - \usepackage{lastpage}
+  - \pagestyle{fancy}
+  - \fancyhf{}
+  - \fancyhead[R]{Page \thepage\, of\, \pageref*{LastPage}}
+  - \renewcommand{\headrulewidth}{0pt}
+  - '`r paste0("\\fancyhead[L]{\\textbf{", params$TITLE, "}}")`'
+  - '`r paste0("\\fancyfoot[L]{", params$FOOTNOTE, "}")`'
+  - \setlength{\headsep}{10pt}
+  - \setlength{\headheight}{50pt}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = FALSE, warning = FALSE, message = FALSE, fig.width = 11.5,
+  fig.height = 6, fig.align = "center"
+)
+## load libraries
+library(carver)
+library(purrr, include.only = "walk")
+library(rlang, include.only = "parse_expr")
+is_html <- knitr::opts_knit$get("rmarkdown.pandoc.to") == "html"
+title <-  gsub("\\\\", "<br>", params$TITLE)
+footer <- gsub("\\\\", "<br>", params$FOOTNOTE)
+```
+
+```{r adae_prep, message=FALSE, eval=TRUE}
+## Prepare AE data
+adae_prep <- eval(parse_expr(params$A_DSIN)) |>
+    ### Pre-process AE
+  ae_pre_processor(
+    fmq_data = eval(parse_expr(params$FMQ_DATA)),
+    ae_filter = params$AE_FILTER,
+    subset = params$A_SUBSET,
+    obs_residual = params$AEOBSRESIDUAL
+  )
+adae_merge <- eval(parse_expr(params$ADSL_DSIN)) |>
+  ### Merge with adsl
+  adsl_merge(
+    adsl_subset = params$ADSL_SUBSET,
+    dataset_add = adae_prep$data
+  )
+
+## Apply subset filtering on processed AE data
+adae_entry <- adae_merge |>
+  mentry(
+    subset = params$OVERALL_SUBSET,
+    byvar = params$HT,
+    trtvar = params$TRTVAR,
+    trtsort = params$TRTSORT,
+    add_grpmiss = params$GRPVARMISS,
+    pop_fil = params$POPULATION_FILTER
+  )
+```
+
+```{r risk_statistic, message=FALSE, eval=TRUE}
+# Calculate Risk Statistic and add bigN variable to treatment display legend:
+plot_data <- risk_stat(
+  datain = adae_entry,
+  a_subset = adae_prep$a_subset,
+  summary_by = params$SUMMARY_BY,
+  eventvar = params$EVENT_VAR,
+  ctrlgrp = params$CTRLGRP,
+  trtgrp = params$TRTGRP,
+  statistics = params$STATISTICS,
+  alpha = params$ALPHA,
+  cutoff_where = params$CUTOFF_WHERE,
+  sort_opt = params$SORTOPT,
+  sort_var = params$SORTVAR,
+  g_sort_by_ht = params$SORT_BY_HT
+) |>
+  plot_display_bign(
+    mentry_data = adae_entry,
+    bignyn = params$LEGEND_BIGN
+  )
+```
+
+```{r plotoptions}
+# Prepare graph options for plotting
+series_opts <- plot_aes_opts(
+  datain = plot_data,
+  series_color = params$SERIES_COLOR,
+  series_shape = params$SERIES_SYMBOL,
+  series_size = as.numeric(params$SERIES_SYMSIZE)
+)
+axis_options <- plot_axis_opts(
+  xlinearopts = params$XAXISLINEAROPTS,
+  xopts = params$XAXISOPTS,
+  xaxis_label = params$XAXISLABEL,
+  xaxis_scale = params$XAXIS_SCALE
+) |>
+  append(list(xpos = "top"))
+
+```
+
+<b>`r if (is_html) title`</b>
+
+```{r output, results = "asis"}
+# Create plot output
+plot_list <-
+  ae_forest_plot(
+    datain = plot_data,
+    series_opts = series_opts,
+    trtpair_color = params$TRTPAIR_COLOR,
+    axis_opts = axis_options,
+    text_size = params$TEXT_SIZE,
+    term_label = params$TERM_LABEL,
+    risk_ref = params$RISK_REFVAL,
+    ht_dispyn = params$HT_DISPYN,
+    pvalue_dispyn = params$PVALUE_DISPYN,
+    highlight_sig = params$HLT_SIGYN,
+    pvalue_sig = params$PVALUE_SIG,
+    pairwise = params$PAIRWISE,
+    rel_widths = params$WIDTHS,
+    terms_perpg = params$TERMS_PERPAGE,
+    interactive = params$INTERACTIVE
+  )
+walk(
+  seq_along(plot_list),
+  function(i) {
+    print(plot_list[[i]])
+    if (!is_html) {
+      cat("\n\n\n\\pagebreak\n")
+    } else {
+      cat("<br>")
+    }
+  }
+)
+```
+
+`r if (is_html) footer`

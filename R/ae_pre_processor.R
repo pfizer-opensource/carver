@@ -14,218 +14,217 @@
 #
 #' Pre-processing data for Adverse Event domain specific reports
 #'
-#' @param datain the ADaM dataset read from the `dataread()` utility is taken as input data.
-#' @param ae_filter The filter UI elements that are applied for the report is taken as input.
-#' @param aeSubset Subset conditions for analysis of dependent variable.
-#' @param aeDenomSubset Subset conditions for overall report
-#' @param aeObsPeriod applied for considering AE event that happened in specific duration.
-#' if user pass "Overall duration" it will filter the `STUDYFL == "Y"` records. "Other" will filter
-#' the period which falls under the start and end date.
-#' @param aeObsResidual If `aeObsResidual` sets to "Other", Use this argument to pass a period
-#' (in numeric) to extend the obseravation period.
-#' @param trtvar Treatment variable name string assigned as TRTVAR.
-#' @param trtsort Treatment sorting variable - numeric or character
-#' @param pop_fil Population Filter for data set.
-#' @param fmq_data FMQ table data set
-#' @param aeEventVar Event term variable - Lower Level
-#' @param aeByVar By variable name string assigns to BYVAR1,BYVAR2, etc
-#' @param aeSubGrpVar Subgroup variable name string assigns to SUBGRPVAR1, SUBGRPVAR2, etc.,
-#' @param aeBigN Display big N in column header (y/n).
-#' @param aeGrpVarMiss Include missing values of by group and sub group variables "Y"/"N"
-#' @param aeTrtTot Display total treatment column in table or plot (y/n).
-#' @param aeSubGrpTot Display total AE subgroup column in treatment or plot (y/n)
+#' @param datain the input ADaM (*ADAE*) dataset.
+#' @param date_vars Vector of variables to be converted to R date format
+#' @param fmq_data FMQ table dataframe, if passed, will be merged to adae date by PT.
+#' @param ae_filter Vector of adverse event types to be used as filter conditions.
+#' Permissible Values: "ANY", "ANY EVENT", "TREATMENT EMERGENT", "SERIOUS",
+#' "DRUG-RELATED", "RELATED", "MILD", "MODERATE", "SEVERE", "RECOVERED/RESOLVED",
+#' "RECOVERING/RESOLVING", "NOT RECOVERING/NOT RESOLVING", "FATAL", "GRADE N"
+#' @param subset Analysis subset condition to be applied to `ADAE` dataset prior to ADSL join;
+#' will be appended to `ae_filter`
+#' @param obs_residual If not NA, use this argument to pass a period (numeric) to extend the
+#' observation period. If passed as NA, overall study duration is considered for analysis.
+#' eg. if 5, only events occurring upto 5 days past the TRTEDT are considered.
+#' @param max_sevctc If needed to filter maximum severity/ctc grade rows. Values: NA/"SEV"/"CTC"
+#' @param sev_ctcvar Variable to determine max severity. eg: ASEVN, ATOXGRN
+#' @param hterm High Level Event Term (req for max Sev tables only)
+#' @param lterm Low Level Event Term (req for max Sev tables only)
+#' @param rpt_byvar Page/report by variable if any, to identify max sev/ctc
+#' @param trtvar Treatment Variable
+#' @param pt_total Required to calculate total of preferred terms? Y/N
 #'
-#' @return : a list containing 3 objects
+#' @return : a list containing 2 objects
 #'  \itemize{
-#'  \item dsin - Processed dataframe output for further utilities, with analysis subset
-#'  \item dout - Processed dataframe output to be carried to further utilities; no analysis subset
-#'  \item trtbign - table or numeric value for big N count, pass to mdisplay
+#'  \item data - Processed dataframe output for further utilities (pass to `mentry()`)
+#'  \item a_subset - Analysis Subset condition as a string
+#'  (pass to `mentry()` OR further utilities as required)
 #'  }
 #'
 #' @export
 #'
 #' @examples
-#' library(carver)
 #' data(adae)
 #' data(FMQ_Consolidated_List)
+#'
 #' data_pre <- ae_pre_processor(
 #'   datain = adae,
-#'   aeSubset = "AOCCPFL=='Y'",
-#'   aeDenomSubset = "!is.na(ASTDT)",
-#'   ae_filter = "Any Event",
-#'   aeObsPeriod = "Overall Duration",
-#'   aeObsResidual = 0,
-#'   trtvar = "TRTA",
-#'   trtsort = "TRTAN",
-#'   pop_fil = "SAFFL",
-#'   fmq_data = FMQ_Consolidated_List,
-#'   aeEventVar = "AEDECOD",
-#'   aeByVar = "AEBODSYS",
-#'   aeSubGrpVar = NA,
-#'   aeBigN = "Y",
-#'   aeGrpVarMiss = "Y",
-#'   aeTrtTot = "Y",
-#'   aeSubGrpTot = "Y"
+#'   ae_filter = "Serious",
+#'   obs_residual = 0,
+#'   fmq_data = FMQ_Consolidated_List
 #' )
-#'
-#' data_pre$dout
-ae_pre_processor <- function(
-    datain,
-    ae_filter = "Any Event",
-    aeSubset = "AOCCPFL=='Y'",
-    aeDenomSubset = "!is.na(ASTDT)",
-    aeObsPeriod = "Overall Duration",
-    aeObsResidual = 0,
-    trtvar = "TRTA",
-    trtsort = "TRTAN",
-    pop_fil = "SAFFL",
-    fmq_data = NA,
-    aeEventVar = "AEDECOD",
-    aeByVar = "AEBODSYS",
-    aeSubGrpVar = NA,
-    aeBigN = "Y",
-    aeGrpVarMiss = "Y",
-    aeTrtTot = "Y",
-    aeSubGrpTot = "Y") {
-  # Processing FMQ variables
-  if ((aeEventVar == "FMQ_NAM" || (all(!is.na(aeByVar)) && aeByVar == "FMQ_NAM")) &&
-    all(!is.na(fmq_data))) {
-    # Reading FMQ,
-    fmq <- fmq_data %>%
-      group_by(PT) %>%
+#' data_pre$data
+#' data_pre$a_subset
+ae_pre_processor <- function(datain,
+                             fmq_data = NULL,
+                             date_vars = c("ASTDT", "AENDT", "TRTSDT", "TRTEDT"),
+                             ae_filter = "Any Event",
+                             subset = NA,
+                             obs_residual = NA_real_,
+                             max_sevctc = NA_character_,
+                             sev_ctcvar = "ASEVN",
+                             hterm = "AEBODSYS",
+                             lterm = "AEDECOD",
+                             rpt_byvar = character(0),
+                             trtvar = "TRTA",
+                             pt_total = "N") {
+  if (nrow(datain) == 0) {
+    return(list(data = datain, a_subset = NA_character_))
+  }
+  # Processing FMQ values if exists
+  if (is.data.frame(fmq_data)) {
+    fmq <- fmq_data |>
       mutate(
-        FMQ_NAM = paste0(paste0(FMQ, "/", FMQCAT), collapse = "~~"),
-        PT = toupper(PT)
-      ) %>%
-      select(c(PT, FMQ_NAM)) %>%
-      distinct_all()
-
+        FMQ_NAM = paste0(.data[["FMQ"]], "/", .data[["FMQCAT"]]),
+        PT = str_trim(toupper(.data[["PT"]]))
+      ) |>
+      group_by(PT) |>
+      summarise(FMQ_NAM = paste(FMQ_NAM, collapse = "~~"))
     # merging FMQ to AE ADaM Data
-    datain <- datain %>%
-      mutate(across(where(is.character), str_trim),
-        SOC_NAME = toupper(AESOC),
-        PT_NAME = toupper(AEDECOD)
-      ) %>%
-      left_join(fmq, by = c("PT_NAME" = "PT"))
+    datain <- datain |>
+      mutate(PT = str_trim(toupper(.data[["AEDECOD"]]))) |>
+      left_join(fmq, by = "PT")
   }
 
-
-  # pre process for AE data
-
-  # standardizing date format to common format
-  date_formats <- c("%d%b%Y", "%Y-%m-%d", "%m/%d/%Y", "%d/%m/%Y")
-  if ("AESTDT" %in% names(datain)) {
-    data_pro <- datain %>%
-      mutate(AESTDT = as.Date(AESTDT, tryFormats = date_formats, optional = FALSE))
-  } else {
-    data_pro <- datain %>%
-      mutate(AESTDT = as.Date(ASTDT, tryFormats = date_formats, optional = FALSE))
-  }
-  if ("AEENDT" %in% names(datain)) {
-    data_pro <- data_pro %>%
-      mutate(AEENDT = as.Date(AEENDT, tryFormats = date_formats, optional = FALSE))
-  } else {
-    data_pro <- data_pro %>%
-      mutate(AEENDT = as.Date(AENDT, tryFormats = date_formats, optional = FALSE))
-  }
-  if ("RFSTDTC" %in% names(datain)) {
-    data_pro <- data_pro %>%
-      mutate(RFSTDTC = as.Date(RFSTDTC, tryFormats = date_formats, optional = FALSE))
-  } else {
-    data_pro <- data_pro %>%
-      mutate(RFSTDTC = as.Date(TRTSDT, tryFormats = date_formats, optional = FALSE))
-  }
-
-  if ("RFENDTC" %in% names(datain)) {
-    data_pro <- data_pro %>%
-      mutate(RFENDTC = as.Date(RFENDTC, tryFormats = date_formats, optional = FALSE))
-  } else {
-    data_pro <- data_pro %>%
-      mutate(RFENDTC = as.Date(TRTEDT, tryFormats = date_formats, optional = FALSE))
-  }
-
-  # Eliminating not coded AE terms and recodeing Toxicity to severity
-  data_pro <- data_pro %>%
-    tidyr::drop_na(RFSTDTC) %>%
-    mutate(
-      AEDECOD = if_else(!is.na(AESTDT) & is.na(AEDECOD), "Not yet coded", AEDECOD),
-      AESTDT = if_else(is.na(AESTDT) & !is.na(AEDECOD), RFSTDTC, AESTDT)
-    )
-  if ("AESEV" %in% (names(data_pro))) {
-    data_pro <- data_pro %>% mutate(AESEV = toupper(AESEV))
-  } else if ("ASEV" %in% names(data_pro)) {
-    data_pro <- data_pro %>% mutate(AESEV = toupper(ASEV))
-  } else if ("ATOXGR" %in% (names(data_pro))) {
-    data_pro <- data_pro %>% mutate(AESEV = recode(toupper(ATOXGR),
-      "GRADE 0" = "MILD",
-      "GRADE 1" = "MILD",
-      "GRADE 2" = "MODERATE",
-      "GRADE 3" = "MODERATE",
-      "GRADE 4" = "SEVERE",
-      "GRADE 5" = "SEVERE"
+  # Standardizing date format to common format
+  data_pro <- datain |>
+    mutate(across(
+      any_of(date_vars),
+      ~ as.Date(.x, tryFormats = c("%d%b%Y", "%Y-%m-%d", "%m/%d/%Y", "%d/%m/%Y"), optional = FALSE)
     ))
+  # Marking non-coded AE terms
+  data_pro <- data_pro |>
+    filter(if_any(any_of("TRTSDT"), ~ !is.na(.x)))
+  if ("ASTDT" %in% names(data_pro) && any(is.na(data_pro[["AEDECOD"]]))) {
+    data_pro <- data_pro |>
+      mutate(AEDECOD = if_else(!is.na(.data[["ASTDT"]]) & is.na(.data[["AEDECOD"]]),
+        "Not Yet Coded", .data[["AEDECOD"]]
+      ))
   }
-  ## Calling Mentry to process treatment variable , grouping variables, total trt, Big N calculation
-  mdsin <- mentry(
-    datain = data_pro,
-    ui_aSubset = aeSubset,
-    ui_dSubset = aeDenomSubset,
-    ui_byvar = aeByVar,
-    ui_subgrpvar = aeSubGrpVar,
-    ui_trtvar = trtvar,
-    ui_trtsort = trtsort,
-    ui_trttotalyn = aeTrtTot,
-    ui_sgtotalyn = aeSubGrpTot,
-    ui_bign = aeBigN,
-    ui_addGrpMiss = aeGrpVarMiss,
-    ui_pop_fil = pop_fil
+  # AE-Specific filter conditions
+  filters <- get_ae_filter(
+    data_pro,
+    ae_filter
   )
-  dsin <- mdsin$dsin
-  # applying fliter conditional from the UI filter element for AE reports
-  # filter data for seriousness, drug-related, and severity
-  if (length(ae_filter) > 0) {
-    if ("Any Event" %in% ae_filter) {
-      dsin <- dsin
-    }
-    if ("Treatment emergent" %in% ae_filter) {
-      dsin <- dsin %>% filter(TRTEMFL == "Y")
-    }
-    if ("Serious" %in% ae_filter) {
-      dsin <- dsin %>% filter(AESER == "Y")
-    }
-
-    if ("Drug-related" %in% ae_filter) {
-      dsin <- dsin %>% filter(AEREL == "RELATED")
-    }
-    if (sum(c("Mild", "Moderate", "Severe") %in% ae_filter) > 0) {
-      severity_filter <- ae_filter[which(ae_filter %in% c("Mild", "Moderate", "Severe"))]
-      dsin <- dsin %>% filter(AESEV %in% toupper(severity_filter))
-    }
-
-    if (sum(c(
-      "Recovered/Resolved", "Recovering/Resolving",
-      "Not Recovered/Not Resolved", "Fatal"
-    ) %in% ae_filter) > 0) {
-      severity_filter <- ae_filter[which(ae_filter %in% c(
-        "Recovered/Resolved",
-        "Recovering/Resolving",
-        "Not Recovered/Not Resolved", "Fatal"
-      ))]
-      dsin <- dsin %>% filter(AEOUT %in% toupper(severity_filter))
-    }
+  if (!is.na(subset)) {
+    filters <- paste(na.omit(c(filters, subset)), collapse = " & ")
+  }
+  # filter for events occurring in given observation period
+  obs_residual <- as.numeric(obs_residual)
+  if (!is.na(obs_residual) && obs_residual >= 0) {
+    stopifnot(
+      "Obs period cannot be used; dates unavailable" =
+        all(c("ASTDT", "TRTSDT", "TRTEDT") %in% names(data_pro))
+    )
+    filters <- paste(na.omit(
+      c(filters, glue("(ASTDT > TRTSDT) & (ASTDT < (TRTEDT + {obs_residual}))"))
+    ), collapse = " & ")
   }
 
-  # filter ae data occurred in the given time frame
-  if (aeObsPeriod == "Overall Duration") {
-    if ("STUDYFL" %in% names(dsin)) {
-      dsin <- dsin %>%
-        filter(STUDYFL == "Y")
-    } else {
-      dsin <- dsin
+  # Apply AE filters if exist:
+  if (!is.na(filters) && filters != "") {
+    data_pro <- data_pro |>
+      filter(!!!parse_exprs(filters))
+    if (nrow(data_pro) < 1) {
+      return(list(data = data_pro, a_subset = filters))
     }
-  } else if (aeObsPeriod == "Other") {
-    dsin <- dsin %>%
-      filter((AESTDT > RFSTDTC) & (AESTDT < (RFENDTC + aeObsResidual)))
   }
-  return(list(dsin = dsin, dout = mdsin$dout, bigN = mdsin$bign))
+  ################### Max SEV/CTC##############
+  # If maximum severity or CTC required:
+  # Filter analysis dataset and also flag max variable
+  # Any AE flag to be set
+  # Flag for high level term and max sevc/ctc
+  if (!is.na(max_sevctc) && toupper(max_sevctc) %in% c("SEV", "CTC")) {
+    data_pro <- data_pro |>
+      group_by(across(
+        any_of(c(rpt_byvar, trtvar, "USUBJID", hterm, lterm))
+      )) |>
+      mutate(
+        MAX_SEVCTC = ifelse(.data[[sev_ctcvar]] == max(.data[[sev_ctcvar]], na.rm = TRUE), 1, 0)
+      ) |>
+      filter(.data[["MAX_SEVCTC"]] == 1) |>
+      group_by(across(any_of(c(rpt_byvar, trtvar, "USUBJID")))) |>
+      mutate(
+        ANY = ifelse(.data[[sev_ctcvar]] == max(.data[[sev_ctcvar]], na.rm = TRUE), 1, 0)
+      ) |>
+      group_by(across(
+        any_of(c(rpt_byvar, trtvar, "USUBJID", hterm))
+      )) |>
+      mutate(
+        HT_FL = ifelse(.data[[sev_ctcvar]] == max(.data[[sev_ctcvar]], na.rm = TRUE), 1, 0)
+      )
+    # For preferred term total count
+    if (toupper(max_sevctc) == "SEV" && pt_total == "Y") {
+      data_pro <- data_pro |>
+        group_by(across(any_of(c(rpt_byvar, trtvar, lterm, "USUBJID")))) |>
+        mutate(
+          PT_CNT = ifelse(.data[[sev_ctcvar]] == max(.data[[sev_ctcvar]], na.rm = TRUE), 1, 0)
+        )
+    }
+    filters <- paste(na.omit(c(filters, "MAX_SEVCTC == 1")), collapse = " & ")
+  }
+  ################### ENDax SEV/CTC##############
+
+  # Return processed dataframe and filter conditions
+  return(list(data = ungroup(data_pro), a_subset = filters))
+}
+
+#' Create filter condition for Adverse Events from keyword
+#'
+#' @param ae_filter Events to be filtered.
+#' Permissible Values: "ANY", "ANY EVENT", "TREATMENT EMERGENT", "SERIOUS",
+#' "DRUG-RELATED", "RELATED", "MILD", "MODERATE", "SEVERE", "RECOVERED/RESOLVED",
+#' "RECOVERING/RESOLVING", "NOT RECOVERING/NOT RESOLVING", "FATAL", "GRADE N"
+#'
+#' @return a string to act as filter condition for AE dataset
+#'
+#' @examples
+#' data(adae)
+#' get_ae_filter(adae, "Serious")
+#'
+#' @noRd
+#'
+get_ae_filter <- function(datain,
+                          ae_filter) {
+  ae_filter <- toupper(ae_filter)
+  # No filter if Any Event
+  if (all(is.na(ae_filter)) || all(ae_filter %in% c("ANY EVENT", "ANY", ""))) {
+    return(NA)
+  }
+  filters_data <- tibble::tribble(
+    ~AETYP, ~CONDN,
+    "TREATMENT EMERGENT", "TRTEMFL == 'Y'",
+    "SERIOUS", "AESER == 'Y'",
+    "DRUG-RELATED", "AEREL == 'RELATED'",
+    "RELATED", "AEREL == 'RELATED'",
+    "MILD", "ASEV == 'MILD'",
+    "MODERATE", "ASEV == 'MODERATE'",
+    "SEVERE", "ASEV == 'SEVERE'",
+    "RECOVERED/RESOLVED", "AEOUT == 'RECOVERED/RESOLVED'",
+    "RECOVERING/RESOLVING", "AEOUT == 'RECOVERING/RESOLVING'",
+    "NOT RECOVERED/NOT RESOLVED", "AEOUT == 'NOT RECOVERED/NOT RESOLVED'",
+    "FATAL", "AEOUT == 'FATAL'"
+  )
+  gr <- ae_filter[grepl("GRADE", ae_filter)]
+  if (length(gr) > 0) {
+    filters_data <- filters_data |>
+      bind_rows(
+        data.frame(AETYP = gr, CONDN = glue("ATOXGR == '{gr}'"))
+      )
+  }
+  stopifnot(
+    "Invalid Adverse Event Filter" =
+      any(ae_filter %in% unique(filters_data$AETYP))
+  )
+  condn <- filters_data |>
+    filter(.data[["AETYP"]] %in% ae_filter) |>
+    pull(.data[["CONDN"]]) |>
+    na.omit()
+  aevars <- unlist(map(strsplit(condn, " "), 1))
+  nevar <- aevars[!aevars %in% names(datain)]
+  if (length(nevar) > 0) {
+    stop(paste(paste(nevar, collapse = ","), "not found in data. Cannot apply ae_filter"))
+  }
+  condn |>
+    paste(collapse = " & ")
 }
