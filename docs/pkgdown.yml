@@ -1,0 +1,15 @@
+pandoc: '3.2'
+pkgdown: 2.1.0
+pkgdown_sha: ~
+articles:
+  adae_r001: adae_r001.html
+  adsl_summary: adsl_summary.html
+  carver: carver.html
+  event_analysis: event_analysis.html
+  forest_plot: forest_plot.html
+  tornado_plot: tornado_plot.html
+  volcano_plot: volcano_plot.html
+last_built: 2025-03-12T08:25Z
+urls:
+  reference: https://pfizer-opensource.github.io/carver/reference
+  article: https://pfizer-opensource.github.io/carver/articles
