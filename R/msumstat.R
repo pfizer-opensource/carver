@@ -163,5 +163,5 @@ msumstat <- function(datain = NULL,
     mutate(DPTVALN = as.numeric(fct_inorder(.data[["DPTVAL"]])))
 
   message("msum success")
-  return(list(tsum = data_long, gsum = data_wide))
+  list(tsum = data_long, gsum = data_wide)
 }

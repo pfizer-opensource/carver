@@ -168,5 +168,5 @@ interval_plot <- function(datain,
     splotly$x$data[[i]]$legendgroup <- splotly$x$data[[i]]$name
     if (!legdf$is_first[[i]]) splotly$x$data[[i]]$showlegend <- FALSE
   }
-  return(list(plot = gplot, ptly = splotly, rpt_data = ad_plot))
+  list(plot = gplot, ptly = splotly, rpt_data = ad_plot)
 }
