@@ -12,6 +12,7 @@ Development of an open-source tool and package to enable generation of identifie
 Useful links:
 \itemize{
   \item \url{https://github.com/pfizer-opensource/carver/}
+  \item \url{https://pfizer-opensource.github.io/carver/}
   \item Report bugs at \url{https://github.com/pfizer-opensource/carver/issues/}
 }
 
