@@ -85,7 +85,7 @@ mod_plot_profile_server <- function(id, sourcedata, sel_rows, datain, plot_data)
           footer = tagList(actionButton(ns("closeCM"), "Close", class = "sidebar-btn"))
         ))
       }
-    }) %>%
+    }) |>
       bindEvent(sel_rows())
 
     observe({
@@ -99,7 +99,7 @@ mod_plot_profile_server <- function(id, sourcedata, sel_rows, datain, plot_data)
         ui_adam_data = input$cm_data
       )$adam
       rv$sourcedata <- append(sourcedata(), cm_data)
-    }) %>%
+    }) |>
       bindEvent(input$closeCM)
 
     observe({

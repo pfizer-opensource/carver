@@ -67,7 +67,7 @@ app_server <- function(input, output, session) {
       removeUI("#readData")
       runjs("Shiny.setInputValue('data_upload', true);")
     }
-  }) %>%
+  }) |>
     bindEvent(adam_read())
 
   rep_inputs <- mod_report_selection_server(

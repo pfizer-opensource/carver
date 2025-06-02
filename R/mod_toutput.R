@@ -186,14 +186,14 @@ mod_toutput_server <- function(id, repName, filters, popfilter, process_btn) {
         })
         print("ADSL Summary Output ends")
       }
-    }) %>%
+    }) |>
       bindEvent(process_btn())
 
     output$table_UI <- renderUI({
       req(rv$tout)
-      ft <- rv$tout %>%
-        border_inner(officer::fp_border(color = "cadetblue")) %>%
-        fontsize(size = 12, part = "header") %>%
+      ft <- rv$tout |>
+        border_inner(officer::fp_border(color = "cadetblue")) |>
+        fontsize(size = 12, part = "header") |>
         fontsize(size = 9, part = "body")
       htmltools_value(ft)
     })

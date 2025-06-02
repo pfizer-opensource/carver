@@ -45,7 +45,7 @@ mod_data_read_server <-
           ui_data_source = source(),
           ui_adam_data = adam_data
         )
-      }) %>%
+      }) |>
         bindEvent(read_btn())
     })
   }
