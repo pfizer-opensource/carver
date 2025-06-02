@@ -12,7 +12,7 @@ test_that("interval plot works with expected inputs", {
     yaxislab = "Reported Term for the Adverse Event"
   )
 
-  complete_stat <- out$rpt_data %>%
+  complete_stat <- out$rpt_data |>
     filter(Status == "Complete")
 
   expect_true(nrow(out$rpt_data) > 0)
@@ -33,7 +33,7 @@ test_that("interval plot works with expected inputs and different subject", {
     yaxislab = "Reported Term for the Adverse Event"
   )
 
-  complete_stat <- out$rpt_data %>%
+  complete_stat <- out$rpt_data |>
     filter(Status == "Complete")
 
   expect_true(nrow(out$rpt_data) > 0)
@@ -54,7 +54,7 @@ test_that("interval plot works with non default inputs", {
     yaxislab = "Reported Term for the Adverse Event"
   )
 
-  complete_stat <- out$rpt_data %>%
+  complete_stat <- out$rpt_data |>
     filter(Status == "Complete")
 
   expect_true(nrow(out$rpt_data) > 0)

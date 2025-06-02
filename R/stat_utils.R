@@ -192,7 +192,7 @@ whiskerup <- function(x, na.rm = TRUE) {
 derv_stats <- function(data, stats, lookup = stat_lookup()) {
   lookup <- lookup |> filter(.data[["derv"]] != "")
   if (!any(stats %in% lookup[[1]])) {
-    return(data)
+    data
   } else {
     stats <- stats[stats %in% lookup[[1]]]
     map(stats, \(s) {

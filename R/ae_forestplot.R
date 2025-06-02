@@ -246,7 +246,7 @@ ae_forest_plot <-
         )
       })
     # Return single level list
-    return(flatten(nested_plots))
+    flatten(nested_plots)
   }
 
 #' Highlight Significant p-value points in forest plot

@@ -147,10 +147,10 @@ save_file <- function(save_object,
         } else if (file_format == "pptx") {
           tryCatch(
             {
-              officer::read_pptx() %>%
-                officer::add_slide() %>%
+              officer::read_pptx() |>
+                officer::add_slide() |>
                 officer::ph_with(officer::external_img(tempfile),
-                                 officer::ph_location_fullsize(left = 0, top = 0)) %>%
+                                 officer::ph_location_fullsize(left = 0, top = 0)) |>
                 print(target = file)
               message("generating figure output in PPTX format passed")
             }
@@ -159,9 +159,9 @@ save_file <- function(save_object,
         }else if (file_format == "docx") {
           tryCatch(
             {
-              officer::read_docx() %>%
+              officer::read_docx() |>
                 officer::body_add_img(src = officer::external_img(tempfile),
-                             width = 5, height = 8) %>%
+                             width = 5, height = 8) |>
                 print(target = file)
               message("generating figure output in DOCX format passed")
             }

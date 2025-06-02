@@ -424,7 +424,7 @@ mod_generic_filters_server <-
           "Analysis Subset",
           text
         )
-      }) %>%
+      }) |>
         bindEvent(repName())
 
       # observer to control showing/hiding inputs based on report selection
@@ -563,7 +563,7 @@ mod_generic_filters_server <-
 
           rv$ae_pre_comp <- rv$ae_pre_comp + 1
         }
-      }) %>%
+      }) |>
         bindEvent(
           list(
             repName(), input$ae_filter, input$period, input$period_spec
@@ -714,7 +714,7 @@ mod_generic_filters_server <-
           })
           print("AE treatment pair processing end")
         }
-      }) %>%
+      }) |>
         bindEvent(list(rv$ae_pre_comp, rv$ment_out))
 
       # Tornado Plot
@@ -741,7 +741,7 @@ mod_generic_filters_server <-
             selected = c("Primary System Organ Class (AESOC)" = "AESOC")
           )
         }
-      }) %>%
+      }) |>
         bindEvent(list(
           repName()
         ))
@@ -919,7 +919,7 @@ mod_generic_filters_server <-
 
           print("AE Tornado plot pre-processing end")
         }
-      }) %>%
+      }) |>
         bindEvent(list(
           repName(), trt_var(), trt_sort(), popfilter(),
           input$ae_filter, input$ae_catvar, input$period, input$period_spec,
@@ -938,10 +938,10 @@ mod_generic_filters_server <-
         req(input$overall_subset)
         print("Edish process start")
 
-        merged_df <- sourcedata()$adsl %>%
+        merged_df <- sourcedata()$adsl |>
           adsl_merge(
             dataset_add = filter(sourcedata()$adlb, !!!rlang::parse_exprs(input$a_subset))
-          ) %>%
+          ) |>
           mentry(
             subset = input$overall_subset,
             byvar = NA_character_,
@@ -955,14 +955,14 @@ mod_generic_filters_server <-
             sgtotalyn = "N",
             add_grpmiss = ifelse(repType() == "Table", input$grpvarmiss, "N")
           )
-        rv$ae_pre <- merged_df %>%
+        rv$ae_pre <- merged_df |>
           process_edish_data(
             alt_paramcd = "ALT",
             ast_paramcd = "AST",
             bili_paramcd = "BILI"
           )
         print("Edish process ends")
-      }) %>%
+      }) |>
         bindEvent(list(
           trt_var(), trt_sort(), popfilter(), input$apply_gen_filt
         ))

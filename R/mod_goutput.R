@@ -150,7 +150,7 @@ mod_goutput_server <- function(id, sourcedata, repName, filters, process_btn) {
       )
       print("AE risk_stat process end")
       rv$output_trigger <- rv$output_trigger + 1
-    }) %>%
+    }) |>
       bindEvent(process_btn())
 
     observe({
@@ -199,7 +199,7 @@ mod_goutput_server <- function(id, sourcedata, repName, filters, process_btn) {
         "Dashed Vertical line represents risk value reference line \n",
         "The number of participants reporting at least 1 occurrence of the event specified."
       )
-    }) %>%
+    }) |>
       bindEvent(rv$output_trigger)
 
     observe({
@@ -255,7 +255,7 @@ mod_goutput_server <- function(id, sourcedata, repName, filters, process_btn) {
         "are not necessarily the sum of those at the lower",
         "levels since a participant may report two or more."
       )
-    }) %>%
+    }) |>
       bindEvent(rv$output_trigger)
 
     observe({
@@ -289,7 +289,7 @@ mod_goutput_server <- function(id, sourcedata, repName, filters, process_btn) {
         rv$footnote <- ""
       })
       print("AE Tornado Plot process end")
-    }) %>%
+    }) |>
       bindEvent(process_btn())
 
     observe({
@@ -333,7 +333,7 @@ mod_goutput_server <- function(id, sourcedata, repName, filters, process_btn) {
       })
       rv$title <- "eDISH Plot of Laboratory Data"
       rv$footnote <- ""
-    }) %>%
+    }) |>
       bindEvent(process_btn())
 
     observe({
@@ -506,7 +506,7 @@ mod_goutput_server <- function(id, sourcedata, repName, filters, process_btn) {
         )
       })
       print("AE event analysis process end")
-    }) %>%
+    }) |>
       bindEvent(process_btn())
 
     plot_data <- reactive({
@@ -521,11 +521,11 @@ mod_goutput_server <- function(id, sourcedata, repName, filters, process_btn) {
         } else {
           test <- rv$outdata$query_df
           trt_level_diff <- length(levels(test$TRTVAR)) - length(unique(test$TRTVAR))
-          test <- test %>%
+          test <- test |>
             mutate(point_n = as.numeric(as.factor(TRTVAR)) - trt_level_diff)
-          order_df <- data.frame(DPTVAL = levels(reorder(test$DPTVAL, -test$DECODh))) %>%
+          order_df <- data.frame(DPTVAL = levels(reorder(test$DPTVAL, -test$DECODh))) |>
             mutate(curve_n = row_number() + 1)
-          test <- full_join(test, order_df, by = "DPTVAL") %>%
+          test <- full_join(test, order_df, by = "DPTVAL") |>
             filter(point_n == event$x, curve_n == event$curveNumber)
         }
       }
@@ -545,20 +545,20 @@ mod_goutput_server <- function(id, sourcedata, repName, filters, process_btn) {
         relocate(c("USUBJID", "TRTVAR"))
 
       ## displaying the listing table
-      plot_table <- plot_table %>%
+      plot_table <- plot_table |>
         rename(
           !!filters()$ae_hlt := "BYVAR1",
           !!filters()$trt_var := "TRTVAR"
-        ) %>%
+        ) |>
         distinct()
-    }) %>%
+    }) |>
       bindEvent(plotly::event_data("plotly_click", source = "plot_output"))
 
     # set selected point to null every time plot updates
     observe({
       req(length(plotly::event_data("plotly_click", source = "plot_output")) > 0)
       runjs("Shiny.setInputValue('plotly_click-plot_output', null);")
-    }) %>%
+    }) |>
       bindEvent(list(repName(), rv$goutput$x$data, rv$goutput$plot$data))
 
     observe({

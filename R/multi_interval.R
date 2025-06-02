@@ -41,7 +41,7 @@ multi_interval <- function(datain,
     return(empty_plot("No AE data available"))
   }
   # Get subject data for footer purposes
-  aedata <- datain[["AE"]] %>% filter(USUBJID == subjectid)
+  aedata <- datain[["AE"]] |> filter(USUBJID == subjectid)
   # Create AE plot - required
   seriesc <- c(MILD = "tan2", MODERATE = "dodgerblue3", SEVERE = "deeppink4")
   if ("ASEV" %in% names(aedata)) {
@@ -84,7 +84,7 @@ multi_interval <- function(datain,
       ptly_out <- plotly::subplot(ae_int$ptly, cm_int$ptly,
         nrows = 2,
         titleX = TRUE, titleY = TRUE
-      ) %>%
+      ) |>
         plotly::layout(height = 600, showlegend = TRUE)
       plot_out <- cowplot::plot_grid(
         ae_int$plot, cm_int$plot,
@@ -101,7 +101,7 @@ multi_interval <- function(datain,
       ptly_out <- plotly::subplot(ae_int$ptly, cm_int$ptly,
         shareX = TRUE, nrows = 2,
         titleX = TRUE, titleY = TRUE, margin = 0.005
-      ) %>%
+      ) |>
         plotly::layout(
           xaxis = list(
             range = c(xmin, xmax),

@@ -147,5 +147,5 @@ bar_plot <- function(datain,
     g_plot <- g_plot + coord_flip()
   }
   message("Bar Plot Success")
-  return(g_plot)
+  g_plot
 }
