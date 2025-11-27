@@ -107,5 +107,13 @@ globalVariables(c(
   "Value",
   "ASEV",
   "TA",
-  "REPTYPE"
+  "REPTYPE",
+  "pred.x",
+  "trt",
+  "yhat",
+  "xx",
+  "zy",
+  "ylow",
+  "yup",
+  "combn"
 ))
