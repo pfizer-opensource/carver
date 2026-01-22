@@ -12,6 +12,119 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+
+#' Build a customized cox ph model
+#'
+#' @inheritParams schoenfeld_plot
+#'
+#' @return
+#' \itemize{
+#' \item  A dataset `out` as data.frame
+#' \item  P-value is returned as numeric
+#' }
+#' @noRd
+#'
+#' @examples
+#' data("adsl")
+#' data("adtte")
+#' library(tlfcarver)
+#' library(survival)
+#' adsl <- adsl %>% 
+#'   mutate(
+#'   TRT01PN = case_when(
+#'   TRT01P == "Xanomeline Low Dose" ~ 1,
+#'   TRT01P == "Placebo" ~ 2,
+#'   TRT01P == "Screen Failure" ~ 3,
+#'  TRUE ~ NA_real_
+#' ),
+#' FASFL = if_else(!is.na(TRTSDT) & !is.na(ARMCD), "Y", "N")
+#')
+#' sh_pre <- surv_pre_processor(
+#'   dataset_adsl = adsl,
+#'   adsl_subset = "SAFFL=='Y'",
+#'   dataset_analysis = adtte,
+#'   split_by = NA_character_,
+#'   analysis_subset = "PARAMCD=='OS' & FASFL=='Y'",
+#'   trtsort = "TRT01PN",
+#'   censor_var = "CNSR",
+#'   censor_val = 1,
+#'   trtvar = "TRT01P",
+#'   time_var = "AVAL"
+#' )
+#' pairs <- combn(unique(sort((sh_pre$TRTSORT))), 2)
+#' pair_data <- sh_pre |>
+#'   dplyr::filter(TRTSORT %in% c(pairs[, 1])) |>
+#'   dplyr::mutate(trt = ifelse(TRTSORT == pairs[1, 1], 0, 1)) |>
+#'   dplyr::arrange(trt)
+#' cp <- custom_cox_ph(datain = pair_data)
+#' cp
+#'
+#'
+custom_cox_ph <- function(datain,
+                          ties_method = "efron",
+                          df = 4,
+                          pvalue_decimal = 4) {
+  cx <-
+    coxph(Surv(timevar, cnsrvar) ~ TRTVAR,
+          data = datain,
+          ties = ties_method
+    )
+  
+  if (cx$nevent <= 1) {
+    return(
+      list(
+        out = NULL,
+        pval = NULL,
+        err = "Not enough data to fit the Proportional Hazards Regression Model"
+      )
+    )
+  }
+  
+  zph <- cox.zph(cx, transform = "identity", global = TRUE)
+  xx <- zph$x
+  pred.x <- seq(from = min(xx), to = max(xx), length = nrow(zph$y))
+  zy <- zph$y[, 1]
+  temp <- c(pred.x, xx)
+  lmat <- try(splines::ns(temp, df = df, intercept = TRUE), TRUE)
+  
+  if (any(class(lmat) == "try-error")) {
+    return(
+      list(
+        out = NULL,
+        pval = NULL,
+        err = "Spline fit is singular, try with smaller degrees of freedom"
+      )
+    )
+  }
+  
+  pmat <- lmat[seq_len(nrow(zph$y)), ]
+  xmat <- lmat[-(seq_len(nrow(zph$y))), ]
+  qmat <- qr(xmat)
+  pval <- round(zph$table[1, 3], pvalue_decimal) # nolint
+  # Y value for curve
+  yhat <- as.vector(pmat %*% qr.coef(qmat, zy))
+  
+  if (qmat$rank < df) {
+    return(
+      list(
+        out = NULL,
+        pval = NULL,
+        err = "Spline fit is singular, try with smaller degrees of freedom"
+      )
+    )
+  }
+  # Standard error calculation
+  bk <- backsolve(qmat$qr[1:df, 1:df], diag(df))
+  xtx <- bk %*% t(bk)
+  seval <- ((pmat %*% xtx) * pmat) %*% rep(1, df)
+  temp1 <- as.vector(2 * sqrt(zph$var[1, 1] * seval))
+  yup <- yhat + temp1
+  ylow <- yhat - temp1
+  
+  out <- as.data.frame(cbind(xx, zy, pred.x, yhat, yup, ylow))
+  return(list(out = out, pval = pval))
+}
+
 #' Update functions to round values
 #'
 #' @param f List of names of summary statistics.

@@ -14,7 +14,13 @@
 #
 #' Process data for Survival Analysis
 #'
-#' @inheritParams process_vx_scatter_data
+#' @param dataset_adsl (data.frame) ADSL dataset.
+#' @param dataset_analysis (data.frame) Analysis Dataset.
+#' @param adsl_subset (string) Subset condition to be applied on dataset_adsl.
+#' @param analysis_subset (string) Subset Condition to be applied on dataset_analysis.
+#' @param split_by (string) By variable for stratification.
+#' @param trtvar (string) Treatment Variable to be created for analysis.
+#' @param trtsort (string) Variable to sort treatment variable by.
 #' @param censor_var Censoring Variable in the input dataset to be used in
 #' ph reg model.Default: `"CNSR"`
 #' @param censor_val Value within `CNSR` variable to be considered as Censor
@@ -24,14 +30,22 @@
 #'
 #' @return Data frame with added variables for survival analysis
 #' @export
-#'
 #' @examples
 #' data("survival")
-#'
+#' survival$adsl <- survival$adsl |>
+#'   dplyr::mutate(
+#'     TRT01PN = dplyr::case_when(
+#'       TRT01P == "Xanomeline Low Dose" ~ 1,
+#'       TRT01P == "Placebo" ~ 2,
+#'       TRT01P == "Screen Failure" ~ 3,
+#'       TRUE ~ NA_real_
+#'     ),
+#'     FASFL = dplyr::if_else(!is.na(TRTSDT) & !is.na(ARMCD), "Y", "N")
+#'    )
 #' survival$adsl |>
 #'   surv_pre_processor(
 #'     dataset_analysis = survival$adtte,
-#'     adsl_subset = "RANDFL=='Y'",
+#'     adsl_subset = "SAFFL=='Y'",
 #'     analysis_subset = "PARAMCD=='OS' & FASFL=='Y'",
 #'     split_by = NA_character_,
 #'     trtvar = "TRT01P",
@@ -40,10 +54,10 @@
 #'     censor_val = 1,
 #'     time_var = "AVAL"
 #'   )
-#'
+
 surv_pre_processor <- function(dataset_adsl,
                                dataset_analysis,
-                               adsl_subset = "RANDFL=='Y'",
+                               adsl_subset = "SAFFL=='Y'",
                                analysis_subset = NA_character_,
                                split_by = NA_character_,
                                trtvar = "TRT01P",
@@ -60,7 +74,7 @@ surv_pre_processor <- function(dataset_adsl,
   stopifnot(
     "Please provide a valid Censoring variable" = censor_var %in% toupper(names(dataset_analysis))
   )
-
+  
   if (!is.na(split_by) && str_squish(split_by) != "") {
     stopifnot(all(str_to_vec(split_by) %in% toupper(names(dataset_adsl))))
   }
@@ -80,8 +94,8 @@ surv_pre_processor <- function(dataset_adsl,
       subgrpvar = str_remove_all(split_by, " ")
     )
   plot_display_bign(mentry_out,
-    mentry_data = mentry_out,
-    bignyn = "N"
+                    mentry_data = mentry_out,
+                    bignyn = "N"
   )
 }
 
@@ -94,7 +108,7 @@ surv_pre_processor <- function(dataset_adsl,
 #'
 pairwise_surv_stats <- function(datain) {
   pairs <- combn(sort(unique(datain[["TRTSORT"]])), 2)
-
+  
   pair_stat <- map_chr(seq_len(ncol(pairs)), \(i) {
     trt_index <- pairs[, i]
     pair_data <- datain |>
@@ -120,6 +134,6 @@ pairwise_surv_stats <- function(datain) {
       "HR ({trt_pair[1]} vs {trt_pair[2]}) = {HR}, 95% CI ({cil}, {ciu}), 2-sided p = {round_f(pval_2s, 4)}, 1-sided p = {pval_1s}" # nolint
     )
   })
-
+  
   paste0(pair_stat, collapse = "\n")
 }
