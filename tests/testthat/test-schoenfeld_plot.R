@@ -69,7 +69,7 @@ test_that("schoenfeld_plot throws expected error message", {
 test_that("schoenfeld Plot Works with standard inputs", {
   # Check that expected  outputs type are returned:
   expect_type(sh_plot, "list")
-  
+
   # check the x and y labels of the graph.
   expect_equal(
     sh_plot[[1]]$s_plot$labels$x,
@@ -96,7 +96,7 @@ test_that("schoenfeld Plot works as expected with empty dataset", {
     pvalue_decimal = 4,
     pair_id = NA
   )
-  
+
   expect_length(length(pt_empty), 1)
   expect_equal(names(pt_empty[[1]]), c("pval", "pair", "s_plot"))
 })

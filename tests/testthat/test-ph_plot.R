@@ -61,4 +61,3 @@ test_that("check whether the fucntion throw NULL output when the data has 0 obse
     pair_id = NA
   )))
 })
-

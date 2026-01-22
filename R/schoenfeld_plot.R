@@ -92,7 +92,7 @@ schoenfeld_plot <- function(datain,
                             pvalue_decimal = 4,
                             pair_id = NA_character_) {
   if (nrow(datain) < 2) {
-    return(list(list(pval = NULL, pair = NULL, s_plot = empty_plot("No data available")$plot))) #nolint
+    return(list(list(pval = NULL, pair = NULL, s_plot = empty_plot("No data available")$plot))) # nolint
   }
   # Applying pairwise logic generate treatment pairs & Apply cox model
   if (all(is.na(pair_id))) {
@@ -136,11 +136,11 @@ schoenfeld_plot <- function(datain,
     # creating residual plot
     sfp <- ggplot(data = data.frame(cx_ph)) +
       geom_line(
-        aes(x = pred.x, y = yhat), #nolint
+        aes(x = pred.x, y = yhat), # nolint
         color = "black", linetype = "longdash"
       ) +
       labs(
-        x = paste0(axis_opts$xaxis_label, " (", str_to_sentence(time_unit), ")"), #nolint
+        x = paste0(axis_opts$xaxis_label, " (", str_to_sentence(time_unit), ")"), # nolint
         y = axis_opts$yaxis_label
       ) +
       scale_x_continuous(

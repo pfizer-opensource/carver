@@ -41,7 +41,7 @@
 #'       TRUE ~ NA_real_
 #'     ),
 #'     FASFL = dplyr::if_else(!is.na(TRTSDT) & !is.na(ARMCD), "Y", "N")
-#'    )
+#'   )
 #' survival$adsl |>
 #'   surv_pre_processor(
 #'     dataset_analysis = survival$adtte,
@@ -54,7 +54,6 @@
 #'     censor_val = 1,
 #'     time_var = "AVAL"
 #'   )
-
 surv_pre_processor <- function(dataset_adsl,
                                dataset_analysis,
                                adsl_subset = "SAFFL=='Y'",
@@ -74,7 +73,7 @@ surv_pre_processor <- function(dataset_adsl,
   stopifnot(
     "Please provide a valid Censoring variable" = censor_var %in% toupper(names(dataset_analysis))
   )
-  
+
   if (!is.na(split_by) && str_squish(split_by) != "") {
     stopifnot(all(str_to_vec(split_by) %in% toupper(names(dataset_adsl))))
   }
@@ -94,8 +93,8 @@ surv_pre_processor <- function(dataset_adsl,
       subgrpvar = str_remove_all(split_by, " ")
     )
   plot_display_bign(mentry_out,
-                    mentry_data = mentry_out,
-                    bignyn = "N"
+    mentry_data = mentry_out,
+    bignyn = "N"
   )
 }
 
@@ -108,7 +107,7 @@ surv_pre_processor <- function(dataset_adsl,
 #'
 pairwise_surv_stats <- function(datain) {
   pairs <- combn(sort(unique(datain[["TRTSORT"]])), 2)
-  
+
   pair_stat <- map_chr(seq_len(ncol(pairs)), \(i) {
     trt_index <- pairs[, i]
     pair_data <- datain |>
@@ -134,6 +133,6 @@ pairwise_surv_stats <- function(datain) {
       "HR ({trt_pair[1]} vs {trt_pair[2]}) = {HR}, 95% CI ({cil}, {ciu}), 2-sided p = {round_f(pval_2s, 4)}, 1-sided p = {pval_1s}" # nolint
     )
   })
-  
+
   paste0(pair_stat, collapse = "\n")
 }

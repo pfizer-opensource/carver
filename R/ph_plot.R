@@ -62,10 +62,10 @@ ph_plot <- function(datain,
   if (nrow(datain) != 0) {
     stopifnot(
       "Missing required Variable(s)" =
-        all(c("TRTSORT", "TRTVAR", "TRTTXT", "timevar", "cnsrvar") %in% names(datain)) #nolint
+        all(c("TRTSORT", "TRTVAR", "TRTTXT", "timevar", "cnsrvar") %in% names(datain)) # nolint
     )
     stopifnot(
-      "Invalid value passed to `pair_id`. Specify the pairs with '-' and delimited with '~'." = #nolint
+      "Invalid value passed to `pair_id`. Specify the pairs with '-' and delimited with '~'." = # nolint
         is.na(pair_id) || grepl("-", pair_id)
     )
     if (all(is.na(pair_id))) {
@@ -79,16 +79,17 @@ ph_plot <- function(datain,
       if (all(is.na(pair_id))) {
         pair_data <- datain %>% filter(TRTSORT %in% c(pairs_comb[, i]))
       } else {
-        pair_data <- datain |> filter(TRTSORT %in% as.numeric(unlist(str_split(i, "-")))) #nolint
+        pair_data <- datain |> filter(TRTSORT %in% as.numeric(unlist(str_split(i, "-")))) # nolint
       }
       survfit_datain <- survfit(Surv(timevar, cnsrvar) ~ TRTVAR,
-                                data = pair_data)
+        data = pair_data
+      )
       sumt <- survfit_summary(survfit_datain, data = pair_data)
       g <- scatter_plot(
         sumt |>
           distinct(.data[["TRTVAR"]], .data[["surv"]], .keep_all = TRUE) |>
           bind_rows(sumt |>
-                      filter(.data[["n.risk"]] == 1)) |>
+            filter(.data[["n.risk"]] == 1)) |>
           mutate(
             XVAR = log(.data[["time"]]),
             YVAR = log(-log(.data[["surv"]]))
@@ -139,7 +140,8 @@ ph_plot <- function(datain,
 #'   time_var = "AVAL"
 #' )
 #' survfit_df <- survival::survfit(survival::Surv(timevar, cnsrvar) ~ TRTVAR,
-#' data = ph_pre)
+#'   data = ph_pre
+#' )
 #' survfit_summary(
 #'   x = survfit_df,
 #'   data = pair_data
@@ -148,7 +150,7 @@ survfit_summary <- function(x,
                             data) {
   res <- cbind(
     data.frame(unclass(x)[c("time", "n.risk", "n.event", "n.censor")]),
-    surv = x[["surv"]], std.err = x[["std.err"]], upper = x[["upper"]], lower = x[["lower"]] #nolint
+    surv = x[["surv"]], std.err = x[["std.err"]], upper = x[["upper"]], lower = x[["lower"]] # nolint
   )
   res[["strata"]] <- rep(names(x[["strata"]]), x[["strata"]])
   res[["TRTVAR"]] <- as.factor(as.vector(
