@@ -34,7 +34,7 @@ fig <- line_plot(
 )
 
 test_that("Standard line plot outputs", {
-  expect_true(is.ggplot(fig))
+  expect_s3_class(fig, "gg")
   expect_equal(fig$data, adsl_sum$gsum)
   purrr::walk(c("mapping", "labels"), \(x) expect_snapshot(fig[[x]]))
 })

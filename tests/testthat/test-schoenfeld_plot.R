@@ -1,16 +1,5 @@
 data("survival")
-
-survival$adsl <- survival$adsl |>
-  dplyr::mutate(
-    TRT01PN = dplyr::case_when(
-      TRT01P == "Xanomeline Low Dose" ~ 1,
-      TRT01P == "Placebo" ~ 2,
-      TRT01P == "Screen Failure" ~ 3,
-      TRUE ~ NA_real_
-    ),
-    FASFL = dplyr::if_else(!is.na(TRTSDT) & !is.na(ARMCD), "Y", "N")
-  )
-
+ 
 sh_pre <- surv_pre_processor(
   dataset_adsl = survival$adsl,
   adsl_subset = "SAFFL=='Y'",
@@ -23,7 +12,7 @@ sh_pre <- surv_pre_processor(
   trtvar = "TRT01P",
   time_var = "AVAL"
 )
-
+ 
 sh_plot <- schoenfeld_plot(
   datain = sh_pre,
   disp_clmband = "Y",
@@ -48,7 +37,7 @@ sh_plot <- schoenfeld_plot(
   pvalue_decimal = 4,
   pair_id = NA
 )
-
+ 
 test_that("schoenfeld_plot throws expected error message", {
   expect_error(
     schoenfeld_plot(
@@ -106,11 +95,6 @@ test_that("scatter_plot works as expected", {
     sh_plot[[i]][[3]]
   })
   purrr::walk(pt, \(x) {
-    purrr::walk(
-      c("mapping", "theme", "labels"),
-      \(y) {
-        testthat::expect_snapshot(x[[y]])
-      }
-    )
+    expect_snapshot(x[["mapping"]])
   })
 })

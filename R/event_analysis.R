@@ -489,7 +489,7 @@ event_plotly <- function(p, ref_line, title_text) {
 
 #' Overwrite plotly line shape without using `shapes` argument in `plotly::layout()`
 #'
-#' This is due to an existing bug in `plotly`.[https://community.rstudio.com/t/drawing-lines-from-layouts-doesnt-work-on-ggplotly/54116] # nolint
+#' This is due to an existing bug in `plotly`.<https://community.rstudio.com/t/drawing-lines-from-layouts-doesnt-work-on-ggplotly/54116> # nolint
 #'
 #' @param p `ggplot` object
 #' @param ref_line Reference line

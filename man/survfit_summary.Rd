@@ -41,7 +41,8 @@ ph_pre <- surv_pre_processor(
   time_var = "AVAL"
 )
 survfit_df <- survival::survfit(survival::Surv(timevar, cnsrvar) ~ TRTVAR,
-data = ph_pre)
+  data = ph_pre
+)
 survfit_summary(
   x = survfit_df,
   data = pair_data

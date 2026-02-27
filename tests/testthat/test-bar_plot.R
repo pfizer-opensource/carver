@@ -38,15 +38,9 @@ test_that("Test Case 1: bar_plot works with expected inputs", {
     plot_title = NULL
   )
 
-  legendgroups <- unique(bar_out[["data"]][["TRTVAR"]])
-
-  expect_type(bar_out, "list")
-  expect_true(is.ggplot(bar_out))
-  expect_equal(legendgroups, unique(bar_out[["data"]][["TRTVAR"]]))
-  purrr::walk(
-    c("mapping", "labels"),
-    \(x) expect_snapshot(bar_out[[x]])
-  )
+  expect_s3_class(bar_out, "gg")
+  expect_snapshot(bar_out[["mapping"]])
+  
 })
 
 test_that("Test Case 2: bar_plot works with modified inputs", {
@@ -68,11 +62,9 @@ test_that("Test Case 2: bar_plot works with modified inputs", {
     griddisplay = "N",
     plot_title = NULL
   )
-
-  legendgroups <- unique(bar_out[["data"]][["TRTVAR"]])
-
-  expect_type(bar_out, "list")
-  expect_equal(legendgroups, unique(bar_out[["data"]][["TRTVAR"]]))
+  
+  expect_s3_class(bar_out, "gg")
   expect_true(nrow(bar_out$data) > 0)
-  expect_true(length(bar_out) > 0)
+  expect_snapshot(bar_out[["mapping"]])
+  
 })

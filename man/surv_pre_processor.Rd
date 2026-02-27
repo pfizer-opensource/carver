@@ -49,16 +49,7 @@ Process data for Survival Analysis
 }
 \examples{
 data("survival")
-survival$adsl <- survival$adsl |>
-  dplyr::mutate(
-    TRT01PN = dplyr::case_when(
-      TRT01P == "Xanomeline Low Dose" ~ 1,
-      TRT01P == "Placebo" ~ 2,
-      TRT01P == "Screen Failure" ~ 3,
-      TRUE ~ NA_real_
-    ),
-    FASFL = dplyr::if_else(!is.na(TRTSDT) & !is.na(ARMCD), "Y", "N")
-   )
+
 survival$adsl |>
   surv_pre_processor(
     dataset_analysis = survival$adtte,

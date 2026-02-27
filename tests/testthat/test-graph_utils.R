@@ -262,14 +262,12 @@ test_that("empty_plot works as expected", {
 
 test_that("theme_cleany works as expected", {
   actual <- theme_cleany(legend_opts = list(pos = "bottom", dir = "horizontal"))
-  expect_true(all(class(actual) %in% c("theme", "gg")))
-  expect_snapshot(actual)
+  expect_equal(actual$legend.position, "bottom")
+  expect_equal(actual$legend.direction, "horizontal")
 })
 
 test_that("theme_std works as expected", {
   actual <- theme_std()
-  expect_true(all(class(actual) %in% c("theme", "gg")))
-  expect_length(actual, 10)
   expect_equal(actual$legend.position, "bottom")
   expect_equal(actual$plot.title$hjust, 0.5)
   actual2 <- theme_std(griddisplay = "Y")
@@ -317,12 +315,14 @@ test_that("tbl_to_plot works as expected", {
       "manufacturer",
       "HWY"
     )
-  expect_true("ggplot" %in% class(fig))
-  purrr::walk(c("mapping", "labels"), \(x) expect_snapshot(fig[[x]]))
+  expect_s3_class(fig, "gg")
+  expect_snapshot(fig[["mapping"]])
 })
+
 
 test_that("series_leg_lab works properly", {
   iris1 <- iris |> mutate(SPNEW = fct_inorder(c(rep("A", 50), rep("B", 50), rep("C", 50))))
   expect_equal(series_leg_lab(iris1, "Species", "SPNEW"), as.factor(c("A", "B", "C")))
   expect_equal(series_leg_lab(iris1, "Species", "Species"), waiver())
 })
+

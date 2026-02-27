@@ -13,28 +13,9 @@
     Code
       fig[[x]]
     Output
-      $x
-      [1] "Race"
-      
-      $y
-      [1] "Mean Age"
-      
-      $fill
-      [1] "Treatment"
-      
-      $title
-      NULL
-      
-      $group
-      [1] "TRTVAR"
-      
-      $colour
-      [1] "TRTVAR"
-      
-      $shape
-      [1] "TRTVAR"
-      
-      $size
-      [1] "TRTVAR"
-      
+      <ggplot2::labels> List of 4
+       $ x    : chr "Race"
+       $ y    : chr "Mean Age"
+       $ fill : chr "Treatment"
+       $ title: NULL
 

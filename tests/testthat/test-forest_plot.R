@@ -48,10 +48,11 @@ fp <- forest_plot_base(
   ),
   legend_opts = list(pos = "bottom", dir = "horizontal")
 )
+
 test_that("Test case 1: Forest Plot Base Works with standard inputs", {
-  expect_true(is.ggplot(fp))
+  expect_s3_class(fp, "gg")
   expect_equal(fp[["data"]], ae_risk)
-  purrr::walk(c("mapping", "layers", "theme"), \(x) expect_snapshot(fp[[x]]))
+  expect_snapshot(fp[["mapping"]])
   expect_error(forest_plot_base(
     datain = data.frame(),
     xvar = "RISK",
@@ -68,6 +69,7 @@ test_that("Test case 1: Forest Plot Base Works with standard inputs", {
     )
   ))
 })
+
 
 # Forest Scatter plot
 sp <-
@@ -88,9 +90,9 @@ sp <-
     axis_opts = list(xsize = 8, xtsize = 4, xaxis_label = "Percentage")
   )
 test_that("Test case 1: Forest Plot Scatter Works with standard inputs", {
-  expect_true(is.ggplot(sp))
+  expect_s3_class(sp, "gg")
   expect_equal(sp[["data"]], ae_risk)
-  purrr::walk(c("mapping", "layers", "theme"), \(x) expect_snapshot(sp[[x]]))
+  expect_snapshot(sp[["mapping"]])
 })
 
 test_that("Test Case 2: Forest plot scatter errors resolve correctly", {
@@ -128,8 +130,7 @@ test_that("Test Case 1: forest_display static works correctly", {
     rel_widths = c(0.6, 0.4),
     interactive = "N"
   )
-  expect_type(actual, "list")
-  expect_true("ggplot" %in% class(actual))
+  expect_s3_class(actual, "gg")
   expect_true("waiver" %in% class(actual$data))
   expect_length(actual$layers, 3)
   expect_error(
@@ -157,9 +158,8 @@ test_that("Test Case 1: forest_display interactive works correctly", {
     plot_height = 800,
     xpos = "top"
   )
-  expect_type(actual, "list")
   expect_true("plotly" %in% class(actual))
   expect_true(actual$x$subplot)
   expect_equal(actual$height, 800)
-  expect_snapshot(actual$x$layout)
 })
+

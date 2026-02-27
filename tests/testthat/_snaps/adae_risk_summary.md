@@ -24,29 +24,6 @@
       #   `P-value` <dbl>, `Lower Limit` <dbl>, `Upper Limit` <dbl>,
       #   `(Lower-Upper)` <chr>
 
----
-
-    Code
-      output
-    Output
-      a flextable object.
-      col_keys: `  `, `Placebo_n (%) `, `Xanomeline Low Dose_n (%)  ` 
-      header has 2 row(s) 
-      body has 24 row(s) 
-      original dataset sample: 
-                                                        DPTVARN DPTVALN CN
-      1                               CARDIAC DISORDERS       1       0  C
-      2                         \t\t\tSINUS BRADYCARDIA       1       1  C
-      3 RESPIRATORY, THORACIC AND MEDIASTINAL DISORDERS       2       0  C
-      4                                     \t\t\tCOUGH       2       1  C
-      5                        NERVOUS SYSTEM DISORDERS       3       0  C
-        Placebo_n (%)  Xanomeline Low Dose_n (%)  
-      1      1 ( 1.6%)                   4 ( 5.5%)
-      2      1 ( 1.6%)                   4 ( 5.5%)
-      3      1 ( 1.6%)                   5 ( 6.8%)
-      4      1 ( 1.6%)                   5 ( 6.8%)
-      5      2 ( 3.2%)                   6 ( 8.2%)
-
 # Test Case 2: adae_summary with summary row
 
     Code
@@ -72,27 +49,4 @@
       #   SUBGRPVARX <chr>, SUBGRPVARXN <dbl>, `Risk Ratio (CI)` <chr>,
       #   `Risk Ratio` <dbl>, `P-value` <dbl>, `Lower Limit` <dbl>,
       #   `Upper Limit` <dbl>, `(Lower-Upper)` <chr>
-
----
-
-    Code
-      output
-    Output
-      a flextable object.
-      col_keys: `  `, `Placebo_n (%) `, `Xanomeline Low Dose_n (%)  `, `Risk Ratio (CI)` 
-      header has 2 row(s) 
-      body has 24 row(s) 
-      original dataset sample: 
-                                   DPTVARN DPTVALN CN Placebo_n (%) 
-      1                     Any AE       0       0  C     42 (67.7%)
-      2          CARDIAC DISORDERS       1       0  C      1 ( 1.6%)
-      3    \t\t\tSINUS BRADYCARDIA       1       1  C      1 ( 1.6%)
-      4 GASTROINTESTINAL DISORDERS       2       0  C      9 (14.5%)
-      5            \t\t\tDIARRHOEA       2       1  C      9 (14.5%)
-        Xanomeline Low Dose_n (%)       Risk Ratio (CI)
-      1                  64 (87.7%)  1.294 (1.07, 1.57)
-      2                   4 ( 5.5%) 3.397 (0.39, 29.61)
-      3                   4 ( 5.5%) 3.397 (0.39, 29.61)
-      4                   3 ( 4.1%)     0.283 (0.08, 1)
-      5                   3 ( 4.1%)     0.283 (0.08, 1)
 

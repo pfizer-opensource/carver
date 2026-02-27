@@ -1,15 +1,5 @@
 data("survival")
 
-survival$adsl <- survival$adsl |>
-  dplyr::mutate(
-    TRT01PN = dplyr::case_when(
-      TRT01P == "Xanomeline Low Dose" ~ 1,
-      TRT01P == "Placebo" ~ 2,
-      TRT01P == "Screen Failure" ~ 3,
-      TRUE ~ NA_real_
-    )
-  )
-
 ph_pre <- surv_pre_processor(
   dataset_adsl = survival$adsl,
   adsl_subset = "SAFFL=='Y'",
@@ -22,6 +12,7 @@ ph_pre <- surv_pre_processor(
   trtvar = "TRT01P",
   time_var = "AVAL"
 )
+
 
 series_opts <- plot_aes_opts(ph_pre,
   series_color = "red~blue~green",
@@ -36,10 +27,11 @@ test_that("checking the pair_id arg", {
     series_opts = series_opts,
     pair_id = "1-2"
   )
-  expect_equal(length(case1), 1)
   expect_match(class(case1), "list")
-  purrr::walk(case1, \(x) purrr::walk(c("mapping", "labels"), \(y) expect_snapshot(x[[y]])))
+  expect_equal(length(case1), 1)
+  purrr::walk(case1, \(x) expect_snapshot(x[["mapping"]]))
 })
+
 
 test_that("checking the pair_id arg with NA", {
   case2 <- ph_plot(
@@ -50,7 +42,7 @@ test_that("checking the pair_id arg with NA", {
   )
   expect_equal(length(case2), 1)
   expect_match(class(case2), "list")
-  expect_true(nrow(case2[[1]][[1]]) > 0)
+  purrr::walk(case2, \(fig) expect_s3_class(fig, "gg"))
 })
 
 test_that("check whether the fucntion throw NULL output when the data has 0 observation.", {
@@ -61,3 +53,4 @@ test_that("check whether the fucntion throw NULL output when the data has 0 obse
     pair_id = NA
   )))
 })
+

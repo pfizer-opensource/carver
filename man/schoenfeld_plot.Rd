@@ -59,18 +59,9 @@ List containing Schoenfeld plots and Cox Regression statistics
 Schoenfeld Plot
 }
 \examples{
-data("survival")
 
-survival$adsl <- survival$adsl |>
-  dplyr::mutate(
-    TRT01PN = dplyr::case_when(
-      TRT01P == "Xanomeline Low Dose" ~ 1,
-      TRT01P == "Placebo" ~ 2,
-      TRT01P == "Screen Failure" ~ 3,
-      TRUE ~ NA_real_
-    ),
-    FASFL = dplyr::if_else(!is.na(TRTSDT) & !is.na(ARMCD), "Y", "N")
-  )
+
+data("survival")
 
 sh_pre <- surv_pre_processor(
   dataset_adsl = survival$adsl,

@@ -183,5 +183,5 @@ box_plot <- function(datain,
       )
   }
   message("Box Plot Success")
-  g_plot
+  return(g_plot)
 }
