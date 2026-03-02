@@ -4,9 +4,9 @@ data("adae")
 adae <- adae |>
   mutate(
     TRTEMFL = if_else(
-      !is.na(ASTDT) & 
+      !is.na(ASTDT) &
         !is.na(TRTSDT) &
-        ASTDT > TRTSDT ,
+        ASTDT > TRTSDT,
       "Y",
       "N"
     ),
@@ -85,7 +85,6 @@ test_that("Test Case 2: tornado data works with expected inputs", {
   expect_true(all(c("BYVAR1", "XVAR", "trt_left", "trt_right") %in% colnames(tornado_df)))
   expect_true(nrow(tornado_df) > 0)
   expect_true(length(tornado_df) > 0)
-  
 })
 
 test_that("Test Case 3: tornado_plot works with expected inputs", {
@@ -94,7 +93,6 @@ test_that("Test Case 3: tornado_plot works with expected inputs", {
   expect_equal(legendgroups, unique(plot_out[["data"]][["BYVAR1"]]))
   expect_true(nrow(plot_out$data) > 0)
   expect_snapshot(plot_out[["mapping"]])
-  
 })
 
 test_that("Test Case 4: tornado_plot throws expected error message", {

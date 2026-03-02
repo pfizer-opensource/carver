@@ -40,7 +40,6 @@ test_that("Test Case 1: bar_plot works with expected inputs", {
 
   expect_s3_class(bar_out, "gg")
   expect_snapshot(bar_out[["mapping"]])
-  
 })
 
 test_that("Test Case 2: bar_plot works with modified inputs", {
@@ -62,9 +61,8 @@ test_that("Test Case 2: bar_plot works with modified inputs", {
     griddisplay = "N",
     plot_title = NULL
   )
-  
+
   expect_s3_class(bar_out, "gg")
   expect_true(nrow(bar_out$data) > 0)
   expect_snapshot(bar_out[["mapping"]])
-  
 })

@@ -172,4 +172,3 @@ test_that("Test Case: Significant Points", {
   expect_length(actual[["layers"]], 3)
   expect_true(length(actual[["layers"]]) > length(splot[["layers"]]))
 })
-

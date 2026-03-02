@@ -26,7 +26,7 @@
 #'
 #' @examples
 #' data("survival")
-#' 
+#'
 #' sh_pre <- surv_pre_processor(
 #'   dataset_adsl = survival$adsl,
 #'   adsl_subset = "SAFFL=='Y'",
@@ -46,7 +46,7 @@
 #'   dplyr::arrange(trt)
 #' cp <- custom_cox_ph(datain = pair_data)
 #' cp
-#' 
+#'
 custom_cox_ph <- function(datain,
                           ties_method = "efron",
                           df = 4,

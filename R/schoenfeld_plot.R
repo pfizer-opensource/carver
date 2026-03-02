@@ -42,8 +42,8 @@
 #' @export
 #'
 #' @examples
-#' 
-#' 
+#'
+#'
 #' data("survival")
 #'
 #' sh_pre <- surv_pre_processor(
@@ -165,5 +165,5 @@ schoenfeld_plot <- function(datain,
 
     list(pval = cus_cx_ph$pval, pair = cx_ph$pair, s_plot = sfp)
   })
-  #return(plt_list)
+  # return(plt_list)
 }

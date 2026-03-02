@@ -32,7 +32,7 @@
 #' @export
 #' @examples
 #' data("survival")
-#' 
+#'
 #' survival$adsl |>
 #'   surv_pre_processor(
 #'     dataset_analysis = survival$adtte,
