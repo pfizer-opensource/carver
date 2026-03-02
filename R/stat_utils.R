@@ -25,26 +25,14 @@
 #' @noRd
 #'
 #' @examples
-#' data("adsl")
-#' data("adtte")
-#' library(tlfcarver)
-#' library(survival)
-#' adsl <- adsl %>%
-#'   mutate(
-#'     TRT01PN = case_when(
-#'       TRT01P == "Xanomeline Low Dose" ~ 1,
-#'       TRT01P == "Placebo" ~ 2,
-#'       TRT01P == "Screen Failure" ~ 3,
-#'       TRUE ~ NA_real_
-#'     ),
-#'     FASFL = if_else(!is.na(TRTSDT) & !is.na(ARMCD), "Y", "N")
-#'   )
+#' data("survival")
+#' 
 #' sh_pre <- surv_pre_processor(
-#'   dataset_adsl = adsl,
+#'   dataset_adsl = survival$adsl,
 #'   adsl_subset = "SAFFL=='Y'",
-#'   dataset_analysis = adtte,
+#'   dataset_analysis = survival$adtte,
 #'   split_by = NA_character_,
-#'   analysis_subset = "PARAMCD=='OS' & FASFL=='Y'",
+#'   analysis_subset = NA_character_,
 #'   trtsort = "TRT01PN",
 #'   censor_var = "CNSR",
 #'   censor_val = 1,
@@ -58,7 +46,7 @@
 #'   dplyr::arrange(trt)
 #' cp <- custom_cox_ph(datain = pair_data)
 #' cp
-#'
+#' 
 custom_cox_ph <- function(datain,
                           ties_method = "efron",
                           df = 4,

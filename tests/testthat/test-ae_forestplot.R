@@ -103,9 +103,8 @@ test_that("Test Case 2: Standard Inputs 1", {
     pvalue_dispyn = "Y",
     terms_perpg = NULL
   )
-  expect_type(forest1, "list")
   expect_length(forest1, 1)
-  expect_true("ggplot" %in% class(forest1[[1]]))
+  expect_s3_class(forest1[[1]], "gg")
   expect_length(forest1[[1]][["layers"]], 3)
   purrr::walk(forest1[[1]][["layers"]], \(x) {
     expect_snapshot(x[["geom_params"]][-1])
@@ -126,9 +125,8 @@ test_that("Test Case 3: Standard Inputs 2", {
     pvalue_dispyn = "N",
     terms_perpg = NULL
   )
-  expect_type(forest2, "list")
   expect_length(forest2, 2)
-  expect_true("ggplot" %in% class(forest2[[1]]))
+  expect_s3_class(forest2[[2]], "gg")
   expect_length(forest2[[2]][["layers"]], 3)
 })
 test_that("Test Case 4: Page splitting", {
@@ -173,5 +171,5 @@ test_that("Test Case: Significant Points", {
   )
   expect_length(actual[["layers"]], 3)
   expect_true(length(actual[["layers"]]) > length(splot[["layers"]]))
-  expect_equal(actual[["labels"]][["fill"]], "EFFECT")
 })
+

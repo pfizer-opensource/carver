@@ -77,7 +77,7 @@ test_that("edish data Works with standard inputs", {
 })
 
 test_that("edish_plot works with expected output", {
-  expect_type(e_plot, "list")
+  expect_s3_class(e_plot, "gg")
   expect_true(nrow(e_plot$data) > 0)
   expect_equal(
     e_plot$labels$x,
@@ -87,7 +87,6 @@ test_that("edish_plot works with expected output", {
     e_plot$labels$y,
     "Peak Total Bilirubin (x ULN)"
   )
-  expect_true(is.ggplot(e_plot))
 
 
   # plotly output comparison

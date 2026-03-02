@@ -286,7 +286,7 @@ ae_forest_hlt_sig <- function(plotin,
       ),
       inherit.aes = FALSE,
       shape = 23,
-      size = pts_size,
+      linewidth = pts_size,
       stroke = 0.2
     ) +
     scale_fill_manual(name = "", values = hltfill)

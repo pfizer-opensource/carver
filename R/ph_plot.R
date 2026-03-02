@@ -77,7 +77,7 @@ ph_plot <- function(datain,
     }
     map(mapthru, function(i) {
       if (all(is.na(pair_id))) {
-        pair_data <- datain %>% filter(TRTSORT %in% c(pairs_comb[, i]))
+        pair_data <- datain |> filter(TRTSORT %in% c(pairs_comb[, i]))
       } else {
         pair_data <- datain |> filter(TRTSORT %in% as.numeric(unlist(str_split(i, "-")))) # nolint
       }

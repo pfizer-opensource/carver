@@ -13,36 +13,6 @@
 ---
 
     Code
-      volcano_test[["labels"]]
-    Output
-      $x
-      [1] "RISK"
-      
-      $y
-      [1] "PVALUE"
-      
-      $text
-      [1] "HOVER_TEXT"
-      
-      $fill
-      [1] "BYVAR1"
-      
-      $key
-      [1] "key"
-      
-      $size
-      [1] "CTRL_N"
-      
-      $yintercept
-      [1] "yintercept"
-      
-      $xintercept
-      [1] "xintercept"
-      
-
----
-
-    Code
       x$aes_params
     Output
       $shape

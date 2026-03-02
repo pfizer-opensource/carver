@@ -55,6 +55,12 @@ based on `TRT`(mandatory variable for generating columns in the final table), `B
 **Note:** *For additional information such as parameters info, refer to the mentry() documentation.*
 
 ```{r message=FALSE, warning=FALSE}
+adsl <- adsl |>
+  mutate(
+    TRT01PN = as.numeric(factor(TRT01P)),
+    TRT01AN = as.numeric(factor(TRT01A))
+  )
+
 mentry_df <- adsl |>
   mentry(
     subset = NA_character_,

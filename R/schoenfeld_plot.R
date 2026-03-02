@@ -42,18 +42,9 @@
 #' @export
 #'
 #' @examples
+#' 
+#' 
 #' data("survival")
-#'
-#' survival$adsl <- survival$adsl |>
-#'   dplyr::mutate(
-#'     TRT01PN = dplyr::case_when(
-#'       TRT01P == "Xanomeline Low Dose" ~ 1,
-#'       TRT01P == "Placebo" ~ 2,
-#'       TRT01P == "Screen Failure" ~ 3,
-#'       TRUE ~ NA_real_
-#'     ),
-#'     FASFL = dplyr::if_else(!is.na(TRTSDT) & !is.na(ARMCD), "Y", "N")
-#'   )
 #'
 #' sh_pre <- surv_pre_processor(
 #'   dataset_adsl = survival$adsl,
@@ -174,5 +165,5 @@ schoenfeld_plot <- function(datain,
 
     list(pval = cus_cx_ph$pval, pair = cx_ph$pair, s_plot = sfp)
   })
-  return(plt_list)
+  #return(plt_list)
 }

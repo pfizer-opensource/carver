@@ -103,12 +103,8 @@
 # Empty_tbl works
 
     Code
-      tbl_empty
+      tbl_empty$body$dataset
     Output
-      a flextable object.
-      col_keys: `X` 
-      header has 1 row(s) 
-      body has 1 row(s) 
-      original dataset sample: 
-      [1] "No participant meets the reporting criteria"
+                                                  X
+      1 No participant meets the reporting criteria
 

@@ -17,42 +17,10 @@
     Code
       p[[x]]
     Output
-      $x
-      [1] "Race"
-      
-      $y
-      [1] "Age"
-      
-      $title
-      NULL
-      
-      $colour
-      [1] "TRTVAR"
-      
-      $ymin
-      [1] "whiskerlow"
-      
-      $ymax
-      [1] "whiskerup"
-      
-      $lower
-      [1] "q25"
-      
-      $upper
-      [1] "q75"
-      
-      $middle
-      [1] "median"
-      
-      $group
-      [1] "TRTVAR"
-      
-      $shape
-      [1] "TRTVAR"
-      
-      $size
-      [1] "TRTVAR"
-      
+      <ggplot2::labels> List of 3
+       $ x    : chr "Race"
+       $ y    : chr "Age"
+       $ title: NULL
 
 ---
 
@@ -73,42 +41,10 @@
     Code
       p[[x]]
     Output
-      $x
-      [1] "Race"
-      
-      $y
-      [1] "Age"
-      
-      $title
-      NULL
-      
-      $fill
-      [1] "TRTVAR"
-      
-      $ymin
-      [1] "whiskerlow"
-      
-      $ymax
-      [1] "whiskerup"
-      
-      $lower
-      [1] "q25"
-      
-      $upper
-      [1] "q75"
-      
-      $middle
-      [1] "median"
-      
-      $group
-      [1] "TRTVAR"
-      
-      $shape
-      [1] "TRTVAR"
-      
-      $size
-      [1] "TRTVAR"
-      
+      <ggplot2::labels> List of 3
+       $ x    : chr "Race"
+       $ y    : chr "Age"
+       $ title: NULL
 
 ---
 
@@ -129,40 +65,8 @@
     Code
       p[[x]]
     Output
-      $x
-      [1] "Race"
-      
-      $y
-      [1] "Age"
-      
-      $title
-      NULL
-      
-      $fill
-      [1] "TRTVAR"
-      
-      $ymin
-      [1] "min"
-      
-      $ymax
-      [1] "max"
-      
-      $lower
-      [1] "q25"
-      
-      $upper
-      [1] "q75"
-      
-      $middle
-      [1] "median"
-      
-      $group
-      [1] "TRTVAR"
-      
-      $shape
-      [1] "TRTVAR"
-      
-      $size
-      [1] "TRTVAR"
-      
+      <ggplot2::labels> List of 3
+       $ x    : chr "Race"
+       $ y    : chr "Age"
+       $ title: NULL
 
