@@ -104,8 +104,8 @@ adae <- adae |>
   mutate(
     TRTEMFL = if_else(
       !is.na(ASTDT) &
-      !is.na(TRTSDT) &
-        ASTDT > TRTSDT ,
+        !is.na(TRTSDT) &
+        ASTDT > TRTSDT,
       "Y",
       "N"
     ),
