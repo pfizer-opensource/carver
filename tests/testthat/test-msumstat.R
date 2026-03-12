@@ -156,4 +156,3 @@ test_that("Test 5: Sparse by value", {
     )
   expect_equal(unique(adsl_sum$gsum$BYVAR1), c("F", "M"))
 })
-
