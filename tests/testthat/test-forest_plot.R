@@ -162,4 +162,3 @@ test_that("Test Case 1: forest_display interactive works correctly", {
   expect_true(actual$x$subplot)
   expect_equal(actual$height, 800)
 })
-

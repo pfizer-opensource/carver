@@ -1,5 +1,5 @@
 data("survival")
- 
+
 sh_pre <- surv_pre_processor(
   dataset_adsl = survival$adsl,
   adsl_subset = "SAFFL=='Y'",
@@ -12,7 +12,7 @@ sh_pre <- surv_pre_processor(
   trtvar = "TRT01P",
   time_var = "AVAL"
 )
- 
+
 sh_plot <- schoenfeld_plot(
   datain = sh_pre,
   disp_clmband = "Y",
@@ -37,7 +37,7 @@ sh_plot <- schoenfeld_plot(
   pvalue_decimal = 4,
   pair_id = NA
 )
- 
+
 test_that("schoenfeld_plot throws expected error message", {
   expect_error(
     schoenfeld_plot(

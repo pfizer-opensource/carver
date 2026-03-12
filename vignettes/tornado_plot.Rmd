@@ -103,7 +103,7 @@ Below is an example of calling `process_tornado_data` function for preprocessing
 adae <- adae |>
   mutate(
     TRTEMFL = if_else(
-      !is.na(ASTDT) & 
+      !is.na(ASTDT) &
       !is.na(TRTSDT) &
         ASTDT > TRTSDT ,
       "Y",
@@ -119,7 +119,7 @@ df <- process_tornado_data(
   dataset_adsl = adsl,
   dataset_analysis = adae,
   adsl_subset = "SAFFL == 'Y'",
-  analysis_subset = "TRTEMFL == 'Y'", 
+  analysis_subset = "TRTEMFL == 'Y'",
   obs_residual = "30",
   fmq_data = NA,
   ae_catvar = "AESEV/AESEVN",

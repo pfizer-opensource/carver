@@ -325,4 +325,3 @@ test_that("series_leg_lab works properly", {
   expect_equal(series_leg_lab(iris1, "Species", "SPNEW"), as.factor(c("A", "B", "C")))
   expect_equal(series_leg_lab(iris1, "Species", "Species"), waiver())
 })
-

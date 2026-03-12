@@ -486,7 +486,7 @@ sparse_vals <- function(datain,
     df_exp <- data_sparse |>
       tidyr::expand(!!!rlang::syms(c(TRTVAR, SUBGRP)), tidyr::nesting(DPTVAL, DPTVALN)) |>
       left_join(distinct(data_sparse, across(any_of(starts_with(c("DPTVAL", "BYVAR"))))),
-        by = c("DPTVAL", "DPTVALN")
+        by = c("DPTVAL", "DPTVALN"), relationship = "many-to-many"
       )
   }
   data_sparse <- ungroup(data_sparse)
