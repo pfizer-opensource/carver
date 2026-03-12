@@ -49,7 +49,7 @@ ae_risk1_forest <- risk_stat(
   g_sort_by_ht = "Y"
 ) |>
   plot_display_bign(ae_entry)
-series_opts1 <- plot_aes_opts(ae_risk1_forest, series_color = "black~black~black")
+series_opts1 <- plot_aes_opts(ae_risk1_forest, series_color = "black~black~black") # nolint
 
 forest_dat <- ae_risk_forest |>
   filter(!is.nan(.data[["RISK"]]), !is.infinite(.data[["RISK"]]))

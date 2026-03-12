@@ -13,9 +13,9 @@ summary_functions(statvar, statdec)
 }
 \value{
 A named list containing function definition for all defined summary
-statistics - mean, min, max, median, mode iqr, var, sum, sd, q25, q75, p1, p5,
+statistics - mean, min, max, median, mode iqr, var, sum, sd, q25, q75, p1, p5,  # nolint
 p10, p90, p95, p99 (where last digits represent \% of quantile), whiskerlow,
-whiskerup, outliers in the Tukey method for box statistics, geometric mean/sd/CI
+whiskerup, outliers in the Tukey method for box statistics, geometric mean/sd/CI  # nolint
 }
 \description{
 List of Summary Functions

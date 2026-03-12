@@ -82,11 +82,6 @@ test_that("tbl_processor works with keepvars", {
   expect_true(unique(tbl_data2$NewCol) == "Keepthis")
 })
 
-# test_that("Empty_tbl works", {
-#   tbl_empty <- empty_tbl()
-#   expect_snapshot(tbl_empty)
-# })
-
 test_that("Empty_tbl works", {
   tbl_empty <- empty_tbl()
   expect_snapshot(tbl_empty$body$dataset)
