@@ -100,6 +100,21 @@ The first step for creating `tornado_plot` for Adverse Events is to read the req
 Below is an example of calling `process_tornado_data` function for preprocessing the data for tornado plot.
 
 ```{r tornado_plot_data, message=FALSE, warning=FALSE}
+adae <- adae |>
+  mutate(
+    TRTEMFL = if_else(
+      !is.na(ASTDT) &
+        !is.na(TRTSDT) &
+        ASTDT > TRTSDT,
+      "Y",
+      "N"
+    ),
+    ASTDT = TRTSDT + 5,
+  )
+
+adae <- adae |>
+  left_join(adsl |> select(USUBJID, ARM), by = "USUBJID")
+
 df <- process_tornado_data(
   dataset_adsl = adsl,
   dataset_analysis = adae,

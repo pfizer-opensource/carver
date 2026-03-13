@@ -104,7 +104,7 @@ forest_plot_base <- function(datain,
   ) +
     ggstance::geom_errorbarh(
       height = 0.1,
-      position = ggstance::position_dodgev(height = 0.6), linewidth = 0.5
+      position = ggstance::position_dodgev(height = 0.6), size = 0.5
     ) +
     geom_point(
       shape = 22,

@@ -76,3 +76,10 @@
 #'
 #' @format Data frame with 7510 rows and 21 variables
 "cm"
+
+#' survival
+#'
+#' Test Data for Schoenfeld Plot, Kaplan-Meir Plot, ph plot
+#'
+#' @format List of data frames containing `adsl` and `adtte` dataset
+"survival"

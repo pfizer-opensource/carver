@@ -12,6 +12,106 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+
+#' Build a customized cox ph model
+#'
+#' @inheritParams schoenfeld_plot
+#'
+#' @return
+#' \itemize{
+#' \item  A dataset `out` as data.frame
+#' \item  P-value is returned as numeric
+#' }
+#' @noRd
+#'
+#' @examples
+#' data("survival")
+#'
+#' sh_pre <- surv_pre_processor(
+#'   dataset_adsl = survival$adsl,
+#'   adsl_subset = "SAFFL=='Y'",
+#'   dataset_analysis = survival$adtte,
+#'   split_by = NA_character_,
+#'   analysis_subset = NA_character_,
+#'   trtsort = "TRT01PN",
+#'   censor_var = "CNSR",
+#'   censor_val = 1,
+#'   trtvar = "TRT01P",
+#'   time_var = "AVAL"
+#' )
+#' pairs <- combn(unique(sort((sh_pre$TRTSORT))), 2)
+#' pair_data <- sh_pre |>
+#'   dplyr::filter(TRTSORT %in% c(pairs[, 1])) |>
+#'   dplyr::mutate(trt = ifelse(TRTSORT == pairs[1, 1], 0, 1)) |>
+#'   dplyr::arrange(trt)
+#' cp <- custom_cox_ph(datain = pair_data)
+#' cp
+#'
+custom_cox_ph <- function(datain,
+                          ties_method = "efron",
+                          df = 4,
+                          pvalue_decimal = 4) {
+  cx <-
+    coxph(Surv(timevar, cnsrvar) ~ TRTVAR,
+      data = datain,
+      ties = ties_method
+    )
+
+  if (cx$nevent <= 1) {
+    return(
+      list(
+        out = NULL,
+        pval = NULL,
+        err = "Not enough data to fit the Proportional Hazards Regression Model"
+      )
+    )
+  }
+
+  zph <- cox.zph(cx, transform = "identity", global = TRUE)
+  xx <- zph$x
+  pred.x <- seq(from = min(xx), to = max(xx), length = nrow(zph$y))
+  zy <- zph$y[, 1]
+  temp <- c(pred.x, xx)
+  lmat <- try(splines::ns(temp, df = df, intercept = TRUE), TRUE)
+
+  if (any(class(lmat) == "try-error")) {
+    return(
+      list(
+        out = NULL,
+        pval = NULL,
+        err = "Spline fit is singular, try with smaller degrees of freedom"
+      )
+    )
+  }
+
+  pmat <- lmat[seq_len(nrow(zph$y)), ]
+  xmat <- lmat[-(seq_len(nrow(zph$y))), ]
+  qmat <- qr(xmat)
+  pval <- round(zph$table[1, 3], pvalue_decimal) # nolint
+  # Y value for curve
+  yhat <- as.vector(pmat %*% qr.coef(qmat, zy))
+
+  if (qmat$rank < df) {
+    return(
+      list(
+        out = NULL,
+        pval = NULL,
+        err = "Spline fit is singular, try with smaller degrees of freedom"
+      )
+    )
+  }
+  # Standard error calculation
+  bk <- backsolve(qmat$qr[1:df, 1:df], diag(df))
+  xtx <- bk %*% t(bk)
+  seval <- ((pmat %*% xtx) * pmat) %*% rep(1, df)
+  temp1 <- as.vector(2 * sqrt(zph$var[1, 1] * seval))
+  yup <- yhat + temp1
+  ylow <- yhat - temp1
+
+  out <- as.data.frame(cbind(xx, zy, pred.x, yhat, yup, ylow))
+  list(out = out, pval = pval)
+}
+
 #' Update functions to round values
 #'
 #' @param f List of names of summary statistics.
@@ -50,11 +150,11 @@ stat_lookup <- function() {
     "mean(stderr)", "mean/stderr", "Mean(SE)", "{mean} ({stderr})",
     "minmax", "min/max", "(Min-Max)", "({min}-{max})",
     "minmaxc", "min/max", "(Min,Max)", "({min},{max})",
-    "median(minmax)", "median/min/max", "Median (Min-Max)", "{median} ({min}-{max})",
-    "median(minmaxc)", "median/min/max", "Median (Min,Max)", "{median} ({min},{max})",
+    "median(minmax)", "median/min/max", "Median (Min-Max)", "{median} ({min}-{max})", # nolint
+    "median(minmaxc)", "median/min/max", "Median (Min,Max)", "{median} ({min},{max})", # nolint
     "q1q3", "q1/q3", "(Q1,Q3)", "({q1}, {q3})",
     "median(q1q3)", "median/q1/q3", "Median (Q1,Q3)", "{median} ({q1},{q3})",
-    "geomean(geosd)", "geomean/geosd", "Geomean(Geomean SD)", "{geomean} ({geosd})",
+    "geomean(geosd)", "geomean/geosd", "Geomean(Geomean SD)", "{geomean} ({geosd})", # nolint
     "q1", "q1", "1st Quantile", "",
     "q3", "q3", "3rd Quantile", "",
     "stderr", "stderr", "s.e.", "",
@@ -70,7 +170,7 @@ stat_lookup <- function() {
 #' @return named vector
 #' @noRd
 parse_stats <- function(statvar, statdec) {
-  if (all(is.na(statdec)) || all(statdec == "")) statdec <- rep(2, length(statvar))
+  if (all(is.na(statdec)) || all(statdec == "")) statdec <- rep(2, length(statvar)) # nolint
   if (length(statdec) == 1) statdec <- rep(statdec, length(statvar))
   stopifnot(length(statvar) == length(statdec))
   lookup <- stat_lookup() |> filter(.data[["derv"]] != "")
@@ -103,9 +203,9 @@ parse_stats <- function(statvar, statdec) {
 #' @param statdec Corresponding number of decimal places for each statistic
 #'
 #' @return A named list containing function definition for all defined summary
-#' statistics - mean, min, max, median, mode iqr, var, sum, sd, q25, q75, p1, p5,
+#' statistics - mean, min, max, median, mode iqr, var, sum, sd, q25, q75, p1, p5,  # nolint
 #' p10, p90, p95, p99 (where last digits represent % of quantile), whiskerlow,
-#' whiskerup, outliers in the Tukey method for box statistics, geometric mean/sd/CI
+#' whiskerup, outliers in the Tukey method for box statistics, geometric mean/sd/CI  # nolint
 #' @export
 #'
 #' @examples
@@ -122,7 +222,7 @@ summary_functions <- function(statvar, statdec) {
     if (f %in% base_fns) {
       fmtrd(f, d)
     } else if (str_detect(f, "^(q\\d+)$|^(p\\d+)$")) {
-      fmtrd(f = "quantile", d = d, as.numeric(gsub("\\D", "", f)) / 100, type = 2)
+      fmtrd(f = "quantile", d = d, as.numeric(gsub("\\D", "", f)) / 100, type = 2) # nolint
     } else if (f == "geomean") {
       function(x) round_f(exp(mean(log(x), na.rm = TRUE)), d)
     } else if (f == "geosd") {
@@ -130,13 +230,13 @@ summary_functions <- function(statvar, statdec) {
     } else if (f == "geomean_lowci") {
       function(x) {
         x <- log(x)
-        margin_error <- qt(0.975, df = length(x) - 1) * sd(x, na.rm = TRUE) / sqrt(length(x))
+        margin_error <- qt(0.975, df = length(x) - 1) * sd(x, na.rm = TRUE) / sqrt(length(x)) # nolint
         round_f(exp(mean(x, na.rm = TRUE) - margin_error), d)
       }
     } else if (f == "geomean_upci") {
       function(x) {
         x <- log(x)
-        margin_error <- qt(0.975, df = length(x) - 1) * sd(x, na.rm = TRUE) / sqrt(length(x))
+        margin_error <- qt(0.975, df = length(x) - 1) * sd(x, na.rm = TRUE) / sqrt(length(x)) # nolint
         round_f(exp(mean(x, na.rm = TRUE) + margin_error), d)
       }
     } else if (f == "outliers") {
@@ -190,15 +290,15 @@ whiskerup <- function(x, na.rm = TRUE) {
 #' @return Dataframe with mutated columns
 #' @noRd
 derv_stats <- function(data, stats, lookup = stat_lookup()) {
-  lookup <- lookup |> filter(.data[["derv"]] != "")
+  lookup <- lookup |> filter(.data$derv != "")
   if (!any(stats %in% lookup[[1]])) {
     data
   } else {
     stats <- stats[stats %in% lookup[[1]]]
     map(stats, \(s) {
       derv <- lookup |>
-        filter(if_all(1) == s) |>
-        pull(.data[["derv"]])
+        filter(if_any(-derv, ~ .x == s)) |>
+        pull(.data$derv)
       data |>
         mutate({{ s }} := glue::glue(derv)) |>
         select(all_of(s))

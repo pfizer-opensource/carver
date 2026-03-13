@@ -127,7 +127,7 @@ interval_plot <- function(datain,
           color = !!sym(seriesvar)
         ),
         position = position_dodge(width = 0.3),
-        size = 1.2
+        linewidth = 1.2
       )
     # Convert to plotly object
     splotly <- plotly::ggplotly(gplot, tooltip = "text")

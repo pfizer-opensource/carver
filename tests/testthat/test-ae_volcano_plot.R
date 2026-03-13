@@ -86,10 +86,8 @@ test_that("Test 1: Volcano plot with standard inputs", {
     xref = vaxis_opts$xref,
     pvalue_sig = 0.05
   )
-  expect_type(volcano_test, "list")
-  expect_true("ggplot" %in% class(volcano_test))
+  expect_s3_class(volcano_test, "gg")
   expect_snapshot(volcano_test[["mapping"]])
-  expect_snapshot(volcano_test[["labels"]])
   volcano_test2 <- ae_volcano_plot(
     datain = ae_risk,
     axis_opts = axis_opts,

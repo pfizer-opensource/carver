@@ -14,7 +14,13 @@
 #
 #' Process data for Survival Analysis
 #'
-#' @inheritParams process_vx_scatter_data
+#' @param dataset_adsl (data.frame) ADSL dataset.
+#' @param dataset_analysis (data.frame) Analysis Dataset.
+#' @param adsl_subset (string) Subset condition to be applied on dataset_adsl.
+#' @param analysis_subset (string) Subset Condition to be applied on dataset_analysis.
+#' @param split_by (string) By variable for stratification.
+#' @param trtvar (string) Treatment Variable to be created for analysis.
+#' @param trtsort (string) Variable to sort treatment variable by.
 #' @param censor_var Censoring Variable in the input dataset to be used in
 #' ph reg model.Default: `"CNSR"`
 #' @param censor_val Value within `CNSR` variable to be considered as Censor
@@ -24,14 +30,13 @@
 #'
 #' @return Data frame with added variables for survival analysis
 #' @export
-#'
 #' @examples
 #' data("survival")
 #'
 #' survival$adsl |>
 #'   surv_pre_processor(
 #'     dataset_analysis = survival$adtte,
-#'     adsl_subset = "RANDFL=='Y'",
+#'     adsl_subset = "SAFFL=='Y'",
 #'     analysis_subset = "PARAMCD=='OS' & FASFL=='Y'",
 #'     split_by = NA_character_,
 #'     trtvar = "TRT01P",
@@ -40,10 +45,9 @@
 #'     censor_val = 1,
 #'     time_var = "AVAL"
 #'   )
-#'
 surv_pre_processor <- function(dataset_adsl,
                                dataset_analysis,
-                               adsl_subset = "RANDFL=='Y'",
+                               adsl_subset = "SAFFL=='Y'",
                                analysis_subset = NA_character_,
                                split_by = NA_character_,
                                trtvar = "TRT01P",
