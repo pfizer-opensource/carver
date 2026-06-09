@@ -149,7 +149,7 @@ split_data_by_var <- function(datain,
   data_list <- datain |>
     group_by(!!!syms(split_by)) |>
     group_split()
-  return(data_list)
+  data_list
 }
 
 #' Return section headers according to splitting variables specified
@@ -232,7 +232,7 @@ ord_summ_df <- function(df, sort_var, sort_opt, g_sort_by_ht = "N") {
   } else {
     df <- arrange(df, by = desc(!!!syms(sort_var)), .by_group = TRUE)
   }
-  return(ungroup(df))
+  ungroup(df)
 }
 
 #' Get Variables for ordering
@@ -407,7 +407,7 @@ display_bign_head <- function(datain,
       mutate(!!notrthead := as.character(.data[["CVALUE"]])) |>
       select(-all_of("CVALUE"))
   }
-  return(datain)
+  datain
 }
 
 #' Sparse empty categories/treatments with 0
@@ -486,7 +486,7 @@ sparse_vals <- function(datain,
     df_exp <- data_sparse |>
       tidyr::expand(!!!rlang::syms(c(TRTVAR, SUBGRP)), tidyr::nesting(DPTVAL, DPTVALN)) |>
       left_join(distinct(data_sparse, across(any_of(starts_with(c("DPTVAL", "BYVAR"))))),
-        by = c("DPTVAL", "DPTVALN")
+        by = c("DPTVAL", "DPTVALN"), relationship = "many-to-many"
       )
   }
   data_sparse <- ungroup(data_sparse)

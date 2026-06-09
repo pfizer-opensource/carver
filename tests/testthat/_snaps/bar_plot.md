@@ -1,7 +1,7 @@
 # Test Case 1: bar_plot works with expected inputs
 
     Code
-      bar_out[[x]]
+      bar_out[["mapping"]]
     Output
       Aesthetic mapping: 
       * `x`     -> `.data[["XVAR"]]`
@@ -9,24 +9,15 @@
       * `fill`  -> `.data[["TRTVAR"]]`
       * `group` -> `.data[["TRTVAR"]]`
 
----
+# Test Case 2: bar_plot works with modified inputs
 
     Code
-      bar_out[[x]]
+      bar_out[["mapping"]]
     Output
-      $x
-      [1] ""
-      
-      $y
-      [1] ""
-      
-      $title
-      NULL
-      
-      $fill
-      [1] "TRTVAR"
-      
-      $group
-      [1] "TRTVAR"
-      
+      Aesthetic mapping: 
+      * `colour` -> `.data[["TRTVAR"]]`
+      * `x`      -> `.data[["XVAR"]]`
+      * `y`      -> `.data[["YVAR"]]`
+      * `fill`   -> `.data[["TRTVAR"]]`
+      * `group`  -> `.data[["TRTVAR"]]`
 

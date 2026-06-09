@@ -55,14 +55,14 @@ interval_plot <- function(datain,
                           xaxislab = "Start and End Study Day",
                           yaxislab = "") {
   # Filter subject and get info
-  ad_plot <- datain %>%
-    filter(USUBJID == subjectid) %>%
+  ad_plot <- datain |>
+    filter(USUBJID == subjectid) |>
     mutate(Status = case_when(
       (is.na(get(startvar)) & get(endvar) >= 0) ~ "End Day",
       (is.na(get(endvar)) & get(startvar) >= 0) ~ "Start Day",
       (!is.na(get(startvar)) & !is.na(get(endvar))) ~ "Complete",
       TRUE ~ "Remove"
-    )) %>%
+    )) |>
     filter(Status != "Remove")
   # Check if no data left and return accordingly
   if (nrow(ad_plot) == 0) {
@@ -81,8 +81,8 @@ interval_plot <- function(datain,
     series_color <- g_seriescol(ad_plot, series_color, seriesvar)
   }
   # Hover Information:
-  ad_plot <- ad_plot %>%
-    select(all_of(c("USUBJID", startvar, endvar, yvar, seriesvar, "Status"))) %>%
+  ad_plot <- ad_plot |>
+    select(all_of(c("USUBJID", startvar, endvar, yvar, seriesvar, "Status"))) |>
     mutate(
       HOVER_TEXT = paste0(
         !!sym(yvar), "\n",
@@ -94,15 +94,15 @@ interval_plot <- function(datain,
       !!yvar := as.factor(!!sym(yvar))
     )
   # Use data with both dates present for segment plot
-  segmentdata <- ad_plot %>%
+  segmentdata <- ad_plot |>
     filter(Status == "Complete")
 
   # Use data with either Start or end dates only for scatter plot
-  scatterdata <- ad_plot %>%
-    filter(Status != "Complete" | !!sym(startvar) == !!sym(endvar)) %>%
-    tidyr::pivot_longer(all_of(c(startvar, endvar)), names_to = "key", values_to = "Value") %>%
-    filter(!is.na(Value)) %>%
-    select(-key) %>%
+  scatterdata <- ad_plot |>
+    filter(Status != "Complete" | !!sym(startvar) == !!sym(endvar)) |>
+    tidyr::pivot_longer(all_of(c(startvar, endvar)), names_to = "key", values_to = "Value") |>
+    filter(!is.na(Value)) |>
+    select(-key) |>
     distinct(.keep_all = TRUE)
 
   # Create ggplot object - segment plot for Complete intervals and scatter for incomplete
@@ -127,7 +127,7 @@ interval_plot <- function(datain,
           color = !!sym(seriesvar)
         ),
         position = position_dodge(width = 0.3),
-        size = 1.2
+        linewidth = 1.2
       )
     # Convert to plotly object
     splotly <- plotly::ggplotly(gplot, tooltip = "text")
@@ -168,5 +168,5 @@ interval_plot <- function(datain,
     splotly$x$data[[i]]$legendgroup <- splotly$x$data[[i]]$name
     if (!legdf$is_first[[i]]) splotly$x$data[[i]]$showlegend <- FALSE
   }
-  return(list(plot = gplot, ptly = splotly, rpt_data = ad_plot))
+  list(plot = gplot, ptly = splotly, rpt_data = ad_plot)
 }

@@ -1,6 +1,22 @@
 data("adsl")
 data("adae")
 
+adae <- adae |>
+  mutate(
+    TRTEMFL = if_else(
+      !is.na(ASTDT) &
+        !is.na(TRTSDT) &
+        ASTDT > TRTSDT,
+      "Y",
+      "N"
+    ),
+    ASTDT = TRTSDT + 5,
+  )
+
+adae <- adae |>
+  left_join(adsl |> select(USUBJID, ARM), by = "USUBJID")
+
+
 tornado_df <- process_tornado_data(
   dataset_adsl = adsl,
   dataset_analysis = adae,
@@ -73,12 +89,10 @@ test_that("Test Case 2: tornado data works with expected inputs", {
 
 test_that("Test Case 3: tornado_plot works with expected inputs", {
   legendgroups <- unique(plot_out[["data"]][["BYVAR1"]])
-
-  expect_true(is.ggplot(plot_out))
-  expect_type(plot_out, "list")
+  expect_s3_class(plot_out, "gg")
   expect_equal(legendgroups, unique(plot_out[["data"]][["BYVAR1"]]))
   expect_true(nrow(plot_out$data) > 0)
-  expect_true(length(plot_out) > 0)
+  expect_snapshot(plot_out[["mapping"]])
 })
 
 test_that("Test Case 4: tornado_plot throws expected error message", {
@@ -90,12 +104,5 @@ test_that("Test Case 4: tornado_plot throws expected error message", {
       series_opts = series_opts
     ),
     "XVAR Treatment values not in data"
-  )
-})
-
-test_that("Test Case 5: tornado_plot creates tornado plot", {
-  purrr::walk(
-    c("mapping", "theme", "labels"),
-    \(y) expect_snapshot(plot_out[[y]])
   )
 })

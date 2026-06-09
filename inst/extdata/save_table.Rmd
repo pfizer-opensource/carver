@@ -27,7 +27,8 @@ library(tinytex)
 cat(params$title, "\n")
 if (doc != "html") {
   width(params$ftable,
-        width = dim(params$ftable)$widths * 7 / (flextable_dim(params$ftable)$widths))
+    width = dim(params$ftable)$widths * 7 / (flextable_dim(params$ftable)$widths)
+  )
 } else {
   params$ftable
 }

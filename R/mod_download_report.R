@@ -81,7 +81,7 @@ mod_download_report_server <- function(id, repType, repName, repNum, save_fmt, t
         }
       }
       print("save report object created")
-    }) %>%
+    }) |>
       bindEvent(list(repType(), toutput(), goutput(), save_fmt()))
 
     observe({

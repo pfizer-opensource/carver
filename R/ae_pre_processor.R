@@ -166,7 +166,7 @@ ae_pre_processor <- function(datain,
   ################### ENDax SEV/CTC##############
 
   # Return processed dataframe and filter conditions
-  return(list(data = ungroup(data_pro), a_subset = filters))
+  list(data = ungroup(data_pro), a_subset = filters)
 }
 
 #' Create filter condition for Adverse Events from keyword

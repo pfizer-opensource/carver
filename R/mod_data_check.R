@@ -99,7 +99,7 @@ mod_data_check_server <- function(id, sourcedata, domain) {
       {
         req(input$data_varlist)
 
-        data_lkup <- sourcedata()[[domain()]] %>%
+        data_lkup <- sourcedata()[[domain()]] |>
           select(unlist(strsplit(paste(input$data_varlist, collapse = ","), ",")))
 
         datatable(

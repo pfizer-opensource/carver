@@ -16,6 +16,7 @@ adsl_sum <- msumstat(
   )
 )
 
+
 adsl_sum$gsum$XVAR <- fct_reorder(adsl_sum$gsum$BYVAR1, adsl_sum$gsum$BYVAR1N)
 fig_col <- box_plot(
   datain = adsl_sum$gsum,
@@ -70,7 +71,7 @@ fig_fill2 <- box_plot(
 
 # Tests:
 test_that("Standard box plot outputs", {
-  expect_true(is.ggplot(fig_col))
+  expect_s3_class(fig_col, "gg")
   expectdata <- adsl_sum$gsum |>
     mutate(across(all_of(c(
       "mean", "median", "q25", "q75", "whiskerlow",

@@ -104,7 +104,7 @@ forest_plot_base <- function(datain,
   ) +
     ggstance::geom_errorbarh(
       height = 0.1,
-      position = ggstance::position_dodgev(height = 0.6), linewidth = 0.5
+      position = ggstance::position_dodgev(height = 0.6), size = 0.5
     ) +
     geom_point(
       shape = 22,
@@ -135,7 +135,7 @@ forest_plot_base <- function(datain,
         alpha = 0.5
       )
   }
-  return(gplot)
+  gplot
 }
 
 #' Scatter plot to be included within forest plot
@@ -254,7 +254,7 @@ forest_plot_scatter <- function(datain,
         alpha = 0.5
       )
   }
-  return(gplot)
+  gplot
 }
 
 #' Display combined Forest Plot
@@ -399,5 +399,5 @@ forest_display <- function(plot_list,
       rel_heights = c(0.85, 0.075, 0.075)
     )
   }
-  return(combine_plot)
+  combine_plot
 }

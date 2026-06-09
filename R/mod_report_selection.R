@@ -133,28 +133,28 @@ mod_report_selection_server <- function(id, sourcedata, domain, data_attr) {
       req(input$bdomain)
       req(report_meta())
 
-      tempRepMeta <- report_meta() %>%
+      tempRepMeta <- report_meta() |>
         filter(DOMAIN %in% c(toupper(input$bdomain)))
 
       updateSelectInput(session,
         "tarea",
         choices = pull(unique(tempRepMeta["TA"]))
       )
-    }) %>%
+    }) |>
       bindEvent(input$bdomain)
 
     observe({
       req(input$tarea)
 
-      choices <- filter(report_meta(), TA == input$tarea & DOMAIN == toupper(input$bdomain)) %>%
-        pull(REPTYPE) %>%
+      choices <- filter(report_meta(), TA == input$tarea & DOMAIN == toupper(input$bdomain)) |>
+        pull(REPTYPE) |>
         unique()
 
       updateSelectInput(session,
         "repType",
         choices = choices
       )
-    }) %>%
+    }) |>
       bindEvent(list(input$tarea, input$bdomain))
 
     observe({
@@ -169,7 +169,7 @@ mod_report_selection_server <- function(id, sourcedata, domain, data_attr) {
         "repName",
         choices = choices
       )
-    }) %>%
+    }) |>
       bindEvent(list(input$repType, input$bdomain, input$tarea))
 
     observe({
@@ -188,7 +188,7 @@ mod_report_selection_server <- function(id, sourcedata, domain, data_attr) {
         "repdesc",
         choices = choices_desc
       )
-    }) %>%
+    }) |>
       bindEvent(input$repName)
 
     observe({
@@ -201,17 +201,17 @@ mod_report_selection_server <- function(id, sourcedata, domain, data_attr) {
           "COHORT", "TRTA", "TRTP", "TRTAN", "TRTPN"
         )
       # Get the treatment variable from the input dataset
-      trtvar <- data_attr()[[input$bdomain]] %>%
+      trtvar <- data_attr()[[input$bdomain]] |>
         filter(VAR_NAMES %in% trtv |
-          str_detect(VAR_NAMES, "TRT[:digit:]+[AP]")) %>%
-        select(VAR_NAMES) %>%
+          str_detect(VAR_NAMES, "TRT[:digit:]+[AP]")) |>
+        select(VAR_NAMES) |>
         pull()
 
       # Get the Population variable from the input dataset
-      popvar <- data_attr()[[input$bdomain]] %>%
-        filter(str_detect(tolower(VAR_LABEL), "population")) %>%
-        mutate(pop = paste0(VAR_NAMES, " ~ ", VAR_LABEL)) %>%
-        select(pop) %>%
+      popvar <- data_attr()[[input$bdomain]] |>
+        filter(str_detect(tolower(VAR_LABEL), "population")) |>
+        mutate(pop = paste0(VAR_NAMES, " ~ ", VAR_LABEL)) |>
+        select(pop) |>
         pull()
 
       updateSelectInput(session,

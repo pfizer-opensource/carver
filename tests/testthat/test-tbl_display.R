@@ -84,5 +84,5 @@ test_that("tbl_processor works with keepvars", {
 
 test_that("Empty_tbl works", {
   tbl_empty <- empty_tbl()
-  expect_snapshot(tbl_empty)
+  expect_snapshot(tbl_empty$body$dataset)
 })

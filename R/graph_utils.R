@@ -638,8 +638,8 @@ series_leg_lab <- function(datain,
                            series_var = "TRTVAR",
                            series_labelvar = "TRTTXT") {
   if (series_labelvar != series_var && is.factor(datain[[series_labelvar]])) {
-    return(sort(unique(datain[[series_labelvar]])))
+    sort(unique(datain[[series_labelvar]]))
   } else {
-    return(waiver())
+    waiver()
   }
 }

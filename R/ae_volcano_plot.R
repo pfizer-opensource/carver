@@ -194,7 +194,7 @@ ae_volcano_plot <- function(datain,
         )
       )
   }
-  return(gplot)
+  gplot
 }
 
 #' Volcano Plot axis Options
@@ -276,8 +276,8 @@ Favors {trt2_label} (N={N2}) --->\n{statistic}"
   }
   refval <- ifelse(grepl("Ratio", statistic), 1, 0)
   xref <- c(refval, refval - xref_offset, refval + xref_offset)
-  return(list(
+  list(
     xaxis_label = xlab, yaxis_label = ylab,
     ylinearopts = ylinearopts, yaxis_scale = ytrans, xref = xref
-  ))
+  )
 }

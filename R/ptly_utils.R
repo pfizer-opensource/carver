@@ -74,7 +74,7 @@ plotly_legend <- function(fig,
         size = 8, xanchor = opts[[3]], yanchor = opts[[4]], font = list(size = 8)
       )
     )
-  return(fig)
+  fig
 }
 
 #' Standard convert ggplot to plotly object

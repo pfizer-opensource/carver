@@ -246,7 +246,7 @@ ae_forest_plot <-
         )
       })
     # Return single level list
-    return(flatten(nested_plots))
+    flatten(nested_plots)
   }
 
 #' Highlight Significant p-value points in forest plot
@@ -281,12 +281,11 @@ ae_forest_hlt_sig <- function(plotin,
       aes(
         x = .data[["PCT"]],
         y = .data[["DPTVAL"]],
-        fill = .data[["EFFECT"]],
-        key = .data[["key"]]
+        fill = .data[["EFFECT"]]
       ),
       inherit.aes = FALSE,
       shape = 23,
-      size = pts_size,
+      linewidth = pts_size,
       stroke = 0.2
     ) +
     scale_fill_manual(name = "", values = hltfill)

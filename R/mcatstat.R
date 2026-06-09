@@ -327,5 +327,5 @@ calc_denom <- function(counts,
     df <- df |>
       mutate(CVALUE = ifelse(FREQ == 0, "0", glue(cstat)))
   }
-  return(df |> ungroup())
+  df |> ungroup()
 }
